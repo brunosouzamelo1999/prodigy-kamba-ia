@@ -665,257 +665,224 @@
 
 
   <!-- ============================================================ -->
-  <!-- 3. PAINEL PRINCIPAL DO CHAT IA (DASHBOARD ESTILO CHATGPT)    -->
+  <!-- 3. CHATGPT LAYOUT MINIMALISTA E AUTÊNTICO                     -->
   <!-- ============================================================ -->
   <section id="view-dashboard" class="app-view">
-    <div class="dashboard-layout">
+    <div class="gpt-layout" id="gpt-layout">
 
-      <header class="dash-topbar">
-        <div class="topbar-left">
-          <button id="btn-toggle-sidebar" class="mobile-menu-btn" aria-label="Abrir Histórico">
-            <svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
-              <path d="M4 6h16M4 12h16M4 18h16"/>
+      <!-- BARRA LATERAL (COLLAPSIBLE / EXPANDABLE) -->
+      <aside class="gpt-sidebar" id="gpt-sidebar">
+        <!-- Topo da Barra Lateral -->
+        <div class="gpt-sidebar-top">
+          <div class="gpt-brand-row">
+            <span class="gpt-brand-name">ChatGPT</span>
+            <div class="gpt-top-actions">
+              <button class="gpt-icon-btn" id="btn-sidebar-search" title="Buscar conversas">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </button>
+              <button class="gpt-icon-btn" id="btn-sidebar-collapse" title="Fechar barra lateral">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="9" y1="3" x2="9" y2="21"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Botão Novo Chat -->
+          <button class="gpt-new-chat-btn" id="btn-new-chat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
             </svg>
+            <span>Novo chat</span>
           </button>
+        </div>
 
-          <div class="dash-brand" id="btn-dash-home" title="Voltar à Página Principal">
-            <div class="dash-logo-icon">
-              <svg viewBox="0 0 100 100" class="palanca-svg-mini">
-                <circle cx="50" cy="50" r="45" fill="#D81A2D" stroke="#FFD100" stroke-width="1.5"/>
-                <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="#FFD100"/>
-                <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="#FFD100"/>
-                <path d="M58 44 L64 74 L70 74 L68 50 Z" fill="#FFD100"/>
+        <!-- Navegação de Itens Rápidos -->
+        <div class="gpt-nav-section">
+          <div class="gpt-nav-item">
+            <span class="gpt-nav-icon">🖼️</span>
+            <span class="gpt-nav-text">Imagens</span>
+            <span class="gpt-badge-tag">ATUALIZADO</span>
+          </div>
+          <div class="gpt-nav-item">
+            <span class="gpt-nav-icon">📚</span>
+            <span class="gpt-nav-text">Biblioteca</span>
+          </div>
+          <div class="gpt-nav-item">
+            <span class="gpt-nav-icon">📁</span>
+            <span class="gpt-nav-text">Projetos</span>
+          </div>
+          <div class="gpt-nav-item">
+            <span class="gpt-nav-icon">⏱️</span>
+            <span class="gpt-nav-text">Agendados</span>
+          </div>
+          <div class="gpt-nav-item">
+            <span class="gpt-nav-icon">⚙️</span>
+            <span class="gpt-nav-text">Plugins</span>
+          </div>
+          <div class="gpt-nav-item">
+            <span class="gpt-nav-icon">⚡</span>
+            <span class="gpt-nav-text">Codex</span>
+          </div>
+        </div>
+
+        <!-- Seção Fixada -->
+        <div class="gpt-list-section">
+          <div class="gpt-section-title">Fixada</div>
+          <ul class="gpt-chat-list pinned-list">
+            <li class="gpt-chat-row pinned">
+              <span class="chat-row-icon">🗨️</span>
+              <span class="chat-row-title">Rebater notificação extrajudicial</span>
+            </li>
+            <li class="gpt-chat-row pinned">
+              <span class="chat-row-icon">🗨️</span>
+              <span class="chat-row-title">Analisar mortes prisionais</span>
+              <span class="dot-pinned-amber"></span>
+            </li>
+            <li class="gpt-chat-row pinned">
+              <span class="chat-row-icon">🗨️</span>
+              <span class="chat-row-title">Resumo dos Embargos</span>
+            </li>
+            <li class="gpt-chat-row pinned">
+              <span class="chat-row-icon">🗨️</span>
+              <span class="chat-row-title">Resumo da contradição fát...</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Seção Recentes -->
+        <div class="gpt-list-section gpt-history-scroll">
+          <div class="gpt-section-title">Recentes</div>
+          <ul class="gpt-chat-list" id="history-list">
+            <!-- Renderizado dinamicamente pelo JS -->
+          </ul>
+        </div>
+
+        <!-- Rodapé do Perfil do Cliente -->
+        <div class="gpt-sidebar-footer">
+          <div class="gpt-user-card" id="btn-user-profile">
+            <div class="gpt-user-avatar">BS</div>
+            <div class="gpt-user-details">
+              <span class="gpt-user-name" id="display-user-name">Bruno Souza</span>
+              <span class="gpt-user-sub">Go</span>
+            </div>
+            <div class="gpt-user-more">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="1"/>
+                <circle cx="19" cy="12" r="1"/>
+                <circle cx="5" cy="12" r="1"/>
               </svg>
             </div>
-            <div class="dash-brand-title">
-              <strong>Kamba</strong>
-              <span>Chat IA</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Overlay para Mobile -->
+      <div id="sidebar-overlay" class="gpt-sidebar-overlay"></div>
+
+      <!-- ÁREA PRINCIPAL DO CHAT (SEM DASHBOARDS, APENAS CHAT) -->
+      <main class="gpt-main-viewport">
+        <!-- Topbar Superior Minimalista -->
+        <header class="gpt-viewport-header">
+          <div class="gpt-header-left">
+            <button class="gpt-icon-btn gpt-expand-btn" id="btn-sidebar-expand" title="Abrir barra lateral">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="9" y1="3" x2="9" y2="21"/>
+              </svg>
+            </button>
+            <button class="gpt-icon-btn gpt-top-new" id="btn-top-new-chat" title="Novo chat">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+            </button>
+            <div class="gpt-model-pill">
+              <span>ChatGPT</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
             </div>
           </div>
 
-          <nav class="dash-nav-links">
-            <a href="#" id="link-nav-dash" class="nav-item active">Chat Ativo</a>
-            <a href="#" id="link-nav-home" class="nav-item">🏠 Início</a>
-            <a href="#features" id="link-nav-features" class="nav-item">Demonstração</a>
-          </nav>
-        </div>
-
-        <div class="topbar-right">
-          <div class="model-badge-pill">
-            <span class="dot-green"></span>
-            <span>Kamba-4 Omni · Livre</span>
+          <div class="gpt-header-right">
+            <button class="gpt-text-btn" id="btn-dash-home" title="Voltar para a Landing Page">
+              <span>Página Inicial</span>
+            </button>
           </div>
+        </header>
 
-          <div class="user-profile-widget">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="Usuário" class="user-avatar-img">
-            <div class="user-profile-info">
-              <span class="user-name" id="display-user-name">Bruno</span>
-              <span class="user-role">Modo Ilimitado</span>
+        <!-- Conteúdo do Chat: Centralizado ou Mensagens -->
+        <div class="gpt-scroll-area">
+          <div class="gpt-conversation-wrap">
+            
+            <!-- Estado Inicial: Apenas "Vamos começar" -->
+            <div class="gpt-start-hero" id="gpt-welcome-center">
+              <h1 class="gpt-start-title">Vamos começar</h1>
             </div>
+
+            <!-- Contêiner de Mensagens em Rolagem -->
+            <div id="chat-messages" class="gpt-messages-container"></div>
+
           </div>
-
-          <button id="btn-logout" class="btn-logout" title="Voltar para a Landing Page">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            <span class="logout-text">Início</span>
-          </button>
         </div>
-      </header>
 
-      <div class="dash-content-area">
-
-        <!-- BARRA LATERAL COM HISTÓRICO DAS CONVERSAS -->
-        <aside id="dash-sidebar" class="dash-sidebar">
-          <div class="sidebar-header">
-            <button id="btn-new-chat" class="btn-new-chat-gold">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <!-- Barra Inferior de Entrada (Pill Exata do ChatGPT) -->
+        <div class="gpt-input-area">
+          <div class="gpt-input-box">
+            
+            <button class="gpt-btn-attach" title="Adicionar anexo ou contexto">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              <span>Nova Conversa</span>
             </button>
-            <button id="btn-close-sidebar" class="close-sidebar-mobile" aria-label="Fechar Gaveta">✕</button>
-          </div>
 
-          <div class="chat-history-section">
-            <div class="history-label">HISTÓRICO RECENTE</div>
-            <div class="history-search-wrap">
-              <input type="text" id="history-filter-input" placeholder="🔍 Filtrar conversas..." class="history-filter-field" aria-label="Filtrar conversas">
-            </div>
-            <ul id="history-list" class="history-list">
-            </ul>
-          </div>
+            <textarea 
+              id="chat-input" 
+              rows="1" 
+              placeholder="Vamos começar..." 
+              aria-label="Mensagem para a IA"
+            ></textarea>
 
-          <div class="sidebar-footer-card">
-            <div class="footer-card-header">
-              <span class="flag-indicator">✨</span>
-              <strong>Conversa Sem Limites</strong>
-            </div>
-            <p>Pergunte sobre qualquer assunto sem travas ou barreiras.</p>
-          </div>
-        </aside>
-
-        <div id="sidebar-overlay" class="sidebar-overlay"></div>
-
-        <!-- ÁREA CENTRAL DE MENSAGENS -->
-        <main class="chat-main-container">
-
-          <!-- Métricas de Sessão -->
-          <div class="status-cards-row">
-            <div class="metric-card">
-              <div class="metric-info">
-                <span class="metric-title">Status da IA</span>
-                <span class="metric-value text-gold">Online & Pronta</span>
-              </div>
-              <div class="metric-visual">
-                <span class="dot-online-large"></span>
-              </div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-info">
-                <span class="metric-title">Perguntas Respondidas</span>
-                <span class="metric-value" id="count-searches">42 Ativas</span>
-              </div>
-              <div class="mini-bar-chart">
-                <span style="height: 40%"></span>
-                <span style="height: 70%"></span>
-                <span style="height: 50%"></span>
-                <span style="height: 90%"></span>
-                <span style="height: 60%"></span>
-              </div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-info">
-                <span class="metric-title">Tópicos Explorados</span>
-                <span class="metric-value text-red" id="count-proposals">18 Tópicos</span>
-              </div>
-              <div class="mini-bar-chart red">
-                <span style="height: 30%"></span>
-                <span style="height: 60%"></span>
-                <span style="height: 45%"></span>
-                <span style="height: 80%"></span>
-                <span style="height: 65%"></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Caixa Principal do Chat -->
-          <div class="chat-card-box">
-            
-            <div class="chat-box-header">
-              <div class="chat-agent-info">
-                <div class="agent-avatar">
-                  <svg viewBox="0 0 100 100" class="agent-svg">
-                    <defs>
-                      <linearGradient id="goldAgentHdr" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#FFF066"/>
-                        <stop offset="50%" stop-color="#FFD100"/>
-                        <stop offset="100%" stop-color="#D97706"/>
-                      </linearGradient>
-                    </defs>
-                    <circle cx="50" cy="50" r="45" fill="#D81A2D"/>
-                    <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="url(#goldAgentHdr)"/>
-                    <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="url(#goldAgentHdr)"/>
-                    <path d="M58 44 L64 74 L70 74 L68 50 Z" fill="url(#goldAgentHdr)"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="agent-name">Kamba Chat IA</h3>
-                  <span class="agent-status-label"><span class="dot-green"></span> pronto para qualquer conversa · streaming ativo</span>
-                </div>
-              </div>
-
-              <div class="chat-header-actions">
-                <button id="btn-clear-chat" class="btn-clear-ghost" title="Limpar conversa atual">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                  <span>Limpar</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Contêiner de Mensagens com Rolagem -->
-            <div id="chat-messages" class="chat-messages-container">
-              <!-- Renderizado dinamicamente pelo app.js -->
-            </div>
-
-            <!-- Chips de Prompts Rápidos e Diversificados -->
-            <div id="quick-prompts" class="quick-prompts-row">
-              <button class="prompt-chip" data-prompt="Escreva uma história curta e emocionante de ficção científica sobre o futuro da humanidade.">
-                ✨ Escrever História
+            <div class="gpt-input-actions">
+              <button class="gpt-pill-tool-btn" id="btn-think" title="Pensar profundamente">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/>
+                  <path d="M9 21h6"/>
+                </svg>
+                <span>Pensar</span>
               </button>
-              <button class="prompt-chip" data-prompt="Crie um componente de botão interativo em JavaScript com animação suave e comentários.">
-                💻 Código JavaScript
-              </button>
-              <button class="prompt-chip" data-prompt="Explique como funciona a teoria da relatividade como se eu tivesse 12 anos.">
-                🌌 Explicar Ciência
-              </button>
-              <button class="prompt-chip" data-prompt="Crie uma rotina prática de 7 dias para eliminar a procrastinação e manter o foco.">
-                ⚡ Plano de Foco
-              </button>
-              <button class="prompt-chip" data-prompt="Me dê 5 ideias criativas e saudáveis de jantar rápido em menos de 20 minutos.">
-                🍳 Ideias Culinárias
-              </button>
-              <button class="prompt-chip" data-prompt="Quais são as melhores técnicas de memorização ativa para estudar qualquer disciplina?">
-                📚 Dicas de Estudo
-              </button>
-            </div>
 
-            <!-- Barra de Entrada Flutuante -->
-            <div class="chat-input-wrapper">
-              <div class="input-container-inner">
-                <textarea 
-                  id="chat-input" 
-                  rows="1" 
-                  placeholder="Pergunte qualquer coisa ou escreva sua mensagem..."
-                  aria-label="Mensagem para a IA"
-                ></textarea>
+              <button class="gpt-btn-mic" title="Entrada por voz">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
 
-                <div class="input-tools-bar">
-                  <div class="tools-left">
-                    <button class="tool-btn" title="Criatividade & Ideias">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 8v8M8 12h8"/>
-                      </svg>
-                    </button>
-                    <button class="tool-btn" title="Código & Formatação">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="16 18 22 12 16 6"/>
-                        <polyline points="8 6 2 12 8 18"/>
-                      </svg>
-                    </button>
-                    <button class="tool-btn" title="Pesquisa de Conhecimento">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                      </svg>
-                    </button>
-                  </div>
-
-                  <button id="btn-send-message" class="btn-send-gold" aria-label="Enviar Mensagem">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="chat-box-footer">
-              <span>Kamba Chat IA · Respostas em streaming instantâneo · Na palma da mão, tablet e PC</span>
+              <button class="gpt-btn-send" id="btn-send-message" aria-label="Enviar Mensagem">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="19" x2="12" y2="5"/>
+                  <polyline points="5 12 12 5 19 12"/>
+                </svg>
+              </button>
             </div>
 
           </div>
-        </main>
-      </div>
+
+          <div class="gpt-legal-disclaimer">
+            O Chat IA pode cometer erros. Considere verificar informações importantes.
+          </div>
+        </div>
+
+      </main>
+
     </div>
   </section>
 
