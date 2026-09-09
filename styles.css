@@ -2825,6 +2825,7 @@ body {
 .gpt-sidebar {
   width: 260px;
   min-width: 260px;
+  flex-shrink: 0;
   height: 100vh;
   background: #171717;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -3161,6 +3162,23 @@ body {
 
 .gpt-layout.sidebar-collapsed .gpt-expand-btn {
   display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ECECEC;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gpt-layout.sidebar-collapsed .gpt-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
 }
 
 .gpt-top-new {
@@ -3169,6 +3187,23 @@ body {
 
 .gpt-layout.sidebar-collapsed .gpt-top-new {
   display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ECECEC;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gpt-layout.sidebar-collapsed .gpt-top-new:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
 }
 
 .gpt-model-pill {

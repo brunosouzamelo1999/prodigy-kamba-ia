@@ -237,12 +237,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     sidebarOverlay.addEventListener('click', () => toggleSidebar(true));
   }
 
-  // Restaurar estado salvo da barra lateral no Desktop
+  // No Desktop, a barra lateral deve SEMPRE iniciar aberta por padrão
   if (window.innerWidth > 768) {
-    const savedCollapsed = localStorage.getItem('gpt_sidebar_collapsed') === 'true';
-    if (savedCollapsed && gptLayout) {
-      gptLayout.classList.add('sidebar-collapsed');
+    if (gptLayout) {
+      gptLayout.classList.remove('sidebar-collapsed');
     }
+    // Remove qualquer estado corrompido ou fechado automaticamente anterior
+    localStorage.removeItem('gpt_sidebar_collapsed');
   }
 
   // --- GERENCIAMENTO DE TELAS (SPA COM SUPORTE A HISTÓRICO DO NAVEGADOR) ---
@@ -412,7 +413,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     chats.unshift(newChatObj);
     saveChatsToStorage();
     loadChat(newId);
-    toggleSidebar(true);
+    if (window.innerWidth <= 768) {
+      toggleSidebar(true);
+    }
     if (chatInput) {
       chatInput.focus();
     }
@@ -479,7 +482,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         saveChatsToStorage();
         loadChat(newId);
       }
-      toggleSidebar(true);
+      if (window.innerWidth <= 768) {
+        toggleSidebar(true);
+      }
     });
   });
 
@@ -689,7 +694,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           deleteChat(chat.id);
         } else {
           loadChat(chat.id);
-          toggleSidebar(true);
+          if (window.innerWidth <= 768) {
+            toggleSidebar(true);
+          }
         }
       });
 
@@ -739,6 +746,12 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
   // --- INICIALIZAÇÃO ---
   function initChatDashboard() {
+    // No desktop, garantir que a barra lateral esteja aberta e visível
+    if (window.innerWidth > 768 && gptLayout) {
+      gptLayout.classList.remove('sidebar-collapsed');
+      localStorage.setItem('gpt_sidebar_collapsed', 'false');
+    }
+    renderHistory();
     if (chats.length === 0) {
       createNewChat();
     } else {
