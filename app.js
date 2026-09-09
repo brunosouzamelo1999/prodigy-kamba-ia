@@ -99,7 +99,6 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const sidebarOverlay = document.getElementById('sidebar-overlay');
   const btnNewChat = document.getElementById('btn-new-chat');
   const btnDashHome = document.getElementById('btn-dash-home');
-  const btnSidebarExit = document.getElementById('btn-sidebar-exit');
   const btnUserProfile = document.getElementById('btn-user-profile');
 
   const welcomeCenter = document.getElementById('gpt-welcome-center');
@@ -357,8 +356,6 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   if (btnDashHome) btnDashHome.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
-  if (btnQuickBack) btnQuickBack.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
-  if (btnSidebarExit) btnSidebarExit.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
   if (btnUserProfile) btnUserProfile.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
 
   // Suporte para o botão Voltar do navegador / telemóvel
