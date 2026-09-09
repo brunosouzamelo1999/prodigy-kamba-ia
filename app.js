@@ -213,10 +213,10 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   });
 
   // --- TOAST NOTIFICATIONS ---
-  function showToast(msg, icon = '✓') {
+  function showToast(msg) {
     if (!kambaToast) return;
     if (toastTimer) clearTimeout(toastTimer);
-    if (toastIcon) toastIcon.textContent = icon;
+    if (toastIcon) toastIcon.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
     if (toastMessage) toastMessage.textContent = msg;
     kambaToast.classList.add('show');
     toastTimer = setTimeout(() => {
@@ -272,7 +272,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
   function exitChatToLanding() {
     showView('landing');
-    showToast('Você voltou à página inicial.', '🏠');
+    showToast('Você voltou à página inicial.');
   }
 
   // --- ABAS DO TERMINAL INTERATIVO NO HERO ---
@@ -459,7 +459,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         renderHistory();
       }
     }
-    showToast('Conversa excluída.', '🗑');
+    showToast('Conversa excluída.');
   }
 
   // Alternar estado de fixada (Fixar / Desafixar)
@@ -470,9 +470,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     saveChatsToStorage();
     renderHistory();
     if (chat.pinned) {
-      showToast('Conversa fixada no topo!', '📌');
+      showToast('Conversa fixada no topo!');
     } else {
-      showToast('Conversa desafixada.', '✓');
+      showToast('Conversa desafixada.');
     }
   }
 
@@ -529,9 +529,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     if (btnCopy) {
       btnCopy.addEventListener('click', () => {
         navigator.clipboard.writeText(text).then(() => {
-          showToast('Resposta copiada para a área de transferência!', '📋');
+          showToast('Resposta copiada para a área de transferência!');
         }).catch(() => {
-          showToast('Texto copiado com sucesso.', '✓');
+          showToast('Texto copiado com sucesso.');
         });
       });
     }
@@ -661,18 +661,23 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     });
   }
 
+  const svgPinIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>`;
+  const svgChatIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+  const svgCloseIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  const svgTrashIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+
   function createChatRowElement(chat, isPinned) {
     const li = document.createElement('li');
     li.className = `gpt-chat-row ${chat.id === currentChatId ? 'active' : ''} ${isPinned ? 'is-pinned' : ''}`;
 
     li.innerHTML = `
-      <span class="chat-row-icon">${isPinned ? '📌' : '💬'}</span>
+      <span class="chat-row-icon">${isPinned ? svgPinIcon : svgChatIcon}</span>
       <span class="chat-row-title" title="${escapeHtml(chat.title)}">${escapeHtml(chat.title)}</span>
       <div class="chat-row-actions">
         <button class="btn-action-chat btn-toggle-pin" title="${isPinned ? 'Desafixar conversa' : 'Fixar conversa'}">
-          ${isPinned ? '✕' : '📌'}
+          ${isPinned ? svgCloseIcon : svgPinIcon}
         </button>
-        <button class="btn-action-chat btn-del-chat" title="Excluir conversa">🗑</button>
+        <button class="btn-action-chat btn-del-chat" title="Excluir conversa">${svgTrashIcon}</button>
       </div>
     `;
 
