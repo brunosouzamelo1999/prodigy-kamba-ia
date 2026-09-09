@@ -93,17 +93,12 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const authToggleText = document.getElementById('auth-toggle-text');
   const btnFastDemo = document.getElementById('btn-fast-demo');
 
-  // --- ELEMENTOS CHATGPT (DASHBOARD REFORMULADO) ---
+  // --- ELEMENTOS DO CHAT IA (KAMBA CHAT IA) ---
   const gptLayout = document.getElementById('gpt-layout');
   const gptSidebar = document.getElementById('gpt-sidebar');
-  const btnSidebarCollapse = document.getElementById('btn-sidebar-collapse');
-  const btnSidebarExpand = document.getElementById('btn-sidebar-expand');
-  const btnSidebarSearch = document.getElementById('btn-sidebar-search');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
   const btnNewChat = document.getElementById('btn-new-chat');
-  const btnTopNewChat = document.getElementById('btn-top-new-chat');
   const btnDashHome = document.getElementById('btn-dash-home');
-  const btnQuickBack = document.getElementById('btn-quick-back');
   const btnSidebarExit = document.getElementById('btn-sidebar-exit');
   const btnUserProfile = document.getElementById('btn-user-profile');
 
@@ -203,7 +198,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }, 2500);
   }
 
-  // --- CONTROLE DA BARRA LATERAL RETRÁTIL (EXPANDIR / MINIMIZAR) ---
+  // --- CONTROLE DA BARRA LATERAL (FIXA NO DESKTOP / DRAWER NO MOBILE) ---
   function toggleSidebar(collapse) {
     const isMobile = window.innerWidth <= 768;
     if (isMobile) {
@@ -214,37 +209,18 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         if (gptSidebar) gptSidebar.classList.add('open');
         if (sidebarOverlay) sidebarOverlay.classList.add('active');
       }
-    } else {
-      if (collapse) {
-        if (gptLayout) gptLayout.classList.add('sidebar-collapsed');
-        localStorage.setItem('gpt_sidebar_collapsed', 'true');
-      } else {
-        if (gptLayout) gptLayout.classList.remove('sidebar-collapsed');
-        localStorage.setItem('gpt_sidebar_collapsed', 'false');
-      }
     }
-  }
-
-  if (btnSidebarCollapse) {
-    btnSidebarCollapse.addEventListener('click', () => toggleSidebar(true));
-  }
-
-  if (btnSidebarExpand) {
-    btnSidebarExpand.addEventListener('click', () => toggleSidebar(false));
   }
 
   if (sidebarOverlay) {
     sidebarOverlay.addEventListener('click', () => toggleSidebar(true));
   }
 
-  // No Desktop, a barra lateral deve SEMPRE iniciar aberta por padrão
-  if (window.innerWidth > 768) {
-    if (gptLayout) {
-      gptLayout.classList.remove('sidebar-collapsed');
-    }
-    // Remove qualquer estado corrompido ou fechado automaticamente anterior
-    localStorage.removeItem('gpt_sidebar_collapsed');
+  // No Desktop, a barra lateral é sempre fixa e aberta (sem opção de minimizar)
+  if (gptLayout) {
+    gptLayout.classList.remove('sidebar-collapsed');
   }
+  localStorage.removeItem('gpt_sidebar_collapsed');
 
   // --- GERENCIAMENTO DE TELAS (SPA COM SUPORTE A HISTÓRICO DO NAVEGADOR) ---
   function showView(viewName, pushHistory = true) {

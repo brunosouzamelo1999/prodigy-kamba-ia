@@ -2857,21 +2857,47 @@ body {
 .gpt-brand-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 36px;
+  justify-content: flex-start;
+  height: 40px;
+  padding: 2px 4px;
+}
+
+.kamba-chat-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kamba-mini-logo {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.palanca-svg-mini {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .gpt-brand-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 15.5px;
+  font-weight: 700;
   color: #ECECEC;
   letter-spacing: -0.2px;
 }
 
-.gpt-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.gpt-model-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #FFD100;
+  box-shadow: 0 0 8px rgba(255, 209, 0, 0.6);
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .gpt-icon-btn {
