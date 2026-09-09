@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Botões de Navegação Landing
   const btnGotoLogin = document.getElementById('btn-goto-login');
   const btnHeaderStart = document.getElementById('btn-header-start');
-  const btnHeaderDemo = document.getElementById('btn-header-demo');
   const btnHeroStart = document.getElementById('btn-hero-start');
   const btnHeroDemo = document.getElementById('btn-hero-demo');
   const btnTerminalTry = document.getElementById('btn-terminal-try');
@@ -340,14 +339,10 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     });
   }
 
-  if (btnHeaderDemo || btnHeroDemo) {
-    [btnHeaderDemo, btnHeroDemo].forEach(b => {
-      if (b) {
-        b.addEventListener('click', () => {
-          const featEl = document.getElementById('features');
-          if (featEl) featEl.scrollIntoView({ behavior: 'smooth' });
-        });
-      }
+  if (btnHeroDemo) {
+    btnHeroDemo.addEventListener('click', () => {
+      const featEl = document.getElementById('features');
+      if (featEl) featEl.scrollIntoView({ behavior: 'smooth' });
     });
   }
 
