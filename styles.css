@@ -2619,3 +2619,181 @@ body {
   .chat-messages-container { padding: 14px; gap: 14px; }
   .auth-card { padding: 26px 20px; }
 }
+
+/* ============================================================
+   NOVA VITRINE MULTI-DISPOSITIVO (CELULAR, TABLET, COMPUTADOR)
+   ============================================================ */
+.devices-showcase-section {
+  width: 100%;
+  max-width: 1240px;
+  margin: 80px auto;
+  padding: 0 24px;
+}
+
+.devices-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.device-card {
+  background: var(--angola-card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 32px 26px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.device-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--border-gold);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 24px var(--angola-yellow-glow);
+}
+
+.device-card.highlight {
+  border-color: rgba(255, 209, 0, 0.4);
+  background: linear-gradient(180deg, #121824 0%, #0C1018 100%);
+}
+
+.device-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  width: fit-content;
+  margin-bottom: 20px;
+}
+
+.device-badge.mobile {
+  background: rgba(255, 209, 0, 0.12);
+  color: var(--angola-yellow);
+  border: 1px solid rgba(255, 209, 0, 0.3);
+}
+
+.device-badge.tablet {
+  background: rgba(216, 26, 45, 0.12);
+  color: #FF6B7D;
+  border: 1px solid rgba(216, 26, 45, 0.3);
+}
+
+.device-badge.desktop {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-pure);
+  border: 1px solid var(--border-subtle);
+}
+
+.device-title {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-pure);
+  margin-bottom: 12px;
+}
+
+.device-desc {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  flex-grow: 1;
+}
+
+.device-mockup-frame {
+  width: 100%;
+  background: #06080D;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.mini-bubble {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.mini-bubble.user {
+  background: #182335;
+  color: #FFFFFF;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  max-width: 88%;
+}
+
+.mini-bubble.ai {
+  background: #0E1420;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #E2E8F0;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  max-width: 92%;
+}
+
+.mini-typing-indicator {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 8px;
+}
+
+.mini-typing-indicator span {
+  width: 5px;
+  height: 5px;
+  background: var(--angola-yellow);
+  border-radius: 50%;
+  animation: pulseDot 1.4s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Formatação rica de código Markdown */
+.msg-content pre {
+  background: #060911 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  color: #F8FAFC;
+}
+
+.msg-content code {
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  color: var(--angola-yellow-light);
+}
+
+.msg-content pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+@media (max-width: 960px) {
+  .devices-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

@@ -3,2664 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Prodigy Kamba IA — A Infraestrutura de IA de Angola</title>
-  <meta name="description" content="Prodigy Kamba IA: A infraestrutura de inteligência artificial soberana para empresas, comércio global e líderes em Angola.">
+  <title>Kamba Chat IA — Inteligência Artificial Conversacional para Qualquer Assunto</title>
+  <meta name="description" content="Kamba Chat IA: O seu assistente de inteligência artificial interativo para qualquer conversa, dúvida ou criação. Na palma da mão, tablet ou computador.">
   
-  <!-- Fonte Oficial Geist & Geist Mono (A mesma utilizada pela Vercel) -->
+  <!-- Tipografia Oficial Geist & Geist Mono (Vercel Style) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <style>
-    /* ============================================================
-       PRODIGY KAMBA IA — DESIGN SYSTEM OFICIAL (ESTILO VERCEL)
-       Tipografia: Geist (Vercel) + Geist Mono
-       Cores da Bandeira de Angola: Preto (#000000), Vermelho (#D81A2D), Ouro (#FFD100)
-    ============================================================ */
-    :root {
-      --angola-black: #000000;
-      --angola-black-surface: #090C13;
-      --angola-card-bg: #0C1018;
-      --angola-card-elevated: #121824;
-      --angola-input-bg: #151D2C;
-
-      --angola-red: #D81A2D;
-      --angola-red-hover: #B51323;
-      --angola-red-glow: rgba(216, 26, 45, 0.45);
-
-      --angola-yellow: #FFD100;
-      --angola-yellow-hover: #E6BC00;
-      --angola-yellow-glow: rgba(255, 209, 0, 0.45);
-      --angola-yellow-light: #FFF066;
-
-      --text-pure: #FFFFFF;
-      --text-main: #ECECEC;
-      --text-muted: #8E96A4;
-      --text-dim: #5A6270;
-
-      --border-subtle: rgba(255, 255, 255, 0.1);
-      --border-light: rgba(255, 255, 255, 0.18);
-      --border-gold: rgba(255, 209, 0, 0.45);
-      --border-red: rgba(216, 26, 45, 0.45);
-
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
-      --radius-xl: 24px;
-      --radius-pill: 9999px;
-
-      --font-geist: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: 'Geist Mono', monospace;
-      --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      background-color: var(--angola-black);
-    }
-
-    body {
-      width: 100%;
-      min-height: 100vh;
-      background-color: var(--angola-black);
-      color: var(--text-main);
-      font-family: var(--font-geist);
-      font-size: 14.5px;
-      line-height: 1.5;
-      letter-spacing: -0.015em;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* Scrollbars Modernas */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: var(--radius-pill);
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 209, 0, 0.4);
-    }
-
-    /* Utilitários */
-    .text-gold { color: var(--angola-yellow) !important; }
-    .text-gold-light { color: var(--angola-yellow-light) !important; }
-    .text-red { color: var(--angola-red) !important; }
-    .text-pure { color: var(--text-pure) !important; }
-
-    .text-gradient-gold {
-      background: linear-gradient(135deg, #FFF066 0%, #FFD100 50%, #D97706 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .text-gradient-red {
-      background: linear-gradient(135deg, #FF6B7D 0%, #D81A2D 50%, #990B1B 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    /* Controle de Telas (SPA) */
-    .app-view {
-      display: none;
-      min-height: 100vh;
-      width: 100%;
-      opacity: 0;
-      transition: opacity 0.25s ease-in-out;
-    }
-
-    .app-view.active {
-      display: block;
-      opacity: 1;
-    }
-
-    /* Atmosfera de Fundo */
-    .angola-atmosphere {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 940px;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 0;
-    }
-
-    .glow-spotlight-red {
-      position: absolute;
-      top: -200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 900px;
-      height: 520px;
-      background: radial-gradient(ellipse at center, rgba(216, 26, 45, 0.28) 0%, rgba(216, 26, 45, 0.06) 45%, transparent 70%);
-      filter: blur(85px);
-    }
-
-    .glow-spotlight-gold {
-      position: absolute;
-      top: 160px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 650px;
-      height: 400px;
-      background: radial-gradient(ellipse at center, rgba(255, 209, 0, 0.2) 0%, rgba(255, 209, 0, 0.04) 50%, transparent 70%);
-      filter: blur(80px);
-    }
-
-    /* Faixa de Anúncio Superior Vercel */
-    .vercel-top-banner {
-      background: #000000;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 9px 16px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-muted);
-      position: relative;
-      z-index: 65;
-    }
-
-    .vercel-top-banner a {
-      color: var(--text-pure);
-      text-decoration: none;
-      font-weight: 500;
-      margin-left: 6px;
-      transition: var(--transition);
-    }
-
-    .vercel-top-banner a:hover {
-      color: var(--angola-yellow);
-    }
-
-    /* Header Frosted Glass Vercel */
-    .vercel-header {
-      position: sticky;
-      top: 0;
-      z-index: 60;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .header-container {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .brand-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .palanca-svg {
-      width: 38px;
-      height: 38px;
-      filter: drop-shadow(0 0 10px rgba(255, 209, 0, 0.45));
-      flex-shrink: 0;
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.05;
-    }
-
-    .brand-title {
-      font-size: 1.12rem;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      color: var(--text-pure);
-    }
-
-    .brand-subtitle {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--angola-yellow);
-      letter-spacing: 2.5px;
-    }
-
-    .vercel-nav-links {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .v-nav-link {
-      text-decoration: none;
-      color: var(--text-muted);
-      font-size: 14px;
-      font-weight: 500;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .v-nav-link:hover {
-      color: var(--text-pure);
-    }
-
-    .v-nav-arrow {
-      font-size: 10px;
-      color: var(--text-dim);
-    }
-
-    .header-cta-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .btn-vercel-pill-ghost {
-      background: transparent;
-      color: var(--text-main);
-      border: 1px solid var(--border-light);
-      padding: 7px 16px;
-      font-size: 13.5px;
-      font-weight: 500;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-    }
-
-    .btn-vercel-pill-ghost:hover {
-      color: var(--text-pure);
-      border-color: var(--angola-yellow);
-      background: rgba(255, 209, 0, 0.05);
-    }
-
-    .btn-vercel-pill-solid {
-      background: var(--angola-yellow);
-      color: #000000;
-      border: none;
-      padding: 7px 18px;
-      font-size: 13.5px;
-      font-weight: 600;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 0 16px rgba(255, 209, 0, 0.35);
-      font-family: var(--font-geist);
-    }
-
-    .btn-vercel-pill-solid:hover {
-      background: var(--angola-yellow-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 0 24px rgba(255, 209, 0, 0.55);
-    }
-
-    /* Hero Section */
-    .vercel-hero-layout {
-      position: relative;
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 80px 28px 70px;
-      z-index: 10;
-    }
-
-    .vercel-hero-columns {
-      display: grid;
-      grid-template-columns: 1.15fr 1fr 1fr;
-      align-items: center;
-      gap: 40px;
-    }
-
-    .hero-col-left {
-      text-align: left;
-    }
-
-    .vercel-big-title {
-      font-size: clamp(2.8rem, 5.2vw, 4.3rem);
-      font-weight: 700;
-      line-height: 1.05;
-      letter-spacing: -0.045em;
-      color: var(--text-pure);
-      margin-bottom: 28px;
-    }
-
-    .vercel-big-title span {
-      display: block;
-      color: var(--angola-yellow);
-    }
-
-    .hero-btn-group-vercel {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .btn-pill-primary {
-      background: var(--angola-yellow);
-      color: #000000;
-      border: none;
-      padding: 12px 26px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 0 25px rgba(255, 209, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.5);
-      font-family: var(--font-geist);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-pill-primary:hover {
-      background: var(--angola-yellow-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 0 35px rgba(255, 209, 0, 0.6);
-    }
-
-    .btn-pill-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-pure);
-      border: 1px solid var(--border-light);
-      padding: 12px 24px;
-      font-size: 14px;
-      font-weight: 500;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-      backdrop-filter: blur(10px);
-    }
-
-    .btn-pill-secondary:hover {
-      background: rgba(255, 255, 255, 0.09);
-      border-color: var(--angola-yellow);
-    }
-
-    .hero-col-center {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .monolith-aura-box {
-      position: relative;
-      width: 280px;
-      height: 280px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .monolith-back-glow {
-      position: absolute;
-      inset: -20px;
-      background: radial-gradient(circle, rgba(255, 209, 0, 0.28) 0%, rgba(216, 26, 45, 0.28) 45%, transparent 70%);
-      filter: blur(40px);
-      border-radius: 50%;
-    }
-
-    .monolith-prism {
-      position: relative;
-      width: 220px;
-      height: 220px;
-      background: radial-gradient(circle at 50% 40%, #161C2A 0%, #05070D 100%);
-      border: 1px solid rgba(255, 209, 0, 0.45);
-      border-radius: var(--radius-xl);
-      box-shadow: 0 0 50px rgba(216, 26, 45, 0.4), inset 0 0 30px rgba(0, 0, 0, 0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .monolith-palanca-svg {
-      width: 140px;
-      height: 140px;
-      filter: drop-shadow(0 0 18px rgba(255, 209, 0, 0.75));
-      animation: floatSlow 6s ease-in-out infinite;
-    }
-
-    @keyframes floatSlow {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-6px) scale(1.03); }
-    }
-
-    .hero-col-right {
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      padding-left: 20px;
-    }
-
-    .hero-feature-bullet {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      border-left: 2px solid var(--border-subtle);
-      padding-left: 16px;
-      transition: var(--transition);
-    }
-
-    .hero-feature-bullet:hover {
-      border-left-color: var(--angola-yellow);
-    }
-
-    .feature-bullet-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-pure);
-      letter-spacing: -0.02em;
-    }
-
-    .feature-bullet-desc {
-      font-size: 13.5px;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
-
-    /* Barra de Setores */
-    .vercel-sectors-bar {
-      max-width: 1240px;
-      margin: 0 auto 70px;
-      padding: 0 28px;
-    }
-
-    .sectors-bar-inner {
-      border-top: 1px solid var(--border-subtle);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 24px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .sector-logo-item {
-      font-size: 14px;
-      font-weight: 600;
-      color: #777777;
-      letter-spacing: -0.02em;
-      transition: var(--transition);
-      cursor: default;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sector-logo-item:hover {
-      color: var(--text-pure);
-    }
-
-    .sector-icon-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--angola-yellow);
-    }
-
-    /* Terminal Interativo */
-    .vercel-preview-wrapper {
-      position: relative;
-      max-width: 920px;
-      margin: 0 auto 90px;
-      padding: 0 20px;
-    }
-
-    .preview-glow-border {
-      position: absolute;
-      inset: -1px;
-      background: linear-gradient(135deg, var(--angola-red) 0%, var(--angola-yellow) 50%, transparent 100%);
-      border-radius: var(--radius-lg);
-      z-index: 0;
-      opacity: 0.65;
-      filter: blur(1px);
-    }
-
-    .vercel-terminal-card {
-      position: relative;
-      background: rgba(12, 16, 24, 0.96);
-      backdrop-filter: blur(20px);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(255, 209, 0, 0.12);
-      text-align: left;
-      z-index: 1;
-    }
-
-    .terminal-header {
-      padding: 14px 20px;
-      background: rgba(0, 0, 0, 0.45);
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .terminal-dots {
-      display: flex;
-      gap: 7px;
-    }
-
-    .terminal-dots span {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-    }
-
-    .terminal-dots .dot-red { background: var(--angola-red); }
-    .terminal-dots .dot-yellow { background: var(--angola-yellow); }
-    .terminal-dots .dot-black { background: #475569; }
-
-    .terminal-tabs {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .t-tab {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 6px 14px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-    }
-
-    .t-tab:hover {
-      color: var(--text-pure);
-      border-color: var(--border-light);
-    }
-
-    .t-tab.active {
-      color: #000000;
-      background: var(--angola-yellow);
-      border-color: var(--angola-yellow);
-      font-weight: 600;
-      box-shadow: 0 0 12px rgba(255, 209, 0, 0.35);
-    }
-
-    .terminal-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .pulse-angola-green {
-      width: 8px;
-      height: 8px;
-      background: #22C55E;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #22C55E;
-    }
-
-    .terminal-body {
-      padding: 24px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .terminal-prompt {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-subtle);
-      padding: 12px 16px;
-      border-radius: var(--radius-md);
-    }
-
-    .prompt-icon {
-      font-size: 16px;
-      opacity: 0.8;
-    }
-
-    .prompt-user-text {
-      color: var(--text-main);
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .terminal-response {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 209, 0, 0.2);
-      padding: 18px 20px;
-      border-radius: var(--radius-md);
-    }
-
-    .response-badge-kamba {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13.5px;
-      color: var(--angola-yellow);
-    }
-
-    .tag-speed {
-      background: rgba(216, 26, 45, 0.15);
-      border: 1px solid var(--border-red);
-      color: #F87171;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: var(--radius-pill);
-      margin-left: auto;
-      font-family: var(--font-mono);
-    }
-
-    .response-body-text {
-      font-size: 14px;
-      line-height: 1.6;
-      color: #DFDFDF;
-    }
-
-    .terminal-footer {
-      padding: 12px 20px;
-      background: rgba(0, 0, 0, 0.5);
-      border-top: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .terminal-footer-info {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .btn-terminal-action {
-      background: transparent;
-      border: 1px solid var(--border-gold);
-      color: var(--angola-yellow);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-    }
-
-    .btn-terminal-action:hover {
-      background: var(--angola-yellow);
-      color: #000000;
-    }
-
-    /* Bento Grid */
-    .vercel-bento-section {
-      max-width: 1240px;
-      margin: 0 auto 100px;
-      padding: 0 28px;
-      text-align: center;
-    }
-
-    .section-badge-center {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-
-    .badge-mini-angola {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: var(--angola-yellow);
-      background: rgba(255, 209, 0, 0.08);
-      border: 1px solid var(--border-gold);
-      padding: 4px 12px;
-      border-radius: var(--radius-pill);
-      text-transform: uppercase;
-    }
-
-    .section-title-vercel {
-      font-size: clamp(2rem, 3.8vw, 2.9rem);
-      font-weight: 700;
-      letter-spacing: -0.035em;
-      line-height: 1.15;
-      color: var(--text-pure);
-      margin-bottom: 50px;
-    }
-
-    .bento-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      text-align: left;
-    }
-
-    .bento-card {
-      position: relative;
-      background: var(--angola-card-bg);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 32px 28px;
-      overflow: hidden;
-      transition: var(--transition);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .bento-card:hover {
-      border-color: rgba(255, 209, 0, 0.4);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    .bento-wide {
-      grid-column: span 2;
-    }
-
-    .bento-card-content {
-      position: relative;
-      z-index: 2;
-    }
-
-    .bento-icon-box {
-      width: 44px;
-      height: 44px;
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .bento-icon-box.gold {
-      background: rgba(255, 209, 0, 0.12);
-      color: var(--angola-yellow);
-      border: 1px solid var(--border-gold);
-    }
-
-    .bento-icon-box.red {
-      background: rgba(216, 26, 45, 0.12);
-      color: var(--angola-red);
-      border: 1px solid var(--border-red);
-    }
-
-    .bento-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-pure);
-      letter-spacing: -0.02em;
-      margin-bottom: 10px;
-    }
-
-    .bento-desc {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.55;
-    }
-
-    .bento-chart-preview {
-      margin-top: 24px;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 16px;
-    }
-
-    .chart-label-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .chart-bars-wrap {
-      height: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: var(--radius-pill);
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--angola-red) 0%, var(--angola-yellow) 100%);
-      border-radius: var(--radius-pill);
-    }
-
-    .bento-ambient-glow {
-      position: absolute;
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      filter: blur(50px);
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0.18;
-      bottom: -60px;
-      right: -60px;
-    }
-
-    .bento-ambient-glow.gold { background: var(--angola-yellow); }
-    .bento-ambient-glow.red { background: var(--angola-red); }
-
-    /* Tabela Comparativa */
-    .vercel-comparison-section {
-      max-width: 1080px;
-      margin: 0 auto 100px;
-      padding: 0 28px;
-      text-align: center;
-    }
-
-    .comparison-table-wrapper {
-      background: var(--angola-card-bg);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-    }
-
-    .vercel-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    .vercel-table th {
-      padding: 18px 24px;
-      font-size: 13.5px;
-      font-weight: 600;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border-subtle);
-      background: rgba(0, 0, 0, 0.4);
-    }
-
-    .vercel-table td {
-      padding: 18px 24px;
-      font-size: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      color: var(--text-main);
-    }
-
-    .vercel-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .th-kamba, .td-good {
-      color: var(--angola-yellow) !important;
-      background: rgba(255, 209, 0, 0.03);
-    }
-
-    .td-bad {
-      color: #94A3B8;
-    }
-
-    /* FAQ Accordion */
-    .vercel-faq-section {
-      max-width: 900px;
-      margin: 0 auto 100px;
-      padding: 0 28px;
-      text-align: center;
-    }
-
-    .faq-container {
-      margin-top: 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      text-align: left;
-    }
-
-    .faq-item {
-      background: var(--angola-card-bg);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      transition: var(--transition);
-    }
-
-    .faq-item:hover {
-      border-color: rgba(255, 209, 0, 0.35);
-    }
-
-    .faq-question {
-      width: 100%;
-      padding: 20px 24px;
-      background: none;
-      border: none;
-      color: var(--text-pure);
-      font-size: 15.5px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      font-family: var(--font-geist);
-      text-align: left;
-    }
-
-    .faq-icon {
-      font-size: 20px;
-      color: var(--angola-yellow);
-      transition: transform 0.25s ease;
-      font-weight: 400;
-    }
-
-    .faq-item.active .faq-icon {
-      transform: rotate(45deg);
-    }
-
-    .faq-answer {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out, padding 0.3s ease;
-      padding: 0 24px;
-      color: var(--text-muted);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    .faq-item.active .faq-answer {
-      max-height: 250px;
-      padding-bottom: 22px;
-    }
-
-    .faq-answer p {
-      margin: 0;
-    }
-
-    .faq-answer strong {
-      color: var(--text-pure);
-    }
-
-    /* Banner CTA */
-    .vercel-cta-banner-section {
-      max-width: 1080px;
-      margin: 0 auto 100px;
-      padding: 0 28px;
-    }
-
-    .cta-banner-box {
-      position: relative;
-      background: linear-gradient(180deg, #101520 0%, #080B12 100%);
-      border: 1px solid var(--border-gold);
-      border-radius: var(--radius-xl);
-      padding: 60px 40px;
-      text-align: center;
-      overflow: hidden;
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8), 0 0 50px rgba(255, 209, 0, 0.1);
-    }
-
-    .banner-glow-angola {
-      position: absolute;
-      top: -150px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px;
-      height: 300px;
-      background: radial-gradient(ellipse, rgba(216, 26, 45, 0.25) 0%, rgba(255, 209, 0, 0.18) 50%, transparent 70%);
-      filter: blur(60px);
-      pointer-events: none;
-    }
-
-    .banner-content {
-      position: relative;
-      z-index: 2;
-    }
-
-    .banner-tag {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: var(--angola-yellow);
-      margin-bottom: 16px;
-    }
-
-    .banner-title {
-      font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-      font-weight: 700;
-      letter-spacing: -0.035em;
-      line-height: 1.2;
-      color: var(--text-pure);
-      margin-bottom: 16px;
-    }
-
-    .banner-subtitle {
-      font-size: 15px;
-      color: var(--text-muted);
-      max-width: 620px;
-      margin: 0 auto 30px;
-      line-height: 1.6;
-    }
-
-    .banner-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-    }
-
-    /* Rodapé */
-    .vercel-footer {
-      border-top: 1px solid var(--border-subtle);
-      background: #000000;
-      padding: 70px 28px 40px;
-    }
-
-    .footer-container {
-      max-width: 1240px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1.2fr;
-      gap: 40px;
-      margin-bottom: 50px;
-    }
-
-    .footer-col-brand {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .footer-tagline {
-      color: var(--text-muted);
-      font-size: 13.5px;
-      max-width: 320px;
-      line-height: 1.5;
-    }
-
-    .flag-footer-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .footer-col-links {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .footer-col-links h4 {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-pure);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 4px;
-    }
-
-    .footer-col-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 13.5px;
-      transition: var(--transition);
-    }
-
-    .footer-col-links a:hover {
-      color: var(--angola-yellow);
-    }
-
-    .footer-bottom-bar {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding-top: 30px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 14px;
-      font-size: 12.5px;
-      color: var(--text-dim);
-    }
-
-    .footer-status-pill {
-      color: #22C55E;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* Auth */
-    .auth-wrapper {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      position: relative;
-      background: radial-gradient(circle at 50% 30%, #111724 0%, #000000 80%);
-    }
-
-    .auth-ambient-glow {
-      position: absolute;
-      top: 20%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 450px;
-      height: 450px;
-      background: radial-gradient(circle, rgba(255, 209, 0, 0.15) 0%, rgba(216, 26, 45, 0.15) 50%, transparent 70%);
-      filter: blur(80px);
-      pointer-events: none;
-    }
-
-    .btn-back-link {
-      position: absolute;
-      top: 30px;
-      left: 30px;
-      background: transparent;
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: var(--radius-pill);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-    }
-
-    .btn-back-link:hover {
-      color: var(--text-pure);
-      border-color: var(--border-light);
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .auth-brand-center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .palanca-badge-large {
-      width: 64px;
-      height: 64px;
-    }
-
-    .palanca-svg-large {
-      width: 100%;
-      height: 100%;
-      filter: drop-shadow(0 0 16px rgba(255, 209, 0, 0.5));
-    }
-
-    .auth-logo-text {
-      font-size: 1.4rem;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: var(--text-pure);
-    }
-
-    .auth-card {
-      width: 100%;
-      max-width: 420px;
-      background: #0C1018;
-      border: 1px solid rgba(255, 209, 0, 0.35);
-      border-radius: var(--radius-xl);
-      padding: 34px 30px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(216, 26, 45, 0.15);
-      position: relative;
-      z-index: 2;
-    }
-
-    .auth-tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border-subtle);
-      margin-bottom: 24px;
-    }
-
-    .auth-tab-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      padding: 10px;
-      color: var(--text-muted);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-      border-bottom: 2px solid transparent;
-    }
-
-    .auth-tab-btn.active {
-      color: var(--angola-yellow);
-      border-bottom-color: var(--angola-yellow);
-    }
-
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      letter-spacing: 0.2px;
-    }
-
-    .form-group input {
-      width: 100%;
-      background: var(--angola-input-bg);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
-      color: var(--text-pure);
-      font-size: 14px;
-      font-family: var(--font-geist);
-      outline: none;
-      transition: var(--transition);
-    }
-
-    .form-group input:focus {
-      border-color: var(--angola-yellow);
-      box-shadow: 0 0 0 3px rgba(255, 209, 0, 0.2);
-    }
-
-    .btn-auth-primary {
-      width: 100%;
-      background: var(--angola-yellow);
-      color: #000000;
-      border: none;
-      padding: 13px 20px;
-      font-size: 15px;
-      font-weight: 700;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: var(--transition);
-      margin-top: 6px;
-      margin-bottom: 12px;
-      box-shadow: 0 6px 18px rgba(255, 209, 0, 0.35);
-      font-family: var(--font-geist);
-    }
-
-    .btn-auth-primary:hover {
-      background: var(--angola-yellow-hover);
-      transform: translateY(-1px);
-    }
-
-    .btn-auth-secondary {
-      width: 100%;
-      background: transparent;
-      color: var(--angola-yellow);
-      border: 1px solid var(--border-gold);
-      padding: 11px 20px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: var(--transition);
-      margin-bottom: 14px;
-      font-family: var(--font-geist);
-    }
-
-    .btn-auth-secondary:hover {
-      background: rgba(255, 209, 0, 0.1);
-    }
-
-    .auth-links {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .auth-link-gold {
-      color: var(--angola-yellow);
-      text-decoration: none;
-      font-size: 13px;
-    }
-
-    .auth-link-gold:hover {
-      text-decoration: underline;
-    }
-
-    .auth-demo-shortcut {
-      text-align: center;
-      border-top: 1px dashed var(--border-subtle);
-      padding-top: 16px;
-    }
-
-    .btn-demo-badge {
-      background: rgba(216, 26, 45, 0.15);
-      border: 1px solid var(--border-red);
-      color: #FCA5A5;
-      padding: 9px 18px;
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-demo-badge:hover {
-      background: rgba(216, 26, 45, 0.28);
-      color: #FFF;
-      border-color: #EF4444;
-    }
-
-    .auth-copyright {
-      margin-top: 20px;
-      color: var(--text-dim);
-      font-size: 12.5px;
-    }
-
-    /* Dashboard */
-    #view-dashboard {
-      display: none;
-      height: 100vh;
-      overflow: hidden;
-      background: #06080E;
-    }
-
-    #view-dashboard.active {
-      display: block;
-    }
-
-    .dashboard-layout {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      width: 100%;
-    }
-
-    .dash-topbar {
-      height: 64px;
-      background: #0C1018;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      flex-shrink: 0;
-      z-index: 30;
-    }
-
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .mobile-menu-btn {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text-main);
-      padding: 6px;
-      cursor: pointer;
-      border-radius: var(--radius-sm);
-    }
-
-    .dash-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .palanca-svg-mini {
-      width: 32px;
-      height: 32px;
-      filter: drop-shadow(0 0 8px rgba(255, 209, 0, 0.4));
-    }
-
-    .dash-brand-title {
-      display: flex;
-      align-items: baseline;
-      gap: 5px;
-      font-size: 1.05rem;
-    }
-
-    .dash-brand-title strong {
-      font-weight: 800;
-      color: #FFF;
-    }
-
-    .dash-brand-title span {
-      font-weight: 700;
-      color: var(--angola-yellow);
-    }
-
-    .dash-nav-links {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-left: 16px;
-    }
-
-    .nav-item {
-      text-decoration: none;
-      color: var(--text-muted);
-      font-size: 13.5px;
-      font-weight: 500;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-      cursor: pointer;
-    }
-
-    .nav-item:hover {
-      color: var(--text-pure);
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .nav-item.active {
-      color: var(--angola-yellow);
-      background: rgba(255, 209, 0, 0.1);
-      border-bottom: 2px solid var(--angola-yellow);
-      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .model-badge-pill {
-      background: rgba(255, 209, 0, 0.08);
-      border: 1px solid var(--border-gold);
-      color: var(--angola-yellow);
-      font-size: 11.5px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .user-profile-widget {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 4px 12px 4px 6px;
-      border-radius: var(--radius-pill);
-      border: 1px solid var(--border-subtle);
-    }
-
-    .user-avatar-img {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1.5px solid var(--angola-yellow);
-    }
-
-    .user-profile-info {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.15;
-    }
-
-    .user-name {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-pure);
-    }
-
-    .user-role {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .btn-logout {
-      background: rgba(216, 26, 45, 0.1);
-      border: 1px solid var(--border-red);
-      color: #F87171;
-      padding: 6px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 12.5px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-geist);
-    }
-
-    .btn-logout:hover {
-      background: var(--angola-red);
-      color: #FFF;
-    }
-
-    .dash-content-area {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .dash-sidebar {
-      width: 280px;
-      background: #090C13;
-      border-right: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      z-index: 20;
-      transition: transform 0.25s ease;
-    }
-
-    .sidebar-header {
-      padding: 16px;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .btn-new-chat-gold {
-      flex: 1;
-      background: rgba(255, 209, 0, 0.1);
-      border: 1px solid var(--border-gold);
-      color: var(--angola-yellow);
-      padding: 10px 14px;
-      border-radius: var(--radius-md);
-      font-size: 13.5px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-    }
-
-    .btn-new-chat-gold:hover {
-      background: var(--angola-yellow);
-      color: #000000;
-      box-shadow: 0 0 16px rgba(255, 209, 0, 0.35);
-    }
-
-    .close-sidebar-mobile {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px;
-    }
-
-    .chat-history-section {
-      flex: 1;
-      overflow-y: auto;
-      padding: 14px 10px;
-    }
-
-    .history-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      color: var(--text-dim);
-      padding: 0 8px 8px;
-    }
-
-    .history-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .history-item {
-      padding: 9px 12px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: var(--transition);
-      border-left: 2px solid transparent;
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-
-    .history-item:hover {
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text-pure);
-    }
-
-    .history-item.active {
-      background: rgba(255, 209, 0, 0.08);
-      color: var(--angola-yellow);
-      border-left-color: var(--angola-yellow);
-      font-weight: 600;
-    }
-
-    .history-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
-    }
-
-    .btn-delete-history {
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      opacity: 0.6;
-      transition: var(--transition);
-    }
-
-    .btn-delete-history:hover {
-      color: var(--angola-red);
-      background: rgba(216, 26, 45, 0.15);
-      opacity: 1;
-    }
-
-    .sidebar-footer-card {
-      padding: 14px;
-      margin: 10px;
-      background: var(--angola-card-bg);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      line-height: 1.4;
-      color: var(--text-muted);
-    }
-
-    .footer-card-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 4px;
-      color: var(--text-pure);
-      font-size: 12.5px;
-    }
-
-    .sidebar-overlay {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 15;
-    }
-
-    .chat-main-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      padding: 18px 22px;
-      gap: 14px;
-    }
-
-    .status-cards-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    .metric-card {
-      background: #0C1018;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: var(--transition);
-    }
-
-    .metric-card:hover {
-      border-color: rgba(255, 209, 0, 0.3);
-    }
-
-    .metric-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .metric-title {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .metric-value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-pure);
-    }
-
-    .dot-online-large {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      background: #22C55E;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #22C55E;
-    }
-
-    .mini-bar-chart {
-      display: flex;
-      align-items: flex-end;
-      gap: 4px;
-      height: 28px;
-      width: 44px;
-    }
-
-    .mini-bar-chart span {
-      flex: 1;
-      background: var(--angola-yellow);
-      border-radius: 2px;
-      opacity: 0.85;
-    }
-
-    .mini-bar-chart.red span {
-      background: var(--angola-red);
-    }
-
-    .chat-card-box {
-      flex: 1;
-      background: #0C1018;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: var(--radius-lg);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .chat-box-header {
-      padding: 12px 18px;
-      background: rgba(255, 255, 255, 0.02);
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .chat-agent-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .agent-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      overflow: hidden;
-      box-shadow: 0 0 10px var(--angola-red-glow);
-    }
-
-    .agent-svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .agent-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-pure);
-    }
-
-    .agent-status-label {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11.5px;
-      color: #22C55E;
-      font-weight: 500;
-    }
-
-    .dot-green {
-      width: 6px;
-      height: 6px;
-      background: #22C55E;
-      border-radius: 50%;
-    }
-
-    .btn-clear-ghost {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: none;
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      padding: 5px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-    }
-
-    .btn-clear-ghost:hover {
-      color: var(--angola-red);
-      border-color: var(--border-red);
-    }
-
-    .chat-messages-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* Welcome Hero no Chat */
-    .chat-welcome-hero {
-      margin: auto 0;
-      padding: 20px 10px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .welcome-palanca-badge {
-      width: 58px;
-      height: 58px;
-      background: radial-gradient(circle, rgba(255, 209, 0, 0.2) 0%, rgba(216, 26, 45, 0.2) 60%, transparent 80%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      filter: drop-shadow(0 0 16px rgba(255, 209, 0, 0.45));
-    }
-
-    .welcome-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--text-pure);
-      letter-spacing: -0.02em;
-    }
-
-    .welcome-subtitle {
-      font-size: 13.5px;
-      color: var(--text-muted);
-      max-width: 480px;
-    }
-
-    .welcome-card-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      width: 100%;
-      max-width: 640px;
-      margin-top: 10px;
-      text-align: left;
-    }
-
-    .welcome-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .welcome-card:hover {
-      border-color: var(--border-gold);
-      background: rgba(255, 209, 0, 0.05);
-      transform: translateY(-2px);
-    }
-
-    .welcome-card-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-pure);
-    }
-
-    .welcome-card-desc {
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
-
-    /* Mensagens */
-    .msg-row {
-      display: flex;
-      gap: 12px;
-      max-width: 86%;
-    }
-
-    .msg-row.user {
-      align-self: flex-end;
-      flex-direction: row-reverse;
-    }
-
-    .msg-row.ai {
-      align-self: flex-start;
-    }
-
-    .msg-avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      overflow: hidden;
-      flex-shrink: 0;
-      border: 1px solid var(--border-subtle);
-    }
-
-    .msg-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .msg-avatar-ai {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: #000;
-      border: 1px solid var(--border-red);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 0 10px rgba(216, 26, 45, 0.4);
-    }
-
-    .msg-bubble {
-      padding: 14px 18px;
-      border-radius: var(--radius-lg);
-      font-size: 14px;
-      line-height: 1.6;
-      position: relative;
-    }
-
-    .msg-row.user .msg-bubble {
-      background: #141A26;
-      color: var(--text-pure);
-      border: 1px solid rgba(255, 209, 0, 0.35);
-      border-top-right-radius: var(--radius-sm);
-    }
-
-    .msg-row.ai .msg-bubble {
-      background: #0F1420;
-      color: #E2E8F0;
-      border: 1px solid var(--border-subtle);
-      border-top-left-radius: var(--radius-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .msg-actions-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      margin-top: 6px;
-    }
-
-    .btn-msg-action {
-      background: rgba(255, 209, 0, 0.08);
-      border: 1px solid var(--border-gold);
-      color: var(--angola-yellow);
-      padding: 5px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-geist);
-    }
-
-    .btn-msg-action:hover {
-      background: var(--angola-yellow);
-      color: #000000;
-      box-shadow: 0 0 12px rgba(255, 209, 0, 0.35);
-    }
-
-    .btn-msg-action.copied {
-      color: #22C55E;
-      border-color: #22C55E;
-      background: rgba(34, 197, 94, 0.15);
-    }
-
-    .typing-cursor {
-      display: inline-block;
-      width: 6px;
-      height: 14px;
-      background: var(--angola-yellow);
-      margin-left: 4px;
-      vertical-align: middle;
-      animation: blink 0.8s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    .quick-prompts-row {
-      padding: 6px 18px;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      flex-shrink: 0;
-    }
-
-    .prompt-chip {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      font-size: 12.5px;
-      padding: 6px 12px;
-      border-radius: var(--radius-pill);
-      white-space: nowrap;
-      cursor: pointer;
-      transition: var(--transition);
-      font-family: var(--font-geist);
-    }
-
-    .prompt-chip:hover {
-      background: rgba(255, 209, 0, 0.08);
-      border-color: var(--border-gold);
-      color: var(--angola-yellow);
-    }
-
-    .chat-input-wrapper {
-      padding: 12px 18px;
-      background: #090C13;
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .input-container-inner {
-      background: #111724;
-      border: 1px solid rgba(255, 209, 0, 0.35);
-      border-radius: var(--radius-md);
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-    }
-
-    .input-container-inner:focus-within {
-      border-color: var(--angola-yellow);
-      box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.25);
-    }
-
-    #chat-input {
-      width: 100%;
-      background: none;
-      border: none;
-      color: var(--text-pure);
-      font-size: 14px;
-      font-family: var(--font-geist);
-      resize: none;
-      outline: none;
-      max-height: 120px;
-      line-height: 1.5;
-    }
-
-    .input-tools-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .tools-left {
-      display: flex;
-      gap: 6px;
-    }
-
-    .tool-btn {
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      padding: 5px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-    }
-
-    .tool-btn:hover {
-      color: var(--angola-yellow);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .btn-send-gold {
-      background: var(--angola-yellow);
-      color: #000000;
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 2px 10px rgba(255, 209, 0, 0.35);
-    }
-
-    .btn-send-gold:hover {
-      background: var(--angola-yellow-hover);
-      transform: scale(1.05);
-    }
-
-    .chat-box-footer {
-      padding: 7px 18px;
-      background: #06080E;
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    /* Toast */
-    .kamba-toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0C1018;
-      border: 1px solid var(--border-gold);
-      color: var(--text-pure);
-      padding: 10px 18px;
-      border-radius: var(--radius-pill);
-      font-size: 13px;
-      font-weight: 500;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 209, 0, 0.2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 1000;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: all 0.25s ease;
-      pointer-events: none;
-    }
-
-    .kamba-toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Responsividade */
-    @media (max-width: 1024px) {
-      .vercel-hero-columns {
-        grid-template-columns: 1fr 1fr;
-      }
-      .hero-col-center {
-        grid-column: span 2;
-        order: -1;
-      }
-      .bento-container { grid-template-columns: 1fr 1fr; }
-      .bento-wide { grid-column: span 2; }
-      .footer-container { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 860px) {
-      .vercel-nav-links { display: none; }
-      .vercel-hero-columns {
-        grid-template-columns: 1fr;
-        gap: 36px;
-      }
-      .hero-col-center {
-        grid-column: span 1;
-      }
-      .hero-col-right {
-        padding-left: 0;
-      }
-      .sectors-bar-inner {
-        justify-content: center;
-      }
-      .bento-container { grid-template-columns: 1fr; }
-      .bento-wide { grid-column: span 1; }
-      .welcome-card-grid { grid-template-columns: 1fr; }
-      .comparison-table-wrapper { overflow-x: auto; }
-      .footer-container { grid-template-columns: 1fr; }
-    }
-
-    /* Animação de Atualização de Métrica */
-    @keyframes pulseGold {
-      0% { box-shadow: 0 0 0 0 rgba(255, 209, 0, 0.7); transform: scale(1); }
-      50% { box-shadow: 0 0 16px 4px rgba(255, 209, 0, 0.4); transform: scale(1.02); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 209, 0, 0); transform: scale(1); }
-    }
-    .metric-card.pulse-updated {
-      animation: pulseGold 0.8s ease-in-out;
-      border-color: var(--angola-yellow);
-    }
-
-    /* Campo de Filtro do Histórico */
-    .history-search-wrap {
-      padding: 0 14px 10px;
-    }
-    .history-filter-field {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 7px 10px;
-      color: var(--text-pure);
-      font-size: 12.5px;
-      font-family: var(--font-geist);
-      outline: none;
-      transition: var(--transition);
-    }
-    .history-filter-field:focus {
-      border-color: var(--border-gold);
-      background: rgba(255, 209, 0, 0.05);
-    }
-    .history-filter-field::placeholder {
-      color: var(--text-dim);
-    }
-
-    /* Calculadora de Retorno & Economia vs Bubble */
-    .roi-calculator-card {
-      max-width: 920px;
-      margin: 40px auto 0;
-      background: linear-gradient(180deg, #0E1420 0%, #07090F 100%);
-      border: 1px solid rgba(255, 209, 0, 0.3);
-      border-radius: var(--radius-lg);
-      padding: 30px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 209, 0, 0.08);
-      text-align: left;
-    }
-    .roi-header {
-      margin-bottom: 24px;
-    }
-    .roi-badge {
-      display: inline-block;
-      background: rgba(255, 209, 0, 0.12);
-      border: 1px solid var(--border-gold);
-      color: var(--angola-yellow);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      margin-bottom: 8px;
-    }
-    .roi-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text-pure);
-      letter-spacing: -0.02em;
-    }
-    .roi-input-group {
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 16px 20px;
-      margin-bottom: 24px;
-    }
-    .roi-label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 13.5px;
-      color: var(--text-muted);
-    }
-    .roi-range {
-      width: 100%;
-      height: 6px;
-      border-radius: var(--radius-pill);
-      background: #1E293B;
-      outline: none;
-      -webkit-appearance: none;
-      cursor: pointer;
-    }
-    .roi-range::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--angola-yellow);
-      box-shadow: 0 0 10px var(--angola-yellow-glow);
-      cursor: pointer;
-      border: 2px solid #000000;
-    }
-    .roi-results-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 768px) {
-      .roi-results-grid { grid-template-columns: 1fr; }
-    }
-    .roi-res-box {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: var(--transition);
-    }
-    .roi-res-box.legacy {
-      border-color: rgba(216, 26, 45, 0.3);
-      background: rgba(216, 26, 45, 0.03);
-    }
-    .roi-res-box.kamba {
-      border-color: rgba(255, 209, 0, 0.4);
-      background: rgba(255, 209, 0, 0.04);
-    }
-    .roi-res-box.savings {
-      border-color: rgba(34, 197, 94, 0.4);
-      background: rgba(34, 197, 94, 0.04);
-    }
-    .roi-res-label {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    .roi-res-cost {
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text-pure);
-    }
-    .roi-res-desc {
-      font-size: 12px;
-      color: var(--text-dim);
-      line-height: 1.4;
-    }
-
-    /* Botão Imprimir / Guardar em PDF */
-    .btn-msg-action.btn-print-msg {
-      background: rgba(216, 26, 45, 0.1);
-      border-color: rgba(216, 26, 45, 0.4);
-      color: #FFA4A4;
-    }
-    .btn-msg-action.btn-print-msg:hover {
-      background: var(--angola-red);
-      color: #FFFFFF;
-      box-shadow: 0 0 12px rgba(216, 26, 45, 0.4);
-    }
-
-    /* Modal de Pré-visualização Executiva de Impressão */
-    .executive-modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .executive-modal-overlay.active {
-      display: flex;
-    }
-    .executive-modal-box {
-      width: 100%;
-      max-width: 800px;
-      max-height: 90vh;
-      background: #0C1018;
-      border: 1px solid var(--border-gold);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 209, 0, 0.2);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .modal-header-bar {
-      padding: 16px 24px;
-      background: rgba(0, 0, 0, 0.5);
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .modal-title-text {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-pure);
-    }
-    .btn-modal-close {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 20px;
-      cursor: pointer;
-      padding: 4px;
-    }
-    .btn-modal-close:hover {
-      color: var(--text-pure);
-    }
-    .modal-body-scroll {
-      flex: 1;
-      overflow-y: auto;
-      padding: 30px;
-      background: #FFFFFF;
-      color: #111827;
-      font-family: var(--font-geist);
-      line-height: 1.6;
-    }
-    .official-letterhead {
-      border-bottom: 2px solid #D81A2D;
-      padding-bottom: 16px;
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .letterhead-brand h2 {
-      font-size: 18px;
-      font-weight: 900;
-      color: #000000;
-      letter-spacing: 1px;
-      margin-bottom: 2px;
-    }
-    .letterhead-brand p {
-      font-size: 11px;
-      color: #4B5563;
-      margin: 0;
-    }
-    .letterhead-meta {
-      text-align: right;
-      font-size: 11px;
-      color: #6B7280;
-    }
-    .letterhead-meta strong {
-      color: #111827;
-    }
-    .official-doc-content {
-      font-size: 13.5px;
-      color: #1F2937;
-      white-space: pre-wrap;
-      font-family: inherit;
-      line-height: 1.7;
-    }
-    .official-footer-signature {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #E5E7EB;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      font-size: 11px;
-      color: #4B5563;
-    }
-    .signature-block {
-      text-align: center;
-      width: 220px;
-      border-top: 1px solid #111827;
-      padding-top: 6px;
-      font-size: 11.5px;
-      color: #111827;
-    }
-    .modal-actions-footer {
-      padding: 14px 24px;
-      background: #090C13;
-      border-top: 1px solid var(--border-subtle);
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-    }
-    .btn-print-confirm {
-      background: var(--angola-yellow);
-      color: #000000;
-      font-weight: 700;
-      padding: 9px 20px;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-geist);
-      transition: var(--transition);
-    }
-    .btn-print-confirm:hover {
-      background: var(--angola-yellow-hover);
-      box-shadow: 0 0 16px var(--angola-yellow-glow);
-    }
-
-    /* Estilos Nativos de Impressão @media print */
-    @media print {
-      body {
-        background: #FFFFFF !important;
-        color: #000000 !important;
-      }
-      .app-view, .kamba-toast, .executive-modal-overlay {
-        display: none !important;
-      }
-      #print-container {
-        display: block !important;
-        width: 100% !important;
-        padding: 20mm !important;
-        background: #FFFFFF !important;
-        color: #111827 !important;
-      }
-    }
-    #print-container {
-      display: none;
-    }
-
-    @media (max-width: 768px) {
-      .mobile-menu-btn { display: block; }
-      .user-profile-info { display: none; }
-      .model-badge-pill { display: none; }
-      .logout-text { display: none; }
-      .dash-nav-links { display: none; }
-      .status-cards-row { grid-template-columns: 1fr; gap: 8px; }
-      .metric-card:not(:first-child) { display: none; }
-      
-      .dash-sidebar {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        transform: translateX(-100%);
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
-      }
-
-      .dash-sidebar.open { transform: translateX(0); }
-      .close-sidebar-mobile { display: block; }
-      .sidebar-overlay.active { display: block; }
-      .chat-main-container { padding: 12px 10px; }
-      .msg-row { max-width: 95%; }
-      .chat-messages-container { padding: 14px; gap: 14px; }
-      .auth-card { padding: 26px 20px; }
-    }
-  </style>
+  <!-- Estilos Globais -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
   <!-- ============================================================ -->
-  <!-- 1. LANDING PAGE (LAYOUT E FONTES IDÊNTICAS AO VERCEL.COM)    -->
+  <!-- 1. LANDING PAGE — FOCO NO PÚBLICO DE CHAT IA & MULTI-APARELHO -->
   <!-- ============================================================ -->
   <section id="view-landing" class="app-view active">
     
-    <!-- Faixa Superior de Anúncio Vercel -->
+    <!-- Faixa Superior de Anúncio -->
     <div class="vercel-top-banner">
-      <span>A infraestrutura de IA corporativa chegou a Angola.</span>
-      <a href="#features">Descubra os recursos do Kamba IA →</a>
+      <span>✨ O seu novo Chat IA: Converse livremente sobre qualquer assunto.</span>
+      <a href="#features">Experimente a demonstração interativa →</a>
     </div>
 
-    <!-- Atmosfera com Luz Vermelha e Dourada de Angola -->
+    <!-- Atmosfera com Luz Radiante -->
     <div class="angola-atmosphere">
       <div class="glow-spotlight-red"></div>
       <div class="glow-spotlight-gold"></div>
     </div>
 
-    <!-- Barra de Navegação Oficial Vercel (Frosted Glass) -->
+    <!-- Barra de Navegação Frosted Glass -->
     <header class="vercel-header">
       <div class="header-container">
         <div class="brand-logo" id="logo-refresh">
           <div class="logo-symbol">
-            <!-- Palanca Negra Oficial com Fundo Vermelho e Ouro Radiante -->
-            <svg viewBox="0 0 100 100" class="palanca-svg" aria-label="Logo Prodigy Kamba">
+            <svg viewBox="0 0 100 100" class="palanca-svg" aria-label="Logo Kamba Chat IA">
               <circle cx="50" cy="50" r="45" fill="#D81A2D" stroke="#FFD100" stroke-width="2"/>
               <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="#FFD100"/>
               <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="#FFD100"/>
@@ -2669,51 +47,63 @@
             </svg>
           </div>
           <div class="brand-text">
-            <span class="brand-title">PRODIGY</span>
-            <span class="brand-subtitle">KAMBA</span>
+            <span class="brand-title">KAMBA</span>
+            <span class="brand-subtitle">CHAT IA</span>
           </div>
         </div>
 
         <!-- Links de Navegação -->
         <nav class="vercel-nav-links">
-          <a href="#features" class="v-nav-link">Recursos <span class="v-nav-arrow">▾</span></a>
-          <a href="#bento" class="v-nav-link">Soluções <span class="v-nav-arrow">▾</span></a>
-          <a href="#bento" class="v-nav-link">Angola B2B</a>
+          <a href="#features" class="v-nav-link">Demonstração <span class="v-nav-arrow">▾</span></a>
+          <a href="#dispositivos" class="v-nav-link">Multi-Dispositivo</a>
+          <a href="#bento" class="v-nav-link">Recursos Livres</a>
           <a href="#comparison" class="v-nav-link">Comparativo</a>
           <a href="#faq" class="v-nav-link">FAQ</a>
         </nav>
 
-        <!-- Botões Pílula Vercel -->
+        <!-- Botões de Ação Rápida -->
         <div class="header-cta-group">
-          <button id="btn-header-demo" class="btn-vercel-pill-ghost">Faça uma Demo</button>
-          <button id="btn-goto-login" class="btn-vercel-pill-ghost">Faça login</button>
-          <button id="btn-header-start" class="btn-vercel-pill-solid">Inscreva-se</button>
+          <button id="btn-header-demo" class="btn-vercel-pill-ghost">Testar Demonstração</button>
+          <button id="btn-goto-login" class="btn-vercel-pill-ghost">Aceder</button>
+          <button id="btn-header-start" class="btn-vercel-pill-solid">Abrir Chat IA</button>
         </div>
       </div>
     </header>
 
-    <!-- HERO SECTION VERCEL (COMPOSIÇÃO TRIPLA) -->
+    <!-- HERO SECTION (ESTILO CHATGPT / VERCEL MODERNO) -->
     <main class="vercel-hero-layout">
       <div class="vercel-hero-columns">
         
-        <!-- Coluna 1: Título Monumental & Botões Pílula -->
+        <!-- Coluna Esquerda: Título de Alto Impacto -->
         <div class="hero-col-left">
+          <div class="hero-tag-pill">
+            <span class="dot-gold-pulse"></span>
+            <span>Inteligência Artificial Conversacional</span>
+          </div>
+
           <h1 class="vercel-big-title">
-            Infraestrutura
-            <span>Agentic</span>
+            Converse livremente.
+            <span>Em qualquer lugar.</span>
           </h1>
+
+          <p class="hero-description-text" style="color: var(--text-muted); font-size: 16.5px; line-height: 1.65; margin-bottom: 28px;">
+            O seu assistente de IA fluido e interativo para <strong>qualquer assunto</strong>. Tire dúvidas complexas, resolva códigos, escreva textos inspiradores ou simplesmente bata um papo inteligente — na palma da sua mão, no tablet ou no computador.
+          </p>
 
           <div class="hero-btn-group-vercel">
             <button id="btn-hero-start" class="btn-pill-primary">
-              <span>Implante agora</span>
+              <span>Conversar com a IA Agora</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </button>
             <button id="btn-hero-demo" class="btn-pill-secondary">
-              <span>Converse com o setor de vendas</span>
+              <span>Ver Demonstração ao Vivo</span>
             </button>
           </div>
         </div>
 
-        <!-- Coluna 2: Monólito Iluminado com Palanca Negra -->
+        <!-- Coluna Central: Monólito Radiante com Símbolo de IA -->
         <div class="hero-col-center">
           <div class="monolith-aura-box">
             <div class="monolith-back-glow"></div>
@@ -2735,39 +125,41 @@
           </div>
         </div>
 
-        <!-- Coluna 3: 3 Destaques Estruturais -->
+        <!-- Coluna Direita: 3 Destaques do Chat IA -->
         <div class="hero-col-right">
           <div class="hero-feature-bullet">
-            <span class="feature-bullet-title">Para agentes codificadores</span>
-            <span class="feature-bullet-desc">Conexão nativa e sem fricção com inteligência artificial de ponta</span>
+            <span class="feature-bullet-title">💬 Qualquer Assunto</span>
+            <span class="feature-bullet-desc">Sem restrições temáticas: programação, redação criativa, estudos ou conversas do cotidiano.</span>
           </div>
 
           <div class="hero-feature-bullet">
-            <span class="feature-bullet-title">Para enviar aplicativos e agentes</span>
-            <span class="feature-bullet-desc">Pronto para o mercado de Luanda, propostas INAPEM e B2B</span>
+            <span class="feature-bullet-title">📱 Na Palma da Mão</span>
+            <span class="feature-bullet-desc">Ultra-rápido no smartphone, com experiência fluida de toque e sem travar o telemóvel.</span>
           </div>
 
           <div class="hero-feature-bullet">
-            <span class="feature-bullet-title">Automatizado por agentes</span>
-            <span class="feature-bullet-desc">Ultra-rápido, soberano e 100% livre de bloqueios no telemóvel</span>
+            <span class="feature-bullet-title">⚡ Streaming Instantâneo</span>
+            <span class="feature-bullet-desc">As palavras surgem em tempo real à medida que a IA pensa, no mesmo ritmo do ChatGPT.</span>
           </div>
         </div>
 
       </div>
     </main>
 
-    <!-- FAIXA DE PARCEIROS E SETORES DE ANGOLA (LOGO STRIP) -->
+    <!-- FAIXA DE TEMAS E POSSIBILIDADES LIVRES -->
     <section class="vercel-sectors-bar">
       <div class="sectors-bar-inner">
-        <div class="sector-logo-item"><span class="sector-icon-dot"></span> INAPEM LUANDA</div>
-        <div class="sector-logo-item"><span class="sector-icon-dot"></span> B2B COMÉRCIO GLOBAL</div>
-        <div class="sector-logo-item"><span class="sector-icon-dot"></span> AGÊNCIA DE EXPORTAÇÕES</div>
-        <div class="sector-logo-item"><span class="sector-icon-dot"></span> CORREDOR DO LOBITO</div>
-        <div class="sector-logo-item"><span class="sector-icon-dot"></span> PMEs ANGOLA</div>
+        <div class="sector-logo-item"><span class="sector-icon-dot"></span> 💻 CÓDIGO & TECNOLOGIA</div>
+        <div class="sector-logo-item"><span class="sector-icon-dot"></span> ✍️ REDAÇÃO & CRIATIVIDADE</div>
+        <div class="sector-logo-item"><span class="sector-icon-dot"></span> 📚 ESTUDOS & CIÊNCIA</div>
+        <div class="sector-logo-item"><span class="sector-icon-dot"></span> ⚡ PRODUTIVIDADE PESSOAL</div>
+        <div class="sector-logo-item"><span class="sector-icon-dot"></span> 🗣️ DIÁLOGO & BRAINSTORMING</div>
       </div>
     </section>
 
-    <!-- WIDGET INTERATIVO NO HERO (TERMINAL / APP PREVIEW) -->
+    <!-- ============================================================ -->
+    <!-- WIDGET INTERATIVO NO HERO (#features) COM ASSUNTOS VARIADOS  -->
+    <!-- ============================================================ -->
     <section class="vercel-preview-wrapper" id="features">
       <div class="preview-glow-border"></div>
       <div class="vercel-terminal-card">
@@ -2780,133 +172,195 @@
           </div>
           
           <div class="terminal-tabs">
-            <button class="t-tab active" data-tab="luanda">📈 Mercado Luanda</button>
-            <button class="t-tab" data-tab="inapem">📝 Proposta INAPEM</button>
-            <button class="t-tab" data-tab="b2b">🚀 Expansão B2B</button>
+            <button class="t-tab active" data-tab="criatividade">💡 Criatividade & Ideias</button>
+            <button class="t-tab" data-tab="programacao">💻 Código & Dev</button>
+            <button class="t-tab" data-tab="estudos">📚 Estudos & Ciência</button>
+            <button class="t-tab" data-tab="produtividade">⚡ Produtividade</button>
           </div>
 
           <div class="terminal-status">
             <span class="pulse-angola-green"></span>
-            <span class="status-txt">Kamba IA v2.1</span>
+            <span class="status-txt">Chat IA Online</span>
           </div>
         </div>
 
         <div class="terminal-body" id="hero-interactive-content">
           <div class="terminal-prompt">
             <span class="prompt-icon">👤</span>
-            <span class="prompt-user-text" id="interactive-user-query">Kamba, qual é a análise para investimentos comerciais em Luanda e províncias vizinhas?</span>
+            <span class="prompt-user-text" id="interactive-user-query">Escreva uma reflexão criativa sobre como a tecnologia pode aproximar as pessoas.</span>
           </div>
 
           <div class="terminal-response">
             <div class="response-badge-kamba">
-              <span class="avatar-mini-kamba">👑</span>
-              <strong>Prodigy Kamba IA</strong>
-              <span class="tag-speed">&lt; 45ms</span>
+              <span class="avatar-mini-kamba">✨</span>
+              <strong>Kamba Chat IA</strong>
+              <span class="tag-speed">&lt; 25ms</span>
             </div>
             <div class="response-body-text" id="interactive-ai-response">
-              Bom dia, António. O mercado de <strong>Luanda e do corredor de Benguela</strong> regista forte aceleração em:<br><br>
-              • <strong>Logística & Abastecimento:</strong> Crescimento na procura por distribuição direta entre polos industriais (Viana/Cacuaco) e o comércio retalhista.<br>
-              • <strong>Digitalização B2B:</strong> Alta adesão a meios de liquidação instantânea (Multicaixa Express e pagamentos por referência).<br>
-              • <strong>Parcerias com o INAPEM:</strong> Oportunidades abertas para suporte técnico a PMEs no selo "Feito em Angola".<br><br>
-              <em class="text-gold-light">Deseja que eu redija uma proposta comercial formatada para a sua empresa?</em>
+              A tecnologia mais fascinante não é a que constrói pontes de silício, mas a que <strong>elimina distâncias emocionais</strong>.<br><br>
+              Quando uma mensagem atravessa continentes em milissegundos ou uma inteligência artificial ajuda alguém a expressar uma ideia há muito guardada, não estamos apenas transferindo dados — estamos compartilhando humanidade e criando novos pontos de encontro.<br><br>
+              <em class="text-gold-light">Deseja explorar este tema em um poema, crônica ou ensaio reflexivo?</em>
             </div>
           </div>
         </div>
 
         <div class="terminal-footer">
-          <span class="terminal-footer-info">🇦🇴 Otimizado para conexões móveis em Angola · 0 consumo excessivo de dados</span>
-          <button id="btn-terminal-try" class="btn-terminal-action">Testar ao Vivo →</button>
+          <span class="terminal-footer-info">💬 Experimente agora: digite qualquer pergunta livre no chat ao vivo!</span>
+          <button id="btn-terminal-try" class="btn-terminal-action">Abrir Conversa ao Vivo →</button>
         </div>
       </div>
     </section>
 
-    <!-- BENTO GRID CORPORATIVO -->
-    <section id="bento" class="vercel-bento-section">
+    <!-- ============================================================ -->
+    <!-- NOVA SEÇÃO: USABILIDADE MULTI-DISPOSITIVO                    -->
+    <!-- ============================================================ -->
+    <section id="dispositivos" class="devices-showcase-section">
       <div class="section-badge-center">
-        <span class="badge-mini-angola">CAPACIDADES EMPRESARIAIS</span>
+        <span class="badge-mini-angola">SEMPRE COM VOCÊ</span>
       </div>
       <h2 class="section-title-vercel">
-        Tudo o que a sua empresa precisa, <br>
-        <span class="text-gradient-gold">em uma só plataforma inteligente.</span>
+        Na palma da mão, no tablet ou no computador. <br>
+        <span class="text-gradient-gold">Uma experiência fluida em qualquer tela.</span>
+      </h2>
+      <p style="text-align: center; color: var(--text-muted); max-width: 680px; margin: 12px auto 0; font-size: 15.5px; line-height: 1.6;">
+        O Kamba Chat IA foi desenhado para acompanhar a sua rotina onde quer que você esteja, com respostas instantâneas e sem peso de download.
+      </p>
+
+      <div class="devices-grid">
+        
+        <!-- Dispositivo 1: Celular / Palma da Mão -->
+        <div class="device-card highlight">
+          <span class="device-badge mobile">📱 NA PALMA DA MÃO</span>
+          <h3 class="device-title">Smartphone & Mobile First</h3>
+          <p class="device-desc">
+            Ergonomia desenhada para o polegar. Abra rapidamente no navegador do seu telemóvel, envie perguntas com facilidade e receba respostas sem consumir plano de dados desnecessário.
+          </p>
+          <div class="device-mockup-frame">
+            <div class="mini-bubble user">Qual é uma boa dica para começar a meditar hoje?</div>
+            <div class="mini-bubble ai">
+              Comece com apenas <strong>3 minutos</strong> após acordar. Sente-se confortavelmente e foque unicamente na sua respiração natural.
+              <div class="mini-typing-indicator"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dispositivo 2: Tablet -->
+        <div class="device-card">
+          <span class="device-badge tablet">📱 NO TABLET</span>
+          <h3 class="device-title">Espaço Imersivo de Leitura</h3>
+          <p class="device-desc">
+            Área de leitura generosa ideal para estudos, roteiros longos e anotações. Combine o toque intuitivo da tela com teclados acoplados para debates profundos e reflexões criativas.
+          </p>
+          <div class="device-mockup-frame">
+            <div class="mini-bubble user">Resuma a diferença entre física clássica e quântica.</div>
+            <div class="mini-bubble ai">
+              A clássica descreve o mundo visível e determinístico; a quântica estuda a probabilidade e o comportamento atômico em escalas microscópicas.
+            </div>
+          </div>
+        </div>
+
+        <!-- Dispositivo 3: Computador / Desktop -->
+        <div class="device-card">
+          <span class="device-badge desktop">💻 NO COMPUTADOR</span>
+          <h3 class="device-title">Produtividade Máxima no Desktop</h3>
+          <p class="device-desc">
+            Agilidade profissional com atalhos de teclado (<kbd style="background:#222;padding:2px 5px;border-radius:4px;font-size:11px;">Enter</kbd> para enviar, <kbd style="background:#222;padding:2px 5px;border-radius:4px;font-size:11px;">Shift+Enter</kbd> para nova linha), visualização ampla de blocos de código formatados e cópia instantânea.
+          </p>
+          <div class="device-mockup-frame">
+            <div class="mini-bubble user">Crie uma função simples em Python para calcular média.</div>
+            <div class="mini-bubble ai">
+              <code>def media(lista): return sum(lista) / len(lista)</code>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- BENTO GRID DE RECURSOS LIVRES DE CHAT IA                     -->
+    <!-- ============================================================ -->
+    <section id="bento" class="vercel-bento-section">
+      <div class="section-badge-center">
+        <span class="badge-mini-angola">EXPERIÊNCIA DO CHAT IA</span>
+      </div>
+      <h2 class="section-title-vercel">
+        Criado para quem ama <br>
+        <span class="text-gradient-gold">conversar com Inteligência Artificial.</span>
       </h2>
 
       <div class="bento-container">
         
-        <!-- Card 1: Destaque Amplo -->
+        <!-- Card 1: Liberdade Temática Total -->
         <div class="bento-card bento-wide">
           <div class="bento-card-content">
             <div class="bento-icon-box gold">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
               </svg>
             </div>
-            <h3 class="bento-title">Inteligência Comercial & Mercado de Luanda</h3>
+            <h3 class="bento-title">Conversa Livre sem Bloqueios de Assunto</h3>
             <p class="bento-desc">
-              Acesse dados sintetizados sobre o cenário empresarial em Angola, tendências comerciais, logística de abastecimento e oportunidades no mercado B2B.
+              Diferente de assistentes travados em um único nicho, o Kamba Chat IA está pronto para debater filosofia, sugerir receitas culinárias, compor letras de música, resolver exercícios escolares ou tirar dúvidas de tecnologia.
             </p>
             <div class="bento-chart-preview">
               <div class="chart-label-row">
-                <span>Atividade de Mercado (Luanda · Benguela · Huíla)</span>
-                <span class="chart-pct text-gold">+48% Eficiência</span>
+                <span>Versatilidade Temática (Criatividade · Código · Conhecimento Geral)</span>
+                <span class="chart-pct text-gold">100% Livre</span>
               </div>
               <div class="chart-bars-wrap">
-                <div class="bar-fill" style="width: 82%;"></div>
+                <div class="bar-fill" style="width: 100%;"></div>
               </div>
             </div>
           </div>
           <div class="bento-ambient-glow gold"></div>
         </div>
 
-        <!-- Card 2: Propostas e Contratos -->
+        <!-- Card 2: Efeito Streaming Real -->
         <div class="bento-card">
           <div class="bento-card-content">
             <div class="bento-icon-box red">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
             </div>
-            <h3 class="bento-title">Propostas Executivas em Português</h3>
+            <h3 class="bento-title">Streaming de Digitação em Tempo Real</h3>
             <p class="bento-desc">
-              Gere em segundos minutas formais, cartas para o INAPEM, termos de cooperação comercial e apresentações executivas alinhadas com as normas de Angola.
+              Não fique olhando telas congeladas de carregamento. As palavras fluem na velocidade da fala humana com cursor pulsante, gerando uma experiência altamente natural.
             </p>
           </div>
           <div class="bento-ambient-glow red"></div>
         </div>
 
-        <!-- Card 3: Velocidade no Telemóvel -->
+        <!-- Card 3: Formatação com Markdown Rico -->
         <div class="bento-card">
           <div class="bento-card-content">
             <div class="bento-icon-box gold">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
               </svg>
             </div>
-            <h3 class="bento-title">Ultra-leve no Telemóvel</h3>
+            <h3 class="bento-title">Markdown Rico & Blocos de Código</h3>
             <p class="bento-desc">
-              Diferente de sistemas pesados e lentos, a aplicação carrega instantaneamente no 3G/4G sem consumir dados em excesso.
+              Respostas organizadas com títulos, tópicos pontuados, destaques em negrito e blocos de código com fontes monoespaçadas de alta legibilidade.
             </p>
           </div>
           <div class="bento-ambient-glow gold"></div>
         </div>
 
-        <!-- Card 4: Soberania e Pagamentos -->
+        <!-- Card 4: Histórico & Busca Instantânea -->
         <div class="bento-card bento-wide">
           <div class="bento-card-content">
             <div class="bento-icon-box red">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                <line x1="1" y1="10" x2="23" y2="10"/>
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </div>
-            <h3 class="bento-title">Arquitetura Pronta para Pagamentos Nacionais</h3>
+            <h3 class="bento-title">Histórico Salvo com Busca Rápida</h3>
             <p class="bento-desc">
-              Preparada para integrar na Fase 2 soluções como Multicaixa Express, referências bancárias BAI/BFA e cartões internacionais, sem precisar refazer o aplicativo.
+              Todas as suas conversas anteriores ficam salvas com segurança no seu navegador. Filtre tópicos em tempo real pelo campo de busca para revisitar qualquer ideia a qualquer instante.
             </p>
           </div>
           <div class="bento-ambient-glow red"></div>
@@ -2915,14 +369,16 @@
       </div>
     </section>
 
-    <!-- TABELA COMPARATIVA -->
+    <!-- ============================================================ -->
+    <!-- TABELA COMPARATIVA — O QUE TORNA O KAMBA CHAT ESPECIAL        -->
+    <!-- ============================================================ -->
     <section id="comparison" class="vercel-comparison-section">
       <div class="section-badge-center">
-        <span class="badge-mini-angola">ENGENHARIA MODERNA</span>
+        <span class="badge-mini-angola">POR QUE ESCOLHER</span>
       </div>
       <h2 class="section-title-vercel">
-        Por que a arquitetura independente <br>
-        <span class="text-gradient-red">supera as plataformas legadas?</span>
+        Como o Kamba Chat se destaca <br>
+        <span class="text-gradient-red">na sua experiência de conversa?</span>
       </h2>
 
       <div class="comparison-table-wrapper">
@@ -2930,144 +386,148 @@
           <thead>
             <tr>
               <th>Critério</th>
-              <th class="th-legacy">Plataformas Antigas (Bubble)</th>
-              <th class="th-kamba">Prodigy Kamba IA (Web Independente)</th>
+              <th class="th-legacy">Outros Apps Convencionais</th>
+              <th class="th-kamba">Kamba Chat IA (Acesso Aberto)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>Custo Mensal de Servidor</strong></td>
-              <td class="td-bad">Mínimo de $32/mês (~$380/ano)</td>
-              <td class="td-good"><strong>$0 / mês</strong> (Grátis no início)</td>
+              <td><strong>Liberdade de Assuntos</strong></td>
+              <td class="td-bad">Muitas vezes restritos a formulários pré-definidos</td>
+              <td class="td-good"><strong>100% Livre para qualquer tema</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Acesso Multi-Dispositivo</strong></td>
+              <td class="td-bad">Exige instalar aplicativos pesados da loja</td>
+              <td class="td-good"><strong>Abre direto no celular, tablet e PC</strong></td>
             </tr>
             <tr>
               <td><strong>Velocidade no Telemóvel</strong></td>
-              <td class="td-bad">Lenta e pesada (muitos megabytes)</td>
-              <td class="td-good"><strong>Instantânea (&lt; 100ms)</strong></td>
+              <td class="td-bad">Lenta em conexões móveis simples</td>
+              <td class="td-good"><strong>Instantânea (&lt; 50ms) e super leve</strong></td>
             </tr>
             <tr>
-              <td><strong>Estabilidade & Erros</strong></td>
-              <td class="td-bad">Issue Checker com dezenas de bugs</td>
-              <td class="td-good"><strong>Código limpo, zero débitos técnicos</strong></td>
+              <td><strong>Custo de Início</strong></td>
+              <td class="td-bad">Pede cartão de crédito antes de testar</td>
+              <td class="td-good"><strong>Gratuito e sem barreiras para começar</strong></td>
             </tr>
             <tr>
-              <td><strong>Propriedade do Código</strong></td>
-              <td class="td-bad">Refém da plataforma (não exporta)</td>
-              <td class="td-good"><strong>100% Seu (Você é o dono)</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Efeito de Digitação da IA</strong></td>
-              <td class="td-bad">Travado ou sem streaming fluido</td>
-              <td class="td-good"><strong>Streaming em tempo real (ChatGPT)</strong></td>
+              <td><strong>Fluidez da Digitação</strong></td>
+              <td class="td-bad">Respostas em bloco único ou travadas</td>
+              <td class="td-good"><strong>Streaming caractere por caractere</strong></td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- SIMULADOR INTERATIVO DE ECONOMIA VS BUBBLE -->
+      <!-- SIMULADOR DE PRODUTIVIDADE PESSOAL -->
       <div class="roi-calculator-card">
         <div class="roi-header">
-          <span class="roi-badge">SIMULADOR DE ECONOMIA</span>
-          <h3 class="roi-title">Calcule a Poupança da Prodigy Trade ao Escolher Arquitetura Independente</h3>
+          <span class="roi-badge">SIMULADOR DE TEMPO</span>
+          <h3 class="roi-title">Calcule as Horas Poupadas por Semana com um Chat IA na Palma da Mão</h3>
         </div>
         <div class="roi-body">
           <div class="roi-input-group">
             <div class="roi-label-row">
-              <span>Volume Estimado de Consultas e Operações Mensais:</span>
-              <strong id="roi-users-val" class="text-gold">1.500 consultas / mês</strong>
+              <span>Mensagens e perguntas estimadas por semana:</span>
+              <strong id="roi-users-val" class="text-gold">30 perguntas / semana</strong>
             </div>
-            <input type="range" id="roi-slider" min="500" max="20000" step="500" value="1500" class="roi-range" aria-label="Volume de consultas mensais">
+            <input type="range" id="roi-slider" min="5" max="150" step="5" value="30" class="roi-range" aria-label="Volume de perguntas por semana">
           </div>
           <div class="roi-results-grid">
             <div class="roi-res-box legacy">
-              <span class="roi-res-label">Plataforma Legada (Bubble)</span>
-              <span class="roi-res-cost text-red" id="roi-bubble-cost">$680 / ano</span>
-              <span class="roi-res-desc">Plano pago obrigatório + Workload Units extras + Débito de lentidão</span>
+              <span class="roi-res-label">Pesquisa Manual na Web</span>
+              <span class="roi-res-cost text-red" id="roi-bubble-cost">~8 horas gastas</span>
+              <span class="roi-res-desc">Abrir dezenas de abas, ler artigos extensos e filtrar informações repetidas</span>
             </div>
             <div class="roi-res-box kamba">
-              <span class="roi-res-label">Prodigy Kamba IA (Fase 1)</span>
-              <span class="roi-res-cost text-gold" id="roi-kamba-cost">$0 / ano</span>
-              <span class="roi-res-desc">100% Grátis no início + Infraestrutura Vercel Edge + Zero lentidão</span>
+              <span class="roi-res-label">Com o Kamba Chat IA</span>
+              <span class="roi-res-cost text-gold" id="roi-kamba-cost">~35 minutos</span>
+              <span class="roi-res-desc">Respostas diretas, síntese inteligente e explicação no nível que você precisa</span>
             </div>
             <div class="roi-res-box savings">
-              <span class="roi-res-label">Poupança Total Projetada</span>
-              <span class="roi-res-cost text-gold-light" id="roi-savings-pct">100% de Economia</span>
-              <span class="roi-res-desc">+ Carregamento 12x mais veloz nas redes 3G/4G de Angola</span>
+              <span class="roi-res-label">Tempo Livre Conquistado</span>
+              <span class="roi-res-cost text-gold-light" id="roi-savings-pct">+7.5 Horas / sem</span>
+              <span class="roi-res-desc">Mais tempo para criar, estudar, programar ou relaxar</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- FAQ SECTION -->
+    <!-- ============================================================ -->
+    <!-- FAQ SECTION (CHAT IA UNIVERSAL)                             -->
+    <!-- ============================================================ -->
     <section id="faq" class="vercel-faq-section">
       <div class="section-badge-center">
-        <span class="badge-mini-angola">PERGUNTAS FREQUENTES</span>
+        <span class="badge-mini-angola">TUDO O QUE PRECISA SABER</span>
       </div>
       <h2 class="section-title-vercel">
-        Perguntas estratégicas sobre a <br>
-        <span class="text-gradient-gold">modernização da infraestrutura</span>
+        Perguntas frequentes sobre o <br>
+        <span class="text-gradient-gold">Kamba Chat IA</span>
       </h2>
 
       <div class="faq-container">
         <div class="faq-item">
           <button class="faq-question">
-            <span>Por que substituir o template do Bubble por uma aplicação web independente?</span>
+            <span>Posso conversar com a IA sobre qualquer tipo de assunto?</span>
             <span class="faq-icon">+</span>
           </button>
           <div class="faq-answer">
-            <p>O Bubble cobra mensalidades fixas mínimas de $32/mês (~$380+/ano), gera dezenas de erros no Issue Checker, sofre com tempos de carregamento pesados no telemóvel em redes 3G/4G e mantém o cliente refém da sua plataforma proprietária. Com a arquitetura web independente do <strong>Prodigy Kamba IA</strong>, o custo inicial de servidor é <strong>$0/mês</strong>, a velocidade é instantânea (&lt; 100ms) e o código é 100% propriedade da Prodigy Global Trade LTD.</p>
+            <p>Sim! O Kamba Chat IA foi criado para ser um assistente aberto e universal. Você pode pedir ajuda para programar, escrever histórias, criar roteiros de estudo, resumir textos, pedir conselhos de produtividade ou simplesmente bater um papo descontraído.</p>
           </div>
         </div>
 
         <div class="faq-item">
           <button class="faq-question">
-            <span>Como o Kamba IA opera em conexões lentas ou instáveis em Angola?</span>
+            <span>Como ele funciona no telemóvel e no tablet?</span>
             <span class="faq-icon">+</span>
           </button>
           <div class="faq-answer">
-            <p>A aplicação foi construída com código otimizado, sem bibliotecas pesadas. O carregamento consome menos de 80 KB de dados móveis e a comunicação de IA utiliza respostas por fluxo contínuo (streaming), permitindo que o utilizador em Luanda, Benguela ou em qualquer província comece a ler a resposta em menos de 50 milissegundos.</p>
+            <p>O aplicativo foi totalmente construído com design responsivo e adaptativo. Não há necessidade de baixar nada nas lojas de aplicativos: basta abrir o link no navegador do seu smartphone ou tablet para desfrutar de uma experiência leve, veloz e otimizada para o toque.</p>
           </div>
         </div>
 
         <div class="faq-item">
           <button class="faq-question">
-            <span>Como funcionará a cobrança e pagamentos locais na Fase 2?</span>
+            <span>Preciso de cadastro ou pagamento para usar agora?</span>
             <span class="faq-icon">+</span>
           </button>
           <div class="faq-answer">
-            <p>Nesta <strong>Fase 1 (MVP)</strong>, o acesso é livre e sem fricção para validação da experiência executiva. A arquitetura já foi estruturada para que, na <strong>Fase 2</strong>, sejam ativados pagamentos em Kwanzas (AOA) via Multicaixa Express, referências bancárias (BAI/BFA) e cartões internacionais (Visa/Mastercard) sem necessidade de reconstruir a plataforma.</p>
+            <p>Não. Você pode clicar no botão de demonstração rápida e começar a conversar imediatamente, sem nenhuma cobrança ou barreira.</p>
           </div>
         </div>
 
         <div class="faq-item">
           <button class="faq-question">
-            <span>A IA está calibrada para termos empresariais e institucionais de Angola?</span>
+            <span>Como são salvas as minhas conversas?</span>
             <span class="faq-icon">+</span>
           </button>
           <div class="faq-answer">
-            <p>Sim. O modelo está configurado para redigir em Português Padrão Executivo (PT-AO), dominando normas de órgãos como o <strong>INAPEM</strong>, <strong>AGT</strong>, <strong>BNA</strong>, logística do <strong>Corredor do Lobito</strong> e terminologias de comércio exterior para exportação e importação.</p>
+            <p>O seu histórico é armazenado localmente no seu próprio navegador com privacidade. Você pode criar novas conversas, alternar entre elas no menu lateral ou limpá-las a qualquer momento com um clique.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- BANNER FINAL CTA -->
+    <!-- ============================================================ -->
+    <!-- BANNER FINAL CTA                                             -->
+    <!-- ============================================================ -->
     <section class="vercel-cta-banner-section">
       <div class="cta-banner-box">
         <div class="banner-glow-angola"></div>
         <div class="banner-content">
-          <span class="banner-tag">🇦🇴 ACELERAÇÃO NACIONAL</span>
+          <span class="banner-tag">✨ SEU NOVO COMPANHEIRO DIGITAL</span>
           <h2 class="banner-title">
-            Pronto para colocar o Prodigy Kamba <br>
-            em produção com velocidade máxima?
+            Pronto para ter um Chat IA <br>
+            sempre com você em qualquer aparelho?
           </h2>
           <p class="banner-subtitle">
-            Experimente a versão funcional agora mesmo e veja como o seu aplicativo ganha vida sem erros e sem mensalidades abusivas.
+            Abra a conversa agora mesmo. Grátis, sem barreiras e desenhado para surpreender você do primeiro segundo.
           </p>
           <div class="banner-buttons">
             <button id="btn-banner-start" class="btn-pill-primary">
-              <span>Aceder à Plataforma Agora</span>
+              <span>Iniciar Conversa Agora</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
@@ -3077,54 +537,53 @@
       </div>
     </section>
 
-    <!-- RODAPÉ CORPORATIVO -->
+    <!-- RODAPÉ -->
     <footer class="vercel-footer">
       <div class="footer-container">
         <div class="footer-col-brand">
           <div class="brand-logo">
             <div class="brand-text">
-              <span class="brand-title">PRODIGY</span>
-              <span class="brand-subtitle">KAMBA</span>
+              <span class="brand-title">KAMBA</span>
+              <span class="brand-subtitle">CHAT IA</span>
             </div>
           </div>
           <p class="footer-tagline">
-            A infraestrutura de inteligência artificial soberana para Angola e o comércio internacional.
+            Inteligência Artificial conversacional na palma da mão, no tablet e no computador.
           </p>
           <div class="flag-footer-badge">
             <span class="dot-red" style="width:7px;height:7px;border-radius:50%;background:var(--angola-red);display:inline-block;"></span>
             <span class="dot-yellow" style="width:7px;height:7px;border-radius:50%;background:var(--angola-yellow);display:inline-block;"></span>
-            <span>Orgulhosamente pensado para Angola</span>
+            <span>Aberto e acessível para todos</span>
           </div>
         </div>
 
         <div class="footer-col-links">
           <h4>Plataforma</h4>
-          <a href="#features">Recursos B2B</a>
-          <a href="#comparison">Comparativo Técnico</a>
-          <a href="#bento">Angola B2B</a>
+          <a href="#features">Demonstração ao Vivo</a>
+          <a href="#dispositivos">Multi-Dispositivo</a>
+          <a href="#bento">Recursos Universais</a>
           <a href="#faq">Perguntas Frequentes</a>
         </div>
 
         <div class="footer-col-links">
-          <h4>Tecnologia</h4>
-          <a href="#">OpenAI & Claude API</a>
-          <a href="#">Supabase Cloud</a>
-          <a href="#">Vercel Edge Network</a>
-          <a href="#">Geist Design System</a>
+          <h4>Tecnologias</h4>
+          <a href="#">Streaming de Respostas</a>
+          <a href="#">Design System Geist</a>
+          <a href="#">Markdown com Código</a>
+          <a href="#">Armazenamento Local</a>
         </div>
 
         <div class="footer-col-links">
-          <h4>Empresa</h4>
-          <a href="#">Prodigy Global Trade LTD</a>
-          <a href="#">Registo: Companies House #17153989</a>
-          <a href="#">Londres · Luanda · Bruxelas</a>
+          <h4>Desenvolvimento</h4>
+          <a href="https://github.com/brunosouzamelo1999/prodigy-kamba-ia" target="_blank" rel="noopener">Repositório GitHub</a>
+          <a href="https://github.com/brunosouzamelo1999" target="_blank" rel="noopener">Bruno Souza Melo</a>
           <a href="#">Termos & Privacidade</a>
         </div>
       </div>
 
       <div class="footer-bottom-bar">
-        <p>© Prodigy Global Trade LTD · Prodigy Company Angola · Todos os direitos reservados</p>
-        <span class="footer-status-pill">● Servidores em Luanda & Edge Global (100% Operacional)</span>
+        <p>© Kamba Chat IA · Desenvolvido por Bruno Souza Melo · Todos os direitos reservados</p>
+        <span class="footer-status-pill">● Servidores Online · Latência Baixa</span>
       </div>
     </footer>
 
@@ -3132,7 +591,7 @@
 
 
   <!-- ============================================================ -->
-  <!-- 2. TELA DE ACESSO (LOGIN / CADASTRO)                         -->
+  <!-- 2. TELA DE ACESSO (LOGIN / CADASTRO / ACESSO DIRETO)         -->
   <!-- ============================================================ -->
   <section id="view-auth" class="app-view">
     <div class="auth-wrapper">
@@ -3155,29 +614,29 @@
             <circle cx="78" cy="30" r="2.5" fill="#000000"/>
           </svg>
         </div>
-        <h2 class="auth-logo-text">PRODIGY KAMBA</h2>
+        <h2 class="auth-logo-text">KAMBA CHAT IA</h2>
       </div>
 
       <div class="auth-card">
         <div class="auth-tabs">
-          <button id="tab-login" class="auth-tab-btn active">Aceder à sua conta</button>
-          <button id="tab-register" class="auth-tab-btn">Novo Registo</button>
+          <button id="tab-login" class="auth-tab-btn active">Aceder ao Chat</button>
+          <button id="tab-register" class="auth-tab-btn">Criar Conta</button>
         </div>
 
         <form id="form-auth" onsubmit="return false;">
           <div class="form-group" id="group-name" style="display: none;">
-            <label for="auth-name">Nome Completo</label>
-            <input type="text" id="auth-name" placeholder="Ex: António Costa" autocomplete="name">
+            <label for="auth-name">Seu Nome</label>
+            <input type="text" id="auth-name" placeholder="Ex: Bruno" autocomplete="name">
           </div>
 
           <div class="form-group">
             <label for="auth-email">Email</label>
-            <input type="email" id="auth-email" placeholder="seuemail@empresa.ao" value="antonio.costa@prodigy.ao" required autocomplete="email">
+            <input type="email" id="auth-email" placeholder="seuemail@exemplo.com" value="usuario@kamba.ia" required autocomplete="email">
           </div>
 
           <div class="form-group">
             <label for="auth-password">Palavra-passe</label>
-            <input type="password" id="auth-password" placeholder="••••••••" value="prodigy123" required autocomplete="current-password">
+            <input type="password" id="auth-password" placeholder="••••••••" value="kamba123" required autocomplete="current-password">
           </div>
 
           <button type="submit" id="btn-auth-submit" class="btn-auth-primary">
@@ -3185,7 +644,7 @@
           </button>
 
           <button type="button" id="btn-auth-toggle-mode" class="btn-auth-secondary">
-            <span id="auth-toggle-text">Registar</span>
+            <span id="auth-toggle-text">Criar Nova Conta</span>
           </button>
 
           <div class="auth-links">
@@ -3194,19 +653,19 @@
 
           <div class="auth-demo-shortcut">
             <button type="button" id="btn-fast-demo" class="btn-demo-badge">
-              ⚡ Entrar Direto (Modo Demonstração)
+              ⚡ Entrar Direto (Modo Livre Sem Senha)
             </button>
           </div>
         </form>
       </div>
 
-      <p class="auth-copyright">© Prodigy Company Angola · Prodigy Global Trade LTD</p>
+      <p class="auth-copyright">© Kamba Chat IA · Livre e Inteligente</p>
     </div>
   </section>
 
 
   <!-- ============================================================ -->
-  <!-- 3. PAINEL PRINCIPAL DO CHAT IA (DASHBOARD)                   -->
+  <!-- 3. PAINEL PRINCIPAL DO CHAT IA (DASHBOARD ESTILO CHATGPT)    -->
   <!-- ============================================================ -->
   <section id="view-dashboard" class="app-view">
     <div class="dashboard-layout">
@@ -3229,45 +688,46 @@
               </svg>
             </div>
             <div class="dash-brand-title">
-              <strong>Prodigy</strong>
-              <span>Kamba</span>
+              <strong>Kamba</strong>
+              <span>Chat IA</span>
             </div>
           </div>
 
           <nav class="dash-nav-links">
-            <a href="#" id="link-nav-dash" class="nav-item active">Dashboard</a>
-            <a href="#" id="link-nav-home" class="nav-item">🏠 Página Inicial</a>
-            <a href="#features" id="link-nav-features" class="nav-item">Recursos Angola</a>
+            <a href="#" id="link-nav-dash" class="nav-item active">Chat Ativo</a>
+            <a href="#" id="link-nav-home" class="nav-item">🏠 Início</a>
+            <a href="#features" id="link-nav-features" class="nav-item">Demonstração</a>
           </nav>
         </div>
 
         <div class="topbar-right">
           <div class="model-badge-pill">
             <span class="dot-green"></span>
-            <span>Kamba-1 Enterprise</span>
+            <span>Kamba-4 Omni · Livre</span>
           </div>
 
           <div class="user-profile-widget">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="António Costa" class="user-avatar-img">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="Usuário" class="user-avatar-img">
             <div class="user-profile-info">
-              <span class="user-name" id="display-user-name">António Costa</span>
-              <span class="user-role">Prodigy Trade LTD</span>
+              <span class="user-name" id="display-user-name">Bruno</span>
+              <span class="user-role">Modo Ilimitado</span>
             </div>
           </div>
 
-          <button id="btn-logout" class="btn-logout" title="Terminar Sessão">
+          <button id="btn-logout" class="btn-logout" title="Voltar para a Landing Page">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            <span class="logout-text">Sair</span>
+            <span class="logout-text">Início</span>
           </button>
         </div>
       </header>
 
       <div class="dash-content-area">
 
+        <!-- BARRA LATERAL COM HISTÓRICO DAS CONVERSAS -->
         <aside id="dash-sidebar" class="dash-sidebar">
           <div class="sidebar-header">
             <button id="btn-new-chat" class="btn-new-chat-gold">
@@ -3291,22 +751,24 @@
 
           <div class="sidebar-footer-card">
             <div class="footer-card-header">
-              <span class="flag-indicator">🇦🇴</span>
-              <strong>Modo Livre Ativo</strong>
+              <span class="flag-indicator">✨</span>
+              <strong>Conversa Sem Limites</strong>
             </div>
-            <p>Sem bloqueios ou limites de moedas nesta primeira fase.</p>
+            <p>Pergunte sobre qualquer assunto sem travas ou barreiras.</p>
           </div>
         </aside>
 
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
+        <!-- ÁREA CENTRAL DE MENSAGENS -->
         <main class="chat-main-container">
 
+          <!-- Métricas de Sessão -->
           <div class="status-cards-row">
             <div class="metric-card">
               <div class="metric-info">
-                <span class="metric-title">Estado do Serviço</span>
-                <span class="metric-value text-gold">Online e Ativo</span>
+                <span class="metric-title">Status da IA</span>
+                <span class="metric-value text-gold">Online & Pronta</span>
               </div>
               <div class="metric-visual">
                 <span class="dot-online-large"></span>
@@ -3315,8 +777,8 @@
 
             <div class="metric-card">
               <div class="metric-info">
-                <span class="metric-title">Pesquisas & Consultas</span>
-                <span class="metric-value" id="count-searches">34 Ativas</span>
+                <span class="metric-title">Perguntas Respondidas</span>
+                <span class="metric-value" id="count-searches">42 Ativas</span>
               </div>
               <div class="mini-bar-chart">
                 <span style="height: 40%"></span>
@@ -3329,8 +791,8 @@
 
             <div class="metric-card">
               <div class="metric-info">
-                <span class="metric-title">Propostas Geradas</span>
-                <span class="metric-value text-red" id="count-proposals">14 Concluídas</span>
+                <span class="metric-title">Tópicos Explorados</span>
+                <span class="metric-value text-red" id="count-proposals">18 Tópicos</span>
               </div>
               <div class="mini-bar-chart red">
                 <span style="height: 30%"></span>
@@ -3342,6 +804,7 @@
             </div>
           </div>
 
+          <!-- Caixa Principal do Chat -->
           <div class="chat-card-box">
             
             <div class="chat-box-header">
@@ -3362,8 +825,8 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="agent-name">Prodigy Kamba</h3>
-                  <span class="agent-status-label"><span class="dot-green"></span> online · 38ms</span>
+                  <h3 class="agent-name">Kamba Chat IA</h3>
+                  <span class="agent-status-label"><span class="dot-green"></span> pronto para qualquer conversa · streaming ativo</span>
                 </div>
               </div>
 
@@ -3378,59 +841,61 @@
               </div>
             </div>
 
+            <!-- Contêiner de Mensagens com Rolagem -->
             <div id="chat-messages" class="chat-messages-container">
-              <!-- Mensagens renderizadas dinamicamente via app.js -->
+              <!-- Renderizado dinamicamente pelo app.js -->
             </div>
 
+            <!-- Chips de Prompts Rápidos e Diversificados -->
             <div id="quick-prompts" class="quick-prompts-row">
-              <button class="prompt-chip" data-prompt="Quais são as oportunidades para projetos de energia solar fotovoltaica e baterias industriais no sul de Angola?">
-                ☀️ Energia Solar & Renovável
+              <button class="prompt-chip" data-prompt="Escreva uma história curta e emocionante de ficção científica sobre o futuro da humanidade.">
+                ✨ Escrever História
               </button>
-              <button class="prompt-chip" data-prompt="Quais são as oportunidades de investimento e comércio em Luanda este ano?">
-                📈 Mercado de Luanda
+              <button class="prompt-chip" data-prompt="Crie um componente de botão interativo em JavaScript com animação suave e comentários.">
+                💻 Código JavaScript
               </button>
-              <button class="prompt-chip" data-prompt="Redija uma proposta de parceria formal em PT-PT para apresentar ao INAPEM.">
-                📝 Proposta INAPEM
+              <button class="prompt-chip" data-prompt="Explique como funciona a teoria da relatividade como se eu tivesse 12 anos.">
+                🌌 Explicar Ciência
               </button>
-              <button class="prompt-chip" data-prompt="Como estruturar um contrato comercial de fornecimento e distribuição em Angola?">
-                ⚖️ Minuta Contrato B2B
+              <button class="prompt-chip" data-prompt="Crie uma rotina prática de 7 dias para eliminar a procrastinação e manter o foco.">
+                ⚡ Plano de Foco
               </button>
-              <button class="prompt-chip" data-prompt="Como posso expandir as vendas do meu negócio B2B pelo Corredor do Lobito?">
-                🚀 Expansão B2B
+              <button class="prompt-chip" data-prompt="Me dê 5 ideias criativas e saudáveis de jantar rápido em menos de 20 minutos.">
+                🍳 Ideias Culinárias
               </button>
-              <button class="prompt-chip" data-prompt="Escreva um anúncio executivo para redes sociais voltado a investidores em Angola.">
-                📢 Anúncio de Vendas
+              <button class="prompt-chip" data-prompt="Quais são as melhores técnicas de memorização ativa para estudar qualquer disciplina?">
+                📚 Dicas de Estudo
               </button>
             </div>
 
+            <!-- Barra de Entrada Flutuante -->
             <div class="chat-input-wrapper">
               <div class="input-container-inner">
                 <textarea 
                   id="chat-input" 
                   rows="1" 
-                  placeholder="Escreva a sua mensagem ou solicitação..."
+                  placeholder="Pergunte qualquer coisa ou escreva sua mensagem..."
                   aria-label="Mensagem para a IA"
                 ></textarea>
 
                 <div class="input-tools-bar">
                   <div class="tools-left">
-                    <button class="tool-btn" title="Anexar documento (Fase 2)">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                      </svg>
-                    </button>
-                    <button class="tool-btn" title="Estatísticas e Gráficos">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="20" x2="18" y2="10"/>
-                        <line x1="12" y1="20" x2="12" y2="4"/>
-                        <line x1="6" y1="20" x2="6" y2="14"/>
-                      </svg>
-                    </button>
-                    <button class="tool-btn" title="Pesquisa Web Angolana">
+                    <button class="tool-btn" title="Criatividade & Ideias">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
-                        <line x1="2" y1="12" x2="22" y2="12"/>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        <path d="M12 8v8M8 12h8"/>
+                      </svg>
+                    </button>
+                    <button class="tool-btn" title="Código & Formatação">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"/>
+                        <polyline points="8 6 2 12 8 18"/>
+                      </svg>
+                    </button>
+                    <button class="tool-btn" title="Pesquisa de Conhecimento">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                       </svg>
                     </button>
                   </div>
@@ -3445,7 +910,7 @@
             </div>
 
             <div class="chat-box-footer">
-              <span>Prodigy Kamba AI v.2.1 · Seguro & Independente · Angola & Global</span>
+              <span>Kamba Chat IA · Respostas em streaming instantâneo · Na palma da mão, tablet e PC</span>
             </div>
 
           </div>
@@ -3460,92 +925,45 @@
     <span id="toast-message">Notificação</span>
   </div>
 
-  <!-- Modal de Pré-visualização Executiva / Impressão PDF -->
+  <!-- Modal de Pré-visualização e Cópia -->
   <div id="modal-executive-preview" class="executive-modal-overlay">
     <div class="executive-modal-box">
       <div class="modal-header-bar">
         <div class="modal-title-wrap">
-          <span style="font-size: 18px;">📑</span>
-          <span class="modal-title-text">Documento Oficial Executivo — Prodigy Global Trade LTD</span>
+          <span style="font-size: 18px;">📄</span>
+          <span class="modal-title-text">Texto Completo — Kamba Chat IA</span>
         </div>
-        <button id="btn-close-modal-preview" class="btn-modal-close" aria-label="Fechar pré-visualização">✕</button>
+        <button id="btn-close-modal-preview" class="btn-modal-close" aria-label="Fechar">✕</button>
       </div>
 
       <div class="modal-body-scroll">
         <div class="official-letterhead">
           <div class="letterhead-brand">
-            <h2>PRODIGY GLOBAL TRADE LTD</h2>
-            <p>Londres · Luanda · Bruxelas · Energia Renovável & Tecnologia B2B</p>
-            <p style="font-size:10px; color:#6B7280; margin-top:2px;">Registo Companies House (UK): #17153989 · Prodigy Company Angola</p>
+            <h2>KAMBA CHAT IA</h2>
+            <p>Seu Assistente Conversacional Inteligente</p>
           </div>
           <div class="letterhead-meta">
-            <div><strong>Refª:</strong> <span id="modal-doc-ref">PGT/AO/2026/09</span></div>
+            <div><strong>Refª:</strong> <span id="modal-doc-ref">CHAT-REF-01</span></div>
             <div><strong>Data:</strong> <span id="modal-doc-date">09/09/2026</span></div>
-            <div><strong>Sistema:</strong> Prodigy Kamba IA Enterprise</div>
           </div>
         </div>
 
         <div id="modal-doc-content" class="official-doc-content">
-          <!-- Conteúdo gerado dinamicamente -->
-        </div>
-
-        <div class="official-footer-signature">
-          <div>
-            <p><strong>Emissão:</strong> Sistema de IA Soberana Prodigy Kamba</p>
-            <p>Documento corporativo com validade executiva interna.</p>
-          </div>
-          <div class="signature-block">
-            <strong>António Costa</strong><br>
-            Direção Executiva<br>
-            Prodigy Global Trade LTD
-          </div>
+          <!-- Conteúdo dinâmico -->
         </div>
       </div>
 
       <div class="modal-actions-footer">
-        <button id="btn-modal-copy-text" class="btn-msg-action">📋 Copiar Conteúdo</button>
+        <button id="btn-modal-copy-text" class="btn-msg-action">📋 Copiar Texto</button>
         <button id="btn-modal-print-now" class="btn-print-confirm">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 6 2 18 2 18 9"/>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-            <rect x="6" y="14" width="12" height="8"/>
-          </svg>
-          <span>Imprimir / Guardar como PDF</span>
+          <span>Guardar Texto / Imprimir</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Container Oculto Dedicado para Impressão Nativa do Navegador (@media print) -->
   <div id="print-container">
-    <div class="official-letterhead">
-      <div class="letterhead-brand">
-        <h2>PRODIGY GLOBAL TRADE LTD</h2>
-        <p>Londres · Luanda · Bruxelas · Energia Renovável & Tecnologia B2B</p>
-        <p style="font-size:10px; color:#4B5563; margin-top:2px;">Registo Companies House (UK): #17153989 · Prodigy Company Angola</p>
-      </div>
-      <div class="letterhead-meta">
-        <div><strong>Refª:</strong> <span id="print-doc-ref">PGT/AO/2026/09</span></div>
-        <div><strong>Data:</strong> <span id="print-doc-date">09/09/2026</span></div>
-        <div><strong>Sistema:</strong> Prodigy Kamba IA Enterprise</div>
-      </div>
-    </div>
-
-    <div id="print-doc-content" class="official-doc-content">
-      <!-- Conteúdo inserido dinamicamente na impressão -->
-    </div>
-
-    <div class="official-footer-signature">
-      <div>
-        <p><strong>Emissão:</strong> Sistema de IA Soberana Prodigy Kamba</p>
-        <p>Documento corporativo com validade executiva interna.</p>
-      </div>
-      <div class="signature-block">
-        <strong>António Costa</strong><br>
-        Direção Executiva<br>
-        Prodigy Global Trade LTD
-      </div>
-    </div>
+    <div id="print-doc-content" class="official-doc-content"></div>
   </div>
 
   <!-- Script Lógico Modular -->

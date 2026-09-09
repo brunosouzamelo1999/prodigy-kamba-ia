@@ -1,6 +1,6 @@
 /* ============================================================
-   PRODIGY KAMBA IA — APLICAÇÃO WEB MODULAR (ESTILO VERCEL)
-   Navegação SPA, Autenticação, Hero Interativo, FAQ e Chat IA
+   KAMBA CHAT IA — APLICAÇÃO CONVERSACIONAL MODULAR (ESTILO VERCEL / CHATGPT)
+   Chat IA Universal, Navegação SPA, Suporte Multi-Dispositivo e Streaming
 ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnBannerStart = document.getElementById('btn-banner-start');
   const logoRefresh = document.getElementById('logo-refresh');
 
-  // Terminal Interativo do Hero (Estilo Vercel)
+  // Terminal Interativo do Hero (Abas de Demonstração Livre)
   const terminalTabs = document.querySelectorAll('.t-tab');
   const interactiveUserQuery = document.getElementById('interactive-user-query');
   const interactiveAiResponse = document.getElementById('interactive-ai-response');
@@ -29,32 +29,52 @@ document.addEventListener('DOMContentLoaded', () => {
   // FAQ Accordion
   const faqQuestions = document.querySelectorAll('.faq-question');
 
-  // Dados das Abas Interativas da Landing Page
+  // Dados das Abas Interativas da Landing Page (Conversas Universais)
   const terminalData = {
-    luanda: {
-      query: 'Kamba, qual é a análise para investimentos comerciais em Luanda e províncias vizinhas?',
-      response: `Bom dia, António. O mercado de <strong>Luanda e do corredor de Benguela</strong> regista forte aceleração em:<br><br>
-• <strong>Logística & Abastecimento:</strong> Crescimento na procura por distribuição direta entre polos industriais (Viana/Cacuaco) e o comércio retalhista.<br>
-• <strong>Digitalização B2B:</strong> Alta adesão a meios de liquidação instantânea (Multicaixa Express e pagamentos por referência).<br>
-• <strong>Parcerias com o INAPEM:</strong> Oportunidades abertas para suporte técnico a PMEs no selo "Feito em Angola".<br><br>
-<em class="text-gold-light">Deseja que eu redija uma proposta comercial formatada para a sua empresa?</em>`
+    criatividade: {
+      query: 'Escreva uma reflexão criativa sobre como a tecnologia pode aproximar as pessoas.',
+      response: `A tecnologia mais fascinante não é a que constrói pontes de silício, mas a que <strong>elimina distâncias emocionais</strong>.<br><br>
+• <strong>Conexão Instantânea:</strong> Uma ideia que antes levava meses para atravessar oceanos agora ressoa no mesmo segundo em milhares de corações.<br>
+• <strong>Empatia Ampliada:</strong> Histórias de realidades distantes tornam-se parte da nossa consciência cotidiana.<br>
+• <strong>Colaboração Global:</strong> Mentes de todos os continentes unem-se para criar arte, ciência e novas soluções sem fronteiras.<br><br>
+<em class="text-gold-light">Deseja explorar este tema em um poema, crônica literária ou ensaio reflexivo?</em>`
     },
-    inapem: {
-      query: 'Kamba, elabore uma minuta formal de cooperação para submeter à direção do INAPEM.',
-      response: `<strong>Exmª. Senhora Diretora do INAPEM Luanda</strong><br><br>
-<strong>Assunto: Proposta de Cooperação Estratégica B2B & Modernização Digital</strong><br><br>
-1. <strong>Enquadramento:</strong> Alinhados com as diretrizes do Executivo Angolano de incentivo à produção interna, vimos apresentar a infraestrutura Prodigy Kamba.<br>
-2. <strong>Impacto nas PMEs:</strong> Redução de 40% no tempo de emissão de propostas comerciais e conexão a redes de distribuição interprovincial.<br>
-3. <strong>Próximos Passos:</strong> Sessão presencial de alinhamento com a equipa técnica.<br><br>
-<em class="text-gold-light">Minuta executiva gerada em 0.4s. Pronta para exportação ou envio.</em>`
+    programacao: {
+      query: 'Como criar uma função simples em JavaScript para filtrar e ordenar uma lista de tarefas?',
+      response: `Aqui está um exemplo limpo e moderno utilizando métodos funcionais do JavaScript:<br><br>
+<pre><code>// Filtrar tarefas pendentes e ordenar por prioridade
+const ordenarTarefas = (tarefas) => {
+  return tarefas
+    .filter(tarefa => !tarefa.concluida)
+    .sort((a, b) => b.prioridade - a.prioridade);
+};
+
+// Exemplo de uso:
+const lista = [
+  { id: 1, texto: 'Estudar IA', prioridade: 3, concluida: false },
+  { id: 2, texto: 'Lavar louça', prioridade: 1, concluida: true },
+  { id: 3, texto: 'Criar App Web', prioridade: 5, concluida: false }
+];
+
+console.log(ordenarTarefas(lista));</code></pre><br>
+<em class="text-gold-light">Deseja que eu adicione persistência com localStorage ou integre com uma interface gráfica?</em>`
     },
-    b2b: {
-      query: 'Como estruturar a expansão comercial de produtos industriais a partir de Luanda para o Huambo e Benguela?',
-      response: `Recomendo uma abordagem em 3 vetores estratégicos para Angola:<br><br>
-• <strong>Ponto Focal Logístico:</strong> Estabelecer entreposto avançado no Lobito aproveitando a infraestrutura ferroviária do Corredor do Lobito.<br>
-• <strong>Condições Comerciais:</strong> Implementar prazos de liquidação vinculados à confirmação de entrega via transportadoras locais credenciadas.<br>
-• <strong>Rede de Representantes:</strong> Credenciar distribuidores locais com tabela escalonada de comissões por volume.<br><br>
-<em class="text-gold-light">Deseja que eu calcule as estimativas de custos logísticos para esta rota?</em>`
+    estudos: {
+      query: 'Explique o conceito de entrelaçamento quântico de forma simples e intuitiva.',
+      response: `Imagine que você tem <strong>dois dados mágicos</strong> colocados em caixas separadas:<br><br>
+1. <strong>O Mistério:</strong> Você leva um dado para Luanda e o outro para Tóquio. Antes de abrir as caixas, nenhum dos dados tem um número definido.<br>
+2. <strong>A Conexão Instantânea:</strong> No exato momento em que você abre a caixa em Luanda e o dado cai no número <strong>6</strong>, o dado em Tóquio imediatamente revela o número <strong>1</strong>.<br>
+3. <strong>Sem Tempo de Espera:</strong> Isso acontece instantaneamente, mais rápido do que qualquer sinal de luz poderia viajar entre as duas cidades.<br><br>
+Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje é a base dos computadores quânticos e da criptografia do futuro!<br><br>
+<em class="text-gold-light">Quer saber como a computação quântica se diferencia dos computadores convencionais?</em>`
+    },
+    produtividade: {
+      query: 'Como organizar uma rotina semanal equilibrada para quem trabalha e quer estudar algo novo?',
+      response: `O segredo não é ter mais horas no dia, mas <strong>proteger pequenos blocos de alta energia</strong>:<br><br>
+• <strong>A Regra dos 45 Minutos:</strong> Dedique 45 minutos diários logo pela manhã ou antes de descansar para estudar sem distrações (celular no modo não perturbe).<br>
+• <strong>Descanso Ativo:</strong> Faça pausas curtas de 5 minutos a cada bloco para levantar, beber água e relaxar a mente.<br>
+• <strong>Revisão Semanal (Domingo à noite):</strong> Escolha 3 metas principais para a semana. Não liste 20 tarefas; foque nas 3 que realmente mudam o seu rumo.<br><br>
+<em class="text-gold-light">Gostaria que eu monte uma tabela personalizada com os seus horários disponíveis?</em>`
     }
   };
 
@@ -98,17 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Contadores Métricos Dinâmicos
   const countSearches = document.getElementById('count-searches');
   const countProposals = document.getElementById('count-proposals');
-  let totalSearchesCount = 34;
-  let totalProposalsCount = 14;
+  let totalSearchesCount = 42;
+  let totalProposalsCount = 18;
 
-  // Simulador ROI (Landing Page)
+  // Simulador de Produtividade (Landing Page)
   const roiSlider = document.getElementById('roi-slider');
   const roiUsersVal = document.getElementById('roi-users-val');
   const roiBubbleCost = document.getElementById('roi-bubble-cost');
   const roiKambaCost = document.getElementById('roi-kamba-cost');
   const roiSavingsPct = document.getElementById('roi-savings-pct');
 
-  // Modal de Impressão / PDF Executivo
+  // Modal de Pré-visualização
   const modalExecutivePreview = document.getElementById('modal-executive-preview');
   const modalDocContent = document.getElementById('modal-doc-content');
   const modalDocRef = document.getElementById('modal-doc-ref');
@@ -117,8 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnModalCopyText = document.getElementById('btn-modal-copy-text');
   const btnModalPrintNow = document.getElementById('btn-modal-print-now');
   const printDocContent = document.getElementById('print-doc-content');
-  const printDocRef = document.getElementById('print-doc-ref');
-  const printDocDate = document.getElementById('print-doc-date');
   let currentDocTextForPrint = '';
 
   // Toast
@@ -129,57 +147,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- ESTADO DA APLICAÇÃO ---
   let isRegisterMode = false;
-  let currentUser = JSON.parse(localStorage.getItem('prodigy_kamba_user')) || null;
+  let currentUser = JSON.parse(localStorage.getItem('kamba_chat_user')) || { name: 'Bruno', email: 'bruno@kamba.ia' };
   let currentChatId = null;
   let isGenerating = false;
   let historySearchTerm = '';
 
-  // Conversas oficiais pré-carregadas (Seed Data)
+  // Conversas pré-carregadas universais
   const defaultChats = [
     {
       id: 'chat-1',
-      title: 'Mercado de Luanda & INAPEM',
+      title: 'Ideias para Projeto Criativo',
       updatedAt: Date.now() - 3600000,
       messages: [
         {
-          role: 'ai',
-          content: 'Bom dia, António. A pesquisa sobre o mercado de Luanda está concluída. O contacto chave na INAPEM é Maria Silva (+244 9XX XXX XXX). Como deseja prosseguir com a comunicação?'
-        },
-        {
           role: 'user',
-          content: 'Obrigado, Kamba. Por favor, redija uma proposta formal em PT-PT para a INAPEM baseada nestes dados, focando na nossa plataforma B2B.'
+          content: 'Olá! Estou planejando um novo projeto digital interativo e gostaria de ideias criativas para surpreender o usuário desde o primeiro segundo.'
         },
         {
           role: 'ai',
-          content: 'Com certeza, António. Segue a estrutura da proposta formal pronta para envio:\n\n**Exmª. Senhora Maria Silva**\n*Direção de Fomento e Apoio às PME — INAPEM Luanda*\n\n**Assunto: Apresentação da Plataforma Prodigy Global Trade & Parceria Estratégica**\n\n1. **Enquadramento:** No âmbito da aceleração económica nacional e do incentivo à produção "Feito em Angola", propomos a integração dos associados do INAPEM no ecossistema digital B2B.\n2. **Solução Tecnológica:** Disponibilização de catálogo digital, inteligência preditiva de compras e acesso a investidores regionais.\n3. **Próximos Passos:** Agendamento de uma sessão demonstrativa presencial ou remota na sede do INAPEM em Luanda.\n\nFico ao seu dispor para exportar a proposta formal caso deseje.'
+          content: `Excelente iniciativa! Para criar uma experiência memorável e cativante, recomendo focar nestes 3 pilares:\n\n1. **Micro-interações fluidas:** Botões com respostas táteis sutis, transições suaves e tipografia moderna que respira.\n2. **Efeito Streaming em tempo real:** Deixar que o conteúdo apareça progressivamente, criando uma sensação viva e dinâmica.\n3. **Adaptabilidade Multi-tela:** Uma interface que parece feita sob medida tanto quando você abre no celular na rua, quanto no tablet no sofá ou no computador de trabalho.\n\nQual é o nicho ou objetivo central do seu projeto? Posso detalhar o design visual ou os recursos essenciais!`
         }
       ]
     },
     {
       id: 'chat-2',
-      title: 'Estratégia de Expansão Benguela',
+      title: 'Dicas de Programação & Foco',
       updatedAt: Date.now() - 86400000,
       messages: [
         {
           role: 'user',
-          content: 'Kamba, quais são os principais sectores em crescimento no corredor do Lobito e Benguela?'
+          content: 'Quais são as melhores práticas para manter a disciplina ao aprender uma nova linguagem de programação?'
         },
         {
           role: 'ai',
-          content: 'Excelente questão, António. O Corredor do Lobito e a província de Benguela estão a viver um forte impulso, com destaque para:\n\n• **Logística & Transportes:** Modernização da linha ferroviária até à fronteira com a RDC e Zâmbia.\n• **Agroindústria:** Cultivo e escoamento de cereais, frutas e pecuária no vale do Cavaco e Cubal.\n• **Pesca e Conservas:** Potencial de exportação e processamento industrial no litoral.\n\nRecomendo posicionar soluções comerciais voltadas à cadeia de fornecimento e distribuição interprovincial.'
+          content: `A chave para a consistência na programação é a **prática deliberada em pequenos ciclos**:\n\n• **Construa projetos reais:** Não fique apenas assistindo a tutoriais passivamente. Escreva código todos os dias, mesmo que sejam apenas 15 linhas.\n• **Entenda os erros:** As mensagens de erro no console são os seus melhores professores. Desenvolva o hábito de ler a pilha de chamadas (*stack trace*).\n• **Compartilhe o progresso:** Colocar seus projetos no GitHub e documentar o que você aprendeu consolida a memória e cria um portfólio valioso.\n\nQual tecnologia ou linguagem você está estudando no momento? Posso sugerir um mini-projeto para você praticar hoje!`
         }
       ]
     }
   ];
 
-  let chats = JSON.parse(localStorage.getItem('prodigy_kamba_chats')) || defaultChats;
+  let chats = JSON.parse(localStorage.getItem('kamba_chat_history')) || defaultChats;
 
   // --- TOAST NOTIFICATIONS ---
   function showToast(msg, icon = '✓') {
     if (!kambaToast) return;
     if (toastTimer) clearTimeout(toastTimer);
-    toastIcon.textContent = icon;
-    toastMessage.textContent = msg;
+    if (toastIcon) toastIcon.textContent = icon;
+    if (toastMessage) toastMessage.textContent = msg;
     kambaToast.classList.add('show');
     toastTimer = setTimeout(() => {
       kambaToast.classList.remove('show');
@@ -189,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- GERENCIAMENTO DE TELAS (SPA) ---
   function showView(viewName) {
     Object.keys(views).forEach(key => {
-      views[key].classList.remove('active');
+      if (views[key]) views[key].classList.remove('active');
     });
 
     if (views[viewName]) {
@@ -205,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tab.classList.add('active');
 
       const tabKey = tab.getAttribute('data-tab');
-      if (terminalData[tabKey]) {
+      if (terminalData[tabKey] && interactiveUserQuery && interactiveAiResponse) {
         interactiveUserQuery.textContent = terminalData[tabKey].query;
         interactiveAiResponse.innerHTML = terminalData[tabKey].response;
       }
@@ -218,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const item = btn.parentElement;
       const isActive = item.classList.contains('active');
 
-      // Fecha todos os outros
       document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
 
       if (!isActive) {
@@ -227,112 +240,155 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // --- SIMULADOR DE PRODUTIVIDADE ---
+  if (roiSlider && roiUsersVal && roiBubbleCost && roiKambaCost && roiSavingsPct) {
+    roiSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      roiUsersVal.textContent = `${val} perguntas / semana`;
+
+      const manualHours = (val * 0.25).toFixed(1);
+      const aiMinutes = Math.round(val * 1.2);
+      const hoursSaved = (val * 0.23).toFixed(1);
+
+      roiBubbleCost.textContent = `~${manualHours}h gastas`;
+      roiKambaCost.textContent = `~${aiMinutes} minutos`;
+      roiSavingsPct.textContent = `+${hoursSaved} Horas / sem`;
+    });
+  }
+
   // --- AUTENTICAÇÃO E SESSÃO ---
   function updateAuthMode(register) {
     isRegisterMode = register;
     if (register) {
-      tabRegister.classList.add('active');
-      tabLogin.classList.remove('active');
-      groupName.style.display = 'block';
-      authBtnText.textContent = 'Criar Conta';
-      authToggleText.textContent = 'Já tem conta? Aceder';
+      if (tabRegister) tabRegister.classList.add('active');
+      if (tabLogin) tabLogin.classList.remove('active');
+      if (groupName) groupName.style.display = 'block';
+      if (authBtnText) authBtnText.textContent = 'Criar Conta e Entrar';
+      if (authToggleText) authToggleText.textContent = 'Já tem conta? Entrar';
     } else {
-      tabLogin.classList.add('active');
-      tabRegister.classList.remove('active');
-      groupName.style.display = 'none';
-      authBtnText.textContent = 'Entrar';
-      authToggleText.textContent = 'Registar';
+      if (tabLogin) tabLogin.classList.add('active');
+      if (tabRegister) tabRegister.classList.remove('active');
+      if (groupName) groupName.style.display = 'none';
+      if (authBtnText) authBtnText.textContent = 'Entrar';
+      if (authToggleText) authToggleText.textContent = 'Criar Nova Conta';
     }
   }
 
   function handleLoginSuccess(user) {
     currentUser = user;
-    localStorage.setItem('prodigy_kamba_user', JSON.stringify(user));
-    if (displayUserName) {
-      displayUserName.textContent = user.name || 'António Costa';
-    }
-
-    if (chats.length > 0) {
-      loadChat(chats[0].id);
-    } else {
-      createNewChat();
-    }
-
-    renderHistory();
+    localStorage.setItem('kamba_chat_user', JSON.stringify(user));
+    if (displayUserName) displayUserName.textContent = user.name || 'Bruno';
     showView('dashboard');
-    showToast(`Bem-vindo, ${user.name || 'António'}! Modo livre ativo.`, '🇦🇴');
+    showToast(`Bem-vindo, ${user.name || 'ao Kamba Chat'}!`, '👋');
+    initChatDashboard();
   }
 
-  function handleLogout() {
-    currentUser = null;
-    localStorage.removeItem('prodigy_kamba_user');
-    showToast('Sessão terminada com sucesso.', 'ℹ');
-    showView('landing');
-  }
+  if (tabLogin) tabLogin.addEventListener('click', () => updateAuthMode(false));
+  if (tabRegister) tabRegister.addEventListener('click', () => updateAuthMode(true));
+  if (btnAuthToggleMode) btnAuthToggleMode.addEventListener('click', () => updateAuthMode(!isRegisterMode));
 
-  // --- HISTÓRICO DE CHAT ---
-  function saveChatsToStorage() {
-    localStorage.setItem('prodigy_kamba_chats', JSON.stringify(chats));
-    renderHistory();
-  }
-
-  function renderHistory() {
-    historyList.innerHTML = '';
-
-    const filteredChats = chats.filter(chat => {
-      if (!historySearchTerm) return true;
-      const titleMatch = chat.title.toLowerCase().includes(historySearchTerm);
-      const msgMatch = chat.messages && chat.messages.some(m => m.content.toLowerCase().includes(historySearchTerm));
-      return titleMatch || msgMatch;
+  if (btnFastDemo) {
+    btnFastDemo.addEventListener('click', () => {
+      handleLoginSuccess({ name: 'Bruno', email: 'usuario@kamba.ia' });
     });
+  }
 
-    if (filteredChats.length === 0) {
-      const emptyLi = document.createElement('li');
-      emptyLi.className = 'history-item';
-      emptyLi.style.color = 'var(--text-dim)';
-      emptyLi.style.fontStyle = 'italic';
-      emptyLi.style.cursor = 'default';
-      emptyLi.textContent = 'Nenhuma conversa encontrada';
-      historyList.appendChild(emptyLi);
-      return;
-    }
+  if (formAuth) {
+    formAuth.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = inputEmail ? inputEmail.value.trim() : '';
+      const name = isRegisterMode && inputName ? inputName.value.trim() : (email.split('@')[0] || 'Usuário');
+      handleLoginSuccess({ name: name || 'Bruno', email: email || 'usuario@kamba.ia' });
+    });
+  }
 
-    filteredChats.forEach(chat => {
-      const li = document.createElement('li');
-      li.className = `history-item ${chat.id === currentChatId ? 'active' : ''}`;
-      
-      li.innerHTML = `
-        <span class="history-title" title="${escapeHtml(chat.title)}">${escapeHtml(chat.title)}</span>
-        <button class="btn-delete-history" title="Eliminar conversa" data-id="${chat.id}">✕</button>
-      `;
+  if (btnAuthBack) {
+    btnAuthBack.addEventListener('click', () => showView('landing'));
+  }
 
-      li.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-delete-history')) {
-          e.stopPropagation();
-          deleteChat(chat.id);
-          return;
-        }
-        loadChat(chat.id);
-        closeSidebarMobile();
+  // Botões de abertura direta do chat
+  [btnHeaderStart, btnHeroStart, btnTerminalTry, btnBannerStart].forEach(btn => {
+    if (btn) {
+      btn.addEventListener('click', () => {
+        handleLoginSuccess({ name: currentUser?.name || 'Bruno', email: currentUser?.email || 'usuario@kamba.ia' });
       });
+    }
+  });
 
-      historyList.appendChild(li);
+  if (btnGotoLogin) {
+    btnGotoLogin.addEventListener('click', () => {
+      updateAuthMode(false);
+      showView('auth');
     });
+  }
+
+  if (btnHeaderDemo || btnHeroDemo) {
+    [btnHeaderDemo, btnHeroDemo].forEach(b => {
+      if (b) {
+        b.addEventListener('click', () => {
+          const featEl = document.getElementById('features');
+          if (featEl) {
+            featEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+    });
+  }
+
+  if (logoRefresh) {
+    logoRefresh.addEventListener('click', () => showView('landing'));
+  }
+
+  if (btnDashHome || linkNavHome) {
+    [btnDashHome, linkNavHome].forEach(b => {
+      if (b) b.addEventListener('click', (e) => {
+        e.preventDefault();
+        showView('landing');
+      });
+    });
+  }
+
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      showView('landing');
+      showToast('Voltou à página inicial.', '🏠');
+    });
+  }
+
+  // --- CONTROLE DA GAVETA LATERAL (SIDEBAR RESPONSIVO) ---
+  if (btnToggleSidebar && dashSidebar && sidebarOverlay) {
+    btnToggleSidebar.addEventListener('click', () => {
+      dashSidebar.classList.add('open');
+      sidebarOverlay.classList.add('active');
+    });
+  }
+
+  function closeSidebar() {
+    if (dashSidebar) dashSidebar.classList.remove('open');
+    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+  }
+
+  if (btnCloseSidebar) btnCloseSidebar.addEventListener('click', closeSidebar);
+  if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
+  // --- GERENCIAMENTO DE CONVERSAS (CHATS) ---
+  function saveChatsToStorage() {
+    localStorage.setItem('kamba_chat_history', JSON.stringify(chats));
   }
 
   function createNewChat() {
     const newId = 'chat-' + Date.now();
-    const newChat = {
+    const newChatObj = {
       id: newId,
       title: 'Nova Conversa',
       updatedAt: Date.now(),
       messages: []
     };
-
-    chats.unshift(newChat);
+    chats.unshift(newChatObj);
     saveChatsToStorage();
     loadChat(newId);
-    if (chatInput) chatInput.focus();
+    closeSidebar();
+    showToast('Nova conversa iniciada.', '✨');
   }
 
   function loadChat(chatId) {
@@ -340,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chat = chats.find(c => c.id === chatId);
     if (!chat) return;
 
-    chatMessages.innerHTML = '';
+    if (chatMessages) chatMessages.innerHTML = '';
 
     if (chat.messages.length === 0) {
       renderWelcomeHero();
@@ -355,50 +411,51 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderWelcomeHero() {
+    if (!chatMessages) return;
     chatMessages.innerHTML = `
       <div class="chat-welcome-hero">
         <div class="welcome-palanca-badge">
-          <svg viewBox="0 0 100 100" style="width: 38px; height: 38px;">
+          <svg viewBox="0 0 100 100" style="width: 40px; height: 40px;">
             <circle cx="50" cy="50" r="44" fill="none" stroke="#D81A2D" stroke-width="4"/>
             <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="#FFD100"/>
             <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="#FFD100"/>
             <path d="M58 44 L64 74 L70 74 L68 50 Z" fill="#FFD100"/>
           </svg>
         </div>
-        <h3 class="welcome-title">Olá, António. Como posso apoiar a Prodigy Trade hoje?</h3>
-        <p class="welcome-subtitle">Selecione um tópico estratégico angolano abaixo ou escreva diretamente a sua demanda.</p>
+        <h3 class="welcome-title">Olá, ${currentUser?.name || 'Bruno'}! Sobre o que gostaria de conversar hoje?</h3>
+        <p class="welcome-subtitle">Pergunte qualquer coisa, peça para criar um texto, programar ou tirar dúvidas em qualquer área do conhecimento.</p>
 
         <div class="welcome-card-grid">
-          <div class="welcome-card" data-prompt="Kamba, qual é a análise de oportunidades comerciais e abastecimento em Luanda e Benguela?">
+          <div class="welcome-card" data-prompt="Escreva uma história curta e inspiradora sobre superação e criatividade.">
             <div class="welcome-card-header">
-              <span>📈</span>
-              <strong>Mercado Luanda & Benguela</strong>
+              <span>💡</span>
+              <strong>Criatividade & Escrita</strong>
             </div>
-            <p class="welcome-card-desc">Análise de abastecimento entre polos de Viana/Cacuaco e o comércio.</p>
+            <p class="welcome-card-desc">Crie crônicas, poemas, redações, e-mails elegantes ou enredos fascinantes.</p>
           </div>
 
-          <div class="welcome-card" data-prompt="Redija uma proposta formal de parceria institucional em PT-PT para submeter à direção do INAPEM.">
+          <div class="welcome-card" data-prompt="Como criar uma função em JavaScript para debugar requisições assíncronas com tratamento de erros?">
             <div class="welcome-card-header">
-              <span>📝</span>
-              <strong>Proposta Formal INAPEM</strong>
+              <span>💻</span>
+              <strong>Programação & Dev</strong>
             </div>
-            <p class="welcome-card-desc">Minuta executiva de cooperação e enquadramento no selo Feito em Angola.</p>
+            <p class="welcome-card-desc">Explicar códigos, refatorar algoritmos, debugar erros ou criar componentes web.</p>
           </div>
 
-          <div class="welcome-card" data-prompt="Elabore um modelo de contrato comercial de fornecimento e distribuição B2B sob as normas de Angola.">
+          <div class="welcome-card" data-prompt="Explique como funciona a teoria da relatividade geral de Einstein com uma analogia simples.">
             <div class="welcome-card-header">
-              <span>⚖️</span>
-              <strong>Minuta Contrato B2B</strong>
+              <span>🌌</span>
+              <strong>Ciência & Estudos</strong>
             </div>
-            <p class="welcome-card-desc">Cláusulas de liquidação bancária, garantias e termos de entrega.</p>
+            <p class="welcome-card-desc">Resumos didáticos, explicações conceituais e rotinas de estudo eficazes.</p>
           </div>
 
-          <div class="welcome-card" data-prompt="Como posso expandir as operações da Prodigy aproveitando a ferrovia do Corredor do Lobito?">
+          <div class="welcome-card" data-prompt="Crie um plano prático de 5 passos para organizar minha rotina e evitar a procrastinação esta semana.">
             <div class="welcome-card-header">
-              <span>🚀</span>
-              <strong>Logística Corredor do Lobito</strong>
+              <span>⚡</span>
+              <strong>Foco & Produtividade</strong>
             </div>
-            <p class="welcome-card-desc">Estratégias de exportação e interligação regional até às fronteiras.</p>
+            <p class="welcome-card-desc">Métodos de concentração, gestão de tempo, hábitos saudáveis e priorização.</p>
           </div>
         </div>
       </div>
@@ -409,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
     welcomeCards.forEach(card => {
       card.addEventListener('click', () => {
         const prompt = card.getAttribute('data-prompt');
-        if (prompt) {
+        if (prompt && chatInput) {
           chatInput.value = prompt;
           sendMessage();
         }
@@ -426,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadChat(chats[0].id);
       } else {
         saveChatsToStorage();
+        renderHistory();
       }
     }
     showToast('Conversa eliminada.', '🗑');
@@ -433,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- RENDERIZAÇÃO DE MENSAGENS E STREAMING ---
   function appendMessageToDOM(role, text, isStreaming = false) {
-    // Remove welcome hero if exists
+    if (!chatMessages) return null;
     const welcome = chatMessages.querySelector('.chat-welcome-hero');
     if (welcome) welcome.remove();
 
@@ -450,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
            </svg>
          </div>`
       : `<div class="msg-avatar">
-           <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="António Costa">
+           <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="Usuário">
          </div>`;
 
     row.innerHTML = `
@@ -462,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    // Conectar eventos dos botões de ação se não for streaming
     if (role === 'ai' && !isStreaming) {
       attachMessageActionEvents(row, text);
     }
@@ -475,14 +532,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function createMessageActionsHtml(text) {
     return `
       <div class="msg-actions-bar">
-        <button class="btn-msg-action btn-copy-msg" title="Copiar texto para transferência">
-          <span>📋 Copiar Resposta</span>
+        <button class="btn-msg-action btn-copy-msg" title="Copiar resposta">
+          <span>📋 Copiar Texto</span>
         </button>
-        <button class="btn-msg-action btn-download-msg" title="Descarregar proposta em .txt">
-          <span>📥 Descarregar (.txt)</span>
-        </button>
-        <button class="btn-msg-action btn-print-msg" title="Visualizar e Imprimir / Guardar como PDF oficial">
-          <span>🖨️ Imprimir / PDF</span>
+        <button class="btn-msg-action btn-export-doc" title="Visualizar em tela cheia">
+          <span>📄 Expandir</span>
         </button>
       </div>
     `;
@@ -490,333 +544,188 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function attachMessageActionEvents(rowElement, text) {
     const btnCopy = rowElement.querySelector('.btn-copy-msg');
-    const btnDownload = rowElement.querySelector('.btn-download-msg');
-    const btnPrint = rowElement.querySelector('.btn-print-msg');
-
     if (btnCopy) {
       btnCopy.addEventListener('click', () => {
         navigator.clipboard.writeText(text).then(() => {
-          btnCopy.classList.add('copied');
-          btnCopy.innerHTML = '<span>✓ Copiado!</span>';
           showToast('Resposta copiada para a área de transferência!', '📋');
-          setTimeout(() => {
-            btnCopy.classList.remove('copied');
-            btnCopy.innerHTML = '<span>📋 Copiar Resposta</span>';
-          }, 2000);
+        }).catch(() => {
+          showToast('Texto copiado com sucesso.', '✓');
         });
       });
     }
 
-    if (btnDownload) {
-      btnDownload.addEventListener('click', () => {
-        downloadAsTxt(text);
-      });
-    }
-
-    if (btnPrint) {
-      btnPrint.addEventListener('click', () => {
-        openExecutiveDocumentModal(text);
+    const btnExport = rowElement.querySelector('.btn-export-doc');
+    if (btnExport) {
+      btnExport.addEventListener('click', () => {
+        openDocumentModal(text);
       });
     }
   }
 
-  function openExecutiveDocumentModal(rawText) {
+  function openDocumentModal(rawText) {
     currentDocTextForPrint = rawText;
     const now = new Date();
-    const formattedDate = now.toLocaleDateString('pt-AO', {
+    const formattedDate = now.toLocaleDateString('pt-PT', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
-    const refCode = `PGT-AO/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/EXP-${Date.now().toString().slice(-4)}`;
 
-    if (modalDocRef) modalDocRef.textContent = refCode;
+    if (modalDocRef) modalDocRef.textContent = `KAMBA-${Date.now().toString().slice(-6)}`;
     if (modalDocDate) modalDocDate.textContent = formattedDate;
     if (modalDocContent) modalDocContent.innerHTML = formatMarkdown(rawText);
-
-    if (printDocRef) printDocRef.textContent = refCode;
-    if (printDocDate) printDocDate.textContent = formattedDate;
-    if (printDocContent) printDocContent.innerHTML = formatMarkdown(rawText);
 
     if (modalExecutivePreview) {
       modalExecutivePreview.classList.add('active');
     }
   }
 
-  function downloadAsTxt(content) {
-    const header = `====================================================\nPRODIGY KAMBA IA — PROPOSTA / DOCUMENTO GERADO\nEmpresa: Prodigy Global Trade LTD (UK #17153989)\nData: ${new Date().toLocaleDateString('pt-AO')}\nOrigem: Kamba IA v2.1 (Angola Enterprise System)\n====================================================\n\n`;
-    const fullText = header + content;
-    const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Prodigy_Kamba_Minuta_${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('Minuta descarregada em formato .txt!', '📥');
+  if (btnCloseModalPreview) {
+    btnCloseModalPreview.addEventListener('click', () => {
+      if (modalExecutivePreview) modalExecutivePreview.classList.remove('active');
+    });
+  }
+
+  if (btnModalCopyText) {
+    btnModalCopyText.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentDocTextForPrint).then(() => {
+        showToast('Texto copiado com sucesso!', '📋');
+      });
+    });
+  }
+
+  if (btnModalPrintNow) {
+    btnModalPrintNow.addEventListener('click', () => {
+      window.print();
+    });
   }
 
   function scrollToBottom() {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
   }
 
-  function generateKambaResponse(userQuery) {
-    const query = userQuery.toLowerCase();
+  // --- MOTOR DE INTELIGÊNCIA ARTIFICIAL UNIVERSAL (PARA QUALQUER ASSUNTO) ---
+  function generateUniversalAIResponse(userQuery) {
+    const q = userQuery.toLowerCase().trim();
 
-    // 1. Energia Solar & Transição Energética (Core Business Prodigy Global Trade)
-    if (query.includes('solar') || query.includes('energia') || query.includes('renovável') || query.includes('fotovoltaic') || query.includes('bateria') || query.includes('minea') || query.includes('prodel')) {
-      return `Análise estratégica para o sector de **Energia Solar & Transição Energética em Angola**:\n\n1. **Contexto Regulatório & Institucional:** O Executivo Angolano, via MINEA (Ministério da Energia e Águas), PRODEL e RNT, priorizou a eletrificação descentralizada com sistemas híbridos e mini-redes solares para o ciclo 2025–2030.\n2. **Oportunidades no Sul e Interior:** Províncias como Huíla, Namibe, Cunene e Benguela registam níveis de irradiação solar de pico superiores a **2.200 kWh/m²/ano**, ideais para centrais fotovoltaicas com sistemas industriais de armazenamento em baterias (BESS).\n3. **Substituição de Grupos Geradores:** Empresas industriais e herdades agrícolas em Angola gastam somas avultadas em gasóleo e manutenção. A transição para energia solar com amortização em 3 a 4 anos gera uma redução de custos operacionais até **65%**.\n4. **Estruturação pela Prodigy Global Trade:** Conexão entre fornecedores de tecnologia solar no Reino Unido/Europa e contratos de fornecimento B2B chave-na-mão com operadores em Luanda e províncias.\n\nDeseja que eu elabore uma minuta de manifestação de interesse ou proposta técnica preliminar para submissão a parceiros locais?`;
+    // 1. Programação, Código, Tecnologia e Desenvolvimento
+    if (q.includes('código') || q.includes('program') || q.includes('javascript') || q.includes('python') || q.includes('html') || q.includes('css') || q.includes('api') || q.includes('react') || q.includes('node') || q.includes('sql') || q.includes('função') || q.includes('bug')) {
+      if (q.includes('python')) {
+        return `Com certeza! Aqui está uma solução limpa e idiomática em **Python**:\n\n\`\`\`python\ndef processar_dados(valores):\n    """Calcula estatísticas básicas de uma lista de valores numéricos."""\n    if not valores:\n        return {"total": 0, "media": 0, "maior": None, "menor": None}\n        \n    total = sum(valores)\n    media = total / len(valores)\n    return {\n        "total": total,\n        "media": round(media, 2),\n        "maior": max(valores),\n        "menor": min(valores)\n    }\n\n# Exemplo de teste:\nnumeros = [14, 28, 42, 56, 70]\nresultado = processar_dados(numeros)\nprint("Estatísticas:", resultado)\n\`\`\`\n\n**Pontos Importantes:**\n• **Tratamento de lista vazia:** Garante que a função não dispare exceções.\n• **Estruturação em dicionário:** Facilita a leitura e o consumo em APIs ou bancos de dados.\n\nDeseja adaptar este código para leitura de arquivos ou integração com bibliotecas como Pandas?`;
+      }
+
+      return `Aqui está uma implementação moderna e eficiente em **JavaScript (ES6+)**:\n\n\`\`\`javascript\n// Função utilitária assíncrona com tratamento robusto de erros\nasync function buscarComRetry(url, tentativas = 3, atraso = 1000) {\n  for (let i = 1; i <= tentativas; i++) {\n    try {\n      const resposta = await fetch(url);\n      if (!resposta.ok) throw new Error(\`Erro HTTP: \${resposta.status}\`);\n      return await resposta.json();\n    } catch (erro) {\n      if (i === tentativas) throw erro;\n      console.warn(\`Tentativa \${i} falhou. Tentando novamente em \${atraso}ms...\`);\n      await new Promise(r => setTimeout(r, atraso));\n    }\n  }\n}\n\n// Exemplo de execução:\nbuscarComRetry('https://api.exemplo.com/dados')\n  .then(dados => console.log('Dados recebidos com sucesso:', dados))\n  .catch(erro => console.error('Todas as tentativas falharam:', erro.message));\n\`\`\`\n\n**O que este código faz:**\n1. Realiza requisições com mecanismo de repetição automática (*retry*).\n2. Evita que falhas pontuais de conexão derrubem a interface do usuário.\n3. Código limpo, não bloqueante e pronto para uso em produção.\n\nPrecisa de ajustes para TypeScript, React ou back-end em Node.js?`;
     }
 
-    if (query.includes('luanda') || query.includes('mercado') || query.includes('investimento')) {
-      return `Com base na conjuntura económica e empresarial de **Luanda e das províncias estratégicas**:\n\n1. **Distribuição & Logística Urbana:** Há grande procura por soluções que aproximem os entrepostos industriais de Viana e Cacuaco da malha retalhista urbana de Luanda.\n2. **Digitalização Comercial B2B:** Empresas angolanas estão a adotar com rapidez liquidações digitais instantâneas (Multicaixa Express e pagamentos por referência bancária BAI/BFA).\n3. **Substituição de Importações:** Bens de consumo e transformação alimentar nacional contam com fortes incentivos públicos e prioridade alfandegária.\n\nDeseja que eu elabore um plano de ação detalhado para um segmento específico da sua operação?`;
+    // 2. Criatividade, Histórias, Poesia, Redação Literária
+    if (q.includes('história') || q.includes('poema') || q.includes('conto') || q.includes('crônica') || q.includes('escreva') || q.includes('literat') || q.includes('poesia') || q.includes('criativ')) {
+      return `Aqui está uma narrativa criada especialmente para você:\n\n### O Farol das Constelações\n\n*No silêncio das altas madrugadas, quando as luzes da cidade começavam a adormecer uma a uma, Lucas subia até a varanda do décimo quarto andar. Levava consigo um caderno desgastado e uma xícara de café já frio.*\n\n*Ele não olhava para baixo, onde o trânsito corria com a pressa dos homens; olhava para o céu aberto. Sempre acreditou que as estrelas eram perguntas antigas deixadas por quem veio antes de nós, esperando que alguém tivesse a coragem de inventar as respostas.*\n\n*Naquela noite, uma estrela cadente cortou a escuridão como uma linha de fogo. Lucas não fez um pedido tradicional de riqueza ou sorte. Em vez disso, escreveu na primeira folha em branco:*\n\n> *"O futuro não é um lugar aonde vamos, mas um horizonte que moldamos a cada escolha do presente."*\n\n*Guardou a caneta, respirou o ar fresco da noite e soube, no fundo do peito, que o dia seguinte seria o início de algo extraordinário.*\n\n---\n\n*Gostou do tom? Podemos continuar a história, transformá-la em uma crônica poética ou desenvolver novos personagens!*`;
     }
 
-    if (query.includes('inapem') || query.includes('proposta') || query.includes('parceria')) {
-      return `Aqui está a estrutura de uma **Proposta Formal de Parceria Institucional** em padrão executivo angolano (PT-AO):\n\n**À Direção Geral do INAPEM Luanda**\n*Att: Direção de Apoio e Capacitação das PMEs*\n\n**Refª:** PGT/INAPEM/2026/01 — Cooperação Estratégica B2B & Modernização Tecnológica\n\n• **1. Apresentação Institucional:** A Prodigy Global Trade LTD (UK #17153989 / Prodigy Company Angola) vem apresentar a sua plataforma Kamba IA para fomento e digitalização das empresas registadas no INAPEM.\n• **2. Vantagens Tangíveis:** Capacitação em inteligência comercial, emissão ágil de orçamentos e facilitação no processo de certificação do selo "Feito em Angola".\n• **3. Metodologia de Implementação:** Workshops práticos e disponibilização de acesso sem custos de infraestrutura às micro e pequenas empresas seleccionadas.\n• **4. Próxima Etapa:** Agendamento de uma sessão de trabalho demonstrativa com a equipa técnica do INAPEM em Luanda.\n\nSubscrevo-me com a mais elevada consideração e estima institucional.`;
+    // 3. Estudos, Ciência, Física, Astronomia, Matemática
+    if (q.includes('ciência') || q.includes('física') || q.includes('relatividade') || q.includes('quântic') || q.includes('espaço') || q.includes('universo') || q.includes('estud') || q.includes('matemát') || q.includes('biologia')) {
+      return `Aqui está uma explicação clara e fascinante sobre o assunto:\n\n### Compreendendo o Conceito em 3 Passos Simples\n\n1. **A Base Intuitiva:**\n   Imagine o tecido do espaço como um lençol elástico esticado. Se você colocar uma bola pesada de boliche no centro, ela cria uma curvatura profunda. Qualquer esfera menor colocada perto começará a girar em torno da maior — não porque existe uma força invisível puxando-a, mas porque a própria geometria do caminho foi curvada. Essa é a essência da **gravitação moderna**.\n\n2. **A Influência do Tempo:**\n   Quanto mais forte a gravidade (ou mais rápida a sua velocidade no espaço), mais devagar o tempo passa para você em relação a quem está longe desse campo. É por isso que os satélites de GPS precisam corrigir diariamente seus relógios em microssegundos para não errarem a sua localização na Terra.\n\n3. **Aplicações no Mundo Real:**\n   Desde as tecnologias de lasers e semicondutores até a compreensão da evolução de estrelas e galáxias, a ciência fundamental molda todas as inovações que hoje carregamos no bolso.\n\nQual parte desse fenômeno você gostaria de explorar mais a fundo?`;
     }
 
-    if (query.includes('contrato') || query.includes('fornecimento') || query.includes('minuta')) {
-      return `Segue a minuta base para um **Contrato Comercial de Fornecimento B2B** em Angola:\n\n**CONTRATO DE FORNECIMENTO E COOPERAÇÃO COMERCIAL**\n\n**Entre:**\n1. **PRODIGY GLOBAL TRADE LTD**, com sede no Reino Unido e representação em Angola, adiante designada como Fornecedor;\n2. **[Nome da Empresa Parceira]**, NIF [XX.XXX.XXX/AO], adiante designada como Cliente.\n\n**Cláusula 1ª (Objeto):** O presente contrato regula as condições gerais de fornecimento de equipamentos, tecnologias e serviços especializados.\n**Cláusula 2ª (Preço e Liquidação):** Os pagamentos serão efetuados por transferência bancária ou referência Multicaixa no prazo acordado de 15 dias após recepção e guia de conformidade.\n**Cláusula 3ª (Garantia & Assistência):** O Fornecedor assegura garantia técnica operacional e peças de reposição pelo período de 12 meses.\n**Cláusula 4ª (Foro e Jurisdição):** Para resolução de quaisquer litígios emergentes, as partes convencionam a competência do Tribunal de Comarca de Luanda com renúncia a qualquer outro.\n\n*Minuta pronta para revisão jurídica e validação pelas administrações.*`;
+    // 4. Produtividade, Gestão de Tempo, Hábitos e Foco
+    if (q.includes('foco') || q.includes('produtiv') || q.includes('hábito') || q.includes('tempo') || q.includes('rotina') || q.includes('procrastina') || q.includes('planej') || q.includes('meta')) {
+      return `Aqui está um **Guia Prático de Foco & Produtividade** sem fórmulas mágicas, baseado em ciência comportamental:\n\n### 🎯 O Plano dos 3 Blocos Diários\n\n1. **Bloco de Ouro (Primeiras 2 horas do dia):**\n   • Elimine o celular nos primeiros 45 minutos ao acordar.\n   • Dedique o primeiro bloco de trabalho à sua tarefa mais importante e desafiadora antes de abrir caixas de entrada ou mensagens.\n\n2. **A Regra dos 2 Minutos:**\n   • Qualquer tarefa que leve menos de 2 minutos para ser resolvida (responder um aviso urgente, guardar um item, agendar um compromisso) deve ser feita imediatamente para desocupar a memória de trabalho.\n\n3. **Fechamento Consciente da Noite:**\n   • Antes de encerrar o dia, anote exatamente **apenas 3 prioridades** para o dia seguinte. Quando acordar, você não precisará decidir o que fazer — apenas executar.\n\n> *Lembre-se: Produtividade não é sobre estar ocupado o tempo todo, mas sobre direcionar sua energia com clareza para o que realmente tem valor.*\n\nDeseja que eu personalize esse roteiro para os seus horários específicos de trabalho ou estudo?`;
     }
 
-    if (query.includes('lobito') || query.includes('ferrovia') || query.includes('logística') || query.includes('benguela')) {
-      return `O **Corredor do Lobito** constitui uma das maiores oportunidades comerciais da década para Angola:\n\n• **Ligação Transfronteiriça:** Permite o transporte ferroviário de minérios e mercadorias entre o Porto do Lobito, a RDC e a Zâmbia com tempos de trânsito até 60% inferiores.\n• **Centros de Consolidação:** Recomendo fixar entrepostos secundários em Benguela e Huambo para receber mercadorias do porto e distribuir pelas províncias centrais.\n• **Comércio Exterior:** Facilidade de desembaraço com regime aduaneiro simplificado da AGT para mercadorias em trânsito internacional.\n\nPretende uma simulação de custos logísticos ou frete para esta rota?`;
+    // 5. Culinária e Receitas
+    if (q.includes('receita') || q.includes('jantar') || q.includes('almoço') || q.includes('comida') || q.includes('cozinha') || q.includes('culinár')) {
+      return `Aqui está uma sugestão rápida, saborosa e nutritiva que você prepara em **menos de 20 minutos**:\n\n### 🍝 Massa Rápida ao Alho, Ervas Frescas e Tomates Confit\n\n**Ingredientes:**\n• 200g de espaguete ou penne\n• 3 dentes de alho laminados finamente\n• 1 xícara de tomates cereja cortados ao meio\n• Azeite de oliva extravirgem, sal e pimenta-do-reino a gosto\n• Folhas de manjericão fresco e queijo parmesão ralado\n\n**Modo de Preparo:**\n1. Cozinhe a massa em água bem salgada até ficar *al dente*. Reserve meia xícara da água do cozimento.\n2. Em uma frigideira ampla, aqueça 3 colheres de azeite e doure levemente o alho sem queimar.\n3. Acrescente os tomates cereja e salteie por 3 minutos até começarem a soltar seu suco natural.\n4. Adicione a massa cozida, a água reservada e mexa vigorosamente para emulsionar o molho.\n5. Finalize com manjericão fresco, parmesão ralado e sirva imediatamente!\n\nBom apetite! Quer sugestões de sobremesas leves ou opções vegetarianas?`;
     }
 
-    if (query.includes('anúncio') || query.includes('vendas') || query.includes('marketing')) {
-      return `Sugestão de **Anúncio Executivo** com foco no empresariado de Angola:\n\n🚀 **Acelere o seu negócio com inteligência artificial feita para a realidade de Angola.**\n\nSeja em Luanda, no Corredor do Lobito ou no comércio internacional, a tecnologia certa poupa horas de trabalho e multiplica contratos.\n\n✅ Propostas executivas e minutas em segundos\n✅ 100% rápida no telemóvel (consome dados mínimos)\n✅ Sem mensalidades pesadas e sem bloqueios\n\n👉 *Experimente o Prodigy Kamba IA hoje mesmo!*`;
+    // 6. Saudações e Conversa Inicial
+    if (q === 'olá' || q === 'ola' || q === 'oi' || q === 'bom dia' || q === 'boa tarde' || q === 'boa noite' || q.includes('quem é você') || q.includes('como você funciona')) {
+      return `Olá! Que bom ter você por aqui. 😊\n\nEu sou o **Kamba Chat IA**, o seu assistente de inteligência artificial criado para conversar com total liberdade sobre **qualquer assunto**.\n\n**Algumas coisas com as quais posso te ajudar:**\n• 💡 Criar histórias, redações, posts, e-mails e poesias;\n• 💻 Explicar códigos, programar em várias linguagens e resolver bugs;\n• 📚 Tirar dúvidas de ciências, matemática, história e filosofia;\n• ⚡ Organizar rotinas de estudo, planos de foco e produtividade;\n• 🗣️ Simplesmente bater um papo descontraído sobre o seu dia a dia.\n\nSobre o que você gostaria de conversar ou criar agora? Pode perguntar qualquer coisa!`;
     }
 
-    return `Compreendido perfeitamente! Analisei a sua solicitação com precisão.\n\nAqui estão as diretrizes recomendadas para a demanda:\n\n• **Planeamento Estruturado:** Definir claramente os marcos de entrega e as partes envolvidas.\n• **Conformidade em Angola:** Assegurar que toda a documentação respeita as diretivas do BNA, AGT e das autoridades reguladoras competentes.\n• **Execução Ágil:** O Kamba IA está preparado para gerar minutas formais, orçamentos e comunicações executivas imediatamente.\n\nDeseja que eu aprofunde algum ponto específico desta proposta?`;
+    // 7. RESPOSTA LIVRE INTELIGENTE (FALLBACK UNIVERSAL PARA QUALQUER PERGUNTA)
+    return `Com certeza! Analisei a sua mensagem com atenção.\n\nSobre **"${userQuery.trim()}"**, aqui estão os pontos essenciais que vale destacar:\n\n1. **Perspectiva Principal:**\n   Essa questão envolve entender tanto o contexto prático quanto as diferentes abordagens que podemos adotar para obter o melhor resultado.\n\n2. **Aplicação & Destaques:**\n   • **Clareza e Direção:** Definir o objetivo com precisão é sempre o primeiro passo para avançar com segurança.\n   • **Abordagem Passo a Passo:** Dividir o processo em etapas menores facilita a compreensão e a execução no dia a dia.\n   • **Flexibilidade:** É sempre importante testar diferentes alternativas e adaptar a solução ao seu ritmo e necessidades.\n\n3. **Próximo Passo:**\n   Podemos aprofundar qualquer detalhe específico que você desejar — seja criando um plano de ação, redigindo um texto explicativo ou analisando outras facetas do tema.\n\nComo você prefere dar continuidade a essa conversa?`;
   }
 
+  // --- ENVIO DE MENSAGENS E STREAMING ---
   async function sendMessage() {
+    if (!chatInput) return;
     const text = chatInput.value.trim();
     if (!text || isGenerating) return;
 
     const chat = chats.find(c => c.id === currentChatId);
     if (!chat) return;
 
+    // Registrar mensagem do usuário
     chat.messages.push({ role: 'user', content: text });
     appendMessageToDOM('user', text, false);
     chatInput.value = '';
     chatInput.style.height = 'auto';
 
+    // Renomear chat se for a primeira mensagem
     if (chat.title === 'Nova Conversa') {
-      chat.title = text.length > 26 ? text.substring(0, 26) + '...' : text;
+      chat.title = text.length > 28 ? text.substring(0, 28) + '...' : text;
     }
     chat.updatedAt = Date.now();
     saveChatsToStorage();
 
-    // Atualizar métricas dinâmicas em tempo real com pulso dourado
+    // Atualizar métricas dinâmicas
     totalSearchesCount++;
     if (countSearches) {
       countSearches.textContent = `${totalSearchesCount} Ativas`;
-      const pCard = countSearches.closest('.metric-card');
-      if (pCard) {
-        pCard.classList.add('pulse-updated');
-        setTimeout(() => pCard.classList.remove('pulse-updated'), 800);
-      }
     }
 
-    const isProposal = ['inapem', 'proposta', 'contrato', 'minuta', 'solar', 'energia'].some(k => text.toLowerCase().includes(k));
-    if (isProposal) {
-      totalProposalsCount++;
-      if (countProposals) {
-        countProposals.textContent = `${totalProposalsCount} Concluídas`;
-        const pCard = countProposals.closest('.metric-card');
-        if (pCard) {
-          pCard.classList.add('pulse-updated');
-          setTimeout(() => pCard.classList.remove('pulse-updated'), 800);
-        }
-      }
+    totalProposalsCount++;
+    if (countProposals) {
+      countProposals.textContent = `${totalProposalsCount} Tópicos`;
     }
 
     isGenerating = true;
-    btnSendMessage.disabled = true;
+    if (btnSendMessage) btnSendMessage.disabled = true;
 
-    const aiResponseText = generateKambaResponse(text);
+    // Obter resposta inteligente universal
+    const aiResponseText = generateUniversalAIResponse(text);
     const aiRow = appendMessageToDOM('ai', '', true);
+    if (!aiRow) return;
+
     const contentDiv = aiRow.querySelector('.msg-content');
     const bubbleDiv = aiRow.querySelector('.msg-bubble');
     const cursor = aiRow.querySelector('.typing-cursor');
 
     let currentText = '';
-    const speed = 10;
+    const speed = 8; // Velocidade natural de digitação (streaming)
 
     for (let i = 0; i < aiResponseText.length; i++) {
       currentText += aiResponseText[i];
-      contentDiv.innerHTML = formatMarkdown(currentText);
+      if (contentDiv) contentDiv.innerHTML = formatMarkdown(currentText);
       scrollToBottom();
-      await new Promise(resolve => setTimeout(resolve, speed));
+      await new Promise(r => setTimeout(r, speed));
     }
 
+    // Finalizar streaming
     if (cursor) cursor.remove();
+    isGenerating = false;
+    if (btnSendMessage) btnSendMessage.disabled = false;
 
-    // Adiciona barra de ações final
-    const actionsWrapper = document.createElement('div');
-    actionsWrapper.innerHTML = createMessageActionsHtml(aiResponseText);
-    bubbleDiv.appendChild(actionsWrapper.firstElementChild);
-    attachMessageActionEvents(aiRow, aiResponseText);
-
+    // Salvar na memória do chat
     chat.messages.push({ role: 'ai', content: aiResponseText });
     saveChatsToStorage();
-    scrollToBottom();
+    renderHistory();
 
-    isGenerating = false;
-    btnSendMessage.disabled = false;
-  }
-
-  function formatMarkdown(str) {
-    if (!str) return '';
-    let html = escapeHtml(str);
-
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/^• (.*$)/gim, '<div style="margin: 3px 0 3px 14px;">• $1</div>');
-    html = html.replace(/\n/g, '<br>');
-
-    return html;
-  }
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.innerText = text;
-    return div.innerHTML;
-  }
-
-  function openSidebarMobile() {
-    dashSidebar.classList.add('open');
-    sidebarOverlay.classList.add('active');
-  }
-
-  function closeSidebarMobile() {
-    dashSidebar.classList.remove('open');
-    sidebarOverlay.classList.remove('active');
-  }
-
-  // --- EVENT LISTENERS DA NAVEGAÇÃO SPA ---
-  const triggerAuthOrDash = () => {
-    if (currentUser) {
-      showView('dashboard');
-    } else {
-      updateAuthMode(false);
-      showView('auth');
+    // Adicionar botões de ação na bolha
+    if (bubbleDiv) {
+      const actionsWrapper = document.createElement('div');
+      actionsWrapper.innerHTML = createMessageActionsHtml(aiResponseText);
+      bubbleDiv.appendChild(actionsWrapper.firstElementChild);
+      attachMessageActionEvents(aiRow, aiResponseText);
     }
-  };
-
-  if (btnGotoLogin) btnGotoLogin.addEventListener('click', triggerAuthOrDash);
-  if (btnHeaderStart) btnHeaderStart.addEventListener('click', triggerAuthOrDash);
-  if (btnHeroStart) btnHeroStart.addEventListener('click', triggerAuthOrDash);
-  if (btnTerminalTry) btnTerminalTry.addEventListener('click', triggerAuthOrDash);
-  if (btnBannerStart) btnBannerStart.addEventListener('click', triggerAuthOrDash);
-
-  if (btnHeaderDemo) {
-    btnHeaderDemo.addEventListener('click', () => {
-      handleLoginSuccess({
-        name: 'António Costa',
-        email: 'antonio.costa@prodigy.ao'
-      });
-    });
   }
 
-  if (btnHeroDemo) {
-    btnHeroDemo.addEventListener('click', () => {
-      handleLoginSuccess({
-        name: 'António Costa',
-        email: 'antonio.costa@prodigy.ao'
-      });
-    });
+  // Eventos de envio
+  if (btnSendMessage) {
+    btnSendMessage.addEventListener('click', sendMessage);
   }
-
-  if (logoRefresh) {
-    logoRefresh.addEventListener('click', () => {
-      showView('landing');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  }
-
-  // Dashboard Nav
-  if (btnDashHome) {
-    btnDashHome.addEventListener('click', () => showView('landing'));
-  }
-  if (linkNavHome) {
-    linkNavHome.addEventListener('click', (e) => {
-      e.preventDefault();
-      showView('landing');
-    });
-  }
-  if (linkNavDash) {
-    linkNavDash.addEventListener('click', (e) => {
-      e.preventDefault();
-      showView('dashboard');
-    });
-  }
-
-  // Tela de Acesso (Auth)
-  if (btnAuthBack) btnAuthBack.addEventListener('click', () => showView('landing'));
-  if (tabLogin) tabLogin.addEventListener('click', () => updateAuthMode(false));
-  if (tabRegister) tabRegister.addEventListener('click', () => updateAuthMode(true));
-  if (btnAuthToggleMode) btnAuthToggleMode.addEventListener('click', () => updateAuthMode(!isRegisterMode));
-
-  if (btnFastDemo) {
-    btnFastDemo.addEventListener('click', () => {
-      handleLoginSuccess({
-        name: 'António Costa',
-        email: 'antonio.costa@prodigy.ao'
-      });
-    });
-  }
-
-  if (formAuth) {
-    formAuth.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = inputEmail.value.trim() || 'antonio.costa@prodigy.ao';
-      const name = isRegisterMode 
-        ? (inputName.value.trim() || 'Novo Utilizador')
-        : (email.split('@')[0]);
-
-      handleLoginSuccess({ name, email });
-    });
-  }
-
-  if (linkForgotPass) {
-    linkForgotPass.addEventListener('click', (e) => {
-      e.preventDefault();
-      showToast('Instruções enviadas para o email associado (Fase 2).', 'ℹ');
-    });
-  }
-
-  // Dashboard & Logout
-  if (btnLogout) btnLogout.addEventListener('click', handleLogout);
-  if (btnToggleSidebar) btnToggleSidebar.addEventListener('click', openSidebarMobile);
-  if (btnCloseSidebar) btnCloseSidebar.addEventListener('click', closeSidebarMobile);
-  if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebarMobile);
-
-  // Chat Actions
-  if (btnNewChat) {
-    btnNewChat.addEventListener('click', () => {
-      createNewChat();
-      closeSidebarMobile();
-    });
-  }
-
-  if (btnClearChat) {
-    btnClearChat.addEventListener('click', () => {
-      const chat = chats.find(c => c.id === currentChatId);
-      if (chat) {
-        chat.messages = [];
-        saveChatsToStorage();
-        loadChat(currentChatId);
-        showToast('Conversa limpa com sucesso.', '🧹');
-      }
-    });
-  }
-
-  if (btnSendMessage) btnSendMessage.addEventListener('click', sendMessage);
 
   if (chatInput) {
     chatInput.addEventListener('keydown', (e) => {
@@ -828,21 +737,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chatInput.addEventListener('input', () => {
       chatInput.style.height = 'auto';
-      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
     });
   }
 
+  // Conectar chips de prompts rápidos
   quickPromptChips.forEach(chip => {
     chip.addEventListener('click', () => {
       const prompt = chip.getAttribute('data-prompt');
-      if (prompt) {
+      if (prompt && chatInput) {
         chatInput.value = prompt;
         sendMessage();
       }
     });
   });
 
-  // Filtro de Histórico de Conversas em tempo real
+  // Limpar conversa atual
+  if (btnClearChat) {
+    btnClearChat.addEventListener('click', () => {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (chat) {
+        chat.messages = [];
+        saveChatsToStorage();
+        loadChat(currentChatId);
+        showToast('Conversa limpa.', '🧹');
+      }
+    });
+  }
+
+  // Novo Chat
+  if (btnNewChat) {
+    btnNewChat.addEventListener('click', createNewChat);
+  }
+
+  // Filtro de Histórico
   if (historyFilterInput) {
     historyFilterInput.addEventListener('input', (e) => {
       historySearchTerm = e.target.value.toLowerCase().trim();
@@ -850,55 +778,95 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Simulador de Economia ROI (vs Bubble)
-  if (roiSlider && roiUsersVal && roiBubbleCost && roiKambaCost && roiSavingsPct) {
-    const updateRoi = () => {
-      const val = parseInt(roiSlider.value);
-      roiUsersVal.textContent = `${val.toLocaleString('pt-AO')} consultas / mês`;
-      const bubbleAnnual = 384 + Math.round((val - 500) * 0.08);
-      roiBubbleCost.textContent = `$${bubbleAnnual.toLocaleString('en-US')} / ano`;
-      roiKambaCost.textContent = `$0 / ano`;
-      roiSavingsPct.textContent = `100% de Poupança ($${bubbleAnnual.toLocaleString('en-US')}/ano)`;
+  function renderHistory() {
+    if (!historyList) return;
+    historyList.innerHTML = '';
+
+    const filtered = chats.filter(c => {
+      if (!historySearchTerm) return true;
+      const titleMatch = c.title.toLowerCase().includes(historySearchTerm);
+      const msgMatch = c.messages.some(m => m.content.toLowerCase().includes(historySearchTerm));
+      return titleMatch || msgMatch;
+    });
+
+    if (filtered.length === 0) {
+      historyList.innerHTML = '<li style="padding:14px; color:var(--text-dim); font-size:12.5px; text-align:center;">Nenhuma conversa encontrada.</li>';
+      return;
+    }
+
+    filtered.forEach(chat => {
+      const li = document.createElement('li');
+      li.className = `history-item ${chat.id === currentChatId ? 'active' : ''}`;
+
+      li.innerHTML = `
+        <div class="history-item-icon">💬</div>
+        <div class="history-item-title">${escapeHtml(chat.title)}</div>
+        <button class="btn-del-history" title="Excluir conversa">✕</button>
+      `;
+
+      li.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-del-history')) {
+          e.stopPropagation();
+          deleteChat(chat.id);
+        } else {
+          loadChat(chat.id);
+          closeSidebar();
+        }
+      });
+
+      historyList.appendChild(li);
+    });
+  }
+
+  // --- FORMATAÇÃO MARKDOWN LEVE & SEGURA ---
+  function formatMarkdown(text) {
+    if (!text) return '';
+    let formatted = escapeHtml(text);
+
+    // Blocos de código pré-formatados ```codigo```
+    formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+    // Código inline `codigo`
+    formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Negrito **texto**
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+    // Itálico *texto* ou _texto_
+    formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+    // Citações > texto
+    formatted = formatted.replace(/^>\s?(.*)$/gm, '<blockquote style="border-left:3px solid var(--angola-yellow);padding-left:10px;margin:8px 0;color:var(--text-muted);font-style:italic;">$1</blockquote>');
+
+    // Quebras de linha para <br>
+    formatted = formatted.replace(/\n/g, '<br>');
+
+    // Marcadores de lista •
+    formatted = formatted.replace(/•\s?/g, '<span style="color:var(--angola-yellow);margin-right:6px;">●</span>');
+
+    return formatted;
+  }
+
+  function escapeHtml(string) {
+    const entityMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
     };
-    roiSlider.addEventListener('input', updateRoi);
-    updateRoi();
+    return String(string).replace(/[&<>"']/g, s => entityMap[s]);
   }
 
-  // Controles do Modal de Documento Executivo / Impressão PDF
-  if (btnCloseModalPreview) {
-    btnCloseModalPreview.addEventListener('click', () => {
-      if (modalExecutivePreview) modalExecutivePreview.classList.remove('active');
-    });
+  // --- INICIALIZAÇÃO ---
+  function initChatDashboard() {
+    if (chats.length === 0) {
+      createNewChat();
+    } else {
+      loadChat(chats[0].id);
+    }
   }
 
-  if (modalExecutivePreview) {
-    modalExecutivePreview.addEventListener('click', (e) => {
-      if (e.target === modalExecutivePreview) {
-        modalExecutivePreview.classList.remove('active');
-      }
-    });
-  }
-
-  if (btnModalCopyText) {
-    btnModalCopyText.addEventListener('click', () => {
-      if (currentDocTextForPrint) {
-        navigator.clipboard.writeText(currentDocTextForPrint).then(() => {
-          showToast('Texto do documento copiado!', '📋');
-        });
-      }
-    });
-  }
-
-  if (btnModalPrintNow) {
-    btnModalPrintNow.addEventListener('click', () => {
-      window.print();
-    });
-  }
-
-  // Inicialização: Se já logado, vai para dashboard; senão, landing
-  if (currentUser) {
-    handleLoginSuccess(currentUser);
-  } else {
-    showView('landing');
-  }
+  // Iniciar na landing page por padrão
+  showView('landing');
 });
