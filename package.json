@@ -1,0 +1,17 @@
+{
+  "name": "kamba-chat-ia",
+  "version": "1.0.0",
+  "description": "Kamba Chat IA - Aplicação Web Conversacional Inteligente (estilo ChatGPT) com Landing Page Multi-dispositivo",
+  "main": "app.js",
+  "scripts": {
+    "dev": "python -m http.server 8085",
+    "start": "python -m http.server 8085",
+    "check": "node -c app.js"
+  },
+  "author": "Bruno Souza",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brunosouzamelo1999/prodigy-kamba-ia.git"
+  }
+}
