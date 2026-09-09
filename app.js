@@ -103,6 +103,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const btnNewChat = document.getElementById('btn-new-chat');
   const btnTopNewChat = document.getElementById('btn-top-new-chat');
   const btnDashHome = document.getElementById('btn-dash-home');
+  const btnQuickBack = document.getElementById('btn-quick-back');
+  const btnSidebarExit = document.getElementById('btn-sidebar-exit');
+  const btnUserProfile = document.getElementById('btn-user-profile');
 
   const welcomeCenter = document.getElementById('gpt-welcome-center');
   const chatMessages = document.getElementById('chat-messages');
@@ -242,8 +245,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
-  // --- GERENCIAMENTO DE TELAS (SPA) ---
-  function showView(viewName) {
+  // --- GERENCIAMENTO DE TELAS (SPA COM SUPORTE A HISTÓRICO DO NAVEGADOR) ---
+  function showView(viewName, pushHistory = true) {
     Object.keys(views).forEach(key => {
       if (views[key]) views[key].classList.remove('active');
     });
@@ -251,7 +254,22 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     if (views[viewName]) {
       views[viewName].classList.add('active');
       window.scrollTo(0, 0);
+
+      if (pushHistory) {
+        if (viewName === 'dashboard') {
+          history.pushState({ view: 'dashboard' }, '', '#chat');
+        } else if (viewName === 'auth') {
+          history.pushState({ view: 'auth' }, '', '#auth');
+        } else {
+          history.pushState({ view: 'landing' }, '', window.location.pathname);
+        }
+      }
     }
+  }
+
+  function exitChatToLanding() {
+    showView('landing');
+    showToast('Você voltou à página inicial.', '🏠');
   }
 
   // --- ABAS DO TERMINAL INTERATIVO NO HERO ---
@@ -361,12 +379,22 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     logoRefresh.addEventListener('click', () => showView('landing'));
   }
 
-  if (btnDashHome) {
-    btnDashHome.addEventListener('click', (e) => {
-      e.preventDefault();
-      showView('landing');
-    });
-  }
+  if (btnDashHome) btnDashHome.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
+  if (btnQuickBack) btnQuickBack.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
+  if (btnSidebarExit) btnSidebarExit.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
+  if (btnUserProfile) btnUserProfile.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
+
+  // Suporte para o botão Voltar do navegador / telemóvel
+  window.addEventListener('popstate', () => {
+    if (window.location.hash === '#chat') {
+      showView('dashboard', false);
+      initChatDashboard();
+    } else if (window.location.hash === '#auth') {
+      showView('auth', false);
+    } else {
+      showView('landing', false);
+    }
+  });
 
   // --- GERENCIAMENTO DE CONVERSAS (NOVO CHAT / HISTÓRICO) ---
   function saveChatsToStorage() {
@@ -718,6 +746,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
-  // Iniciar na landing page por padrão
-  showView('landing');
+  // Iniciar na landing page ou restaurar rota
+  if (window.location.hash === '#chat') {
+    showView('dashboard', false);
+    initChatDashboard();
+  } else if (window.location.hash === '#auth') {
+    showView('auth', false);
+  } else {
+    showView('landing', false);
+  }
 });

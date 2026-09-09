@@ -3519,3 +3519,69 @@ body {
     display: inline-flex !important;
   }
 }
+
+/* ============================================================
+   ESTILOS DOS BOTÕES DE SAÍDA E TRANSIÇÃO DE TELAS
+   ============================================================ */
+.gpt-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ECECEC;
+  padding: 7px 15px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gpt-exit-btn:hover {
+  background: rgba(216, 26, 45, 0.25);
+  border-color: rgba(216, 26, 45, 0.6);
+  color: #FF8B96;
+  transform: translateY(-1px);
+}
+
+.gpt-exit-btn-icon {
+  background: transparent;
+  border: none;
+  color: #B4B4B4;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  margin-right: 4px;
+}
+
+.gpt-exit-btn-icon:hover {
+  background: rgba(216, 26, 45, 0.2);
+  color: #FF8B96;
+}
+
+.gpt-nav-exit {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 6px;
+  color: #FFD100 !important;
+}
+
+.gpt-nav-exit:hover {
+  background: rgba(216, 26, 45, 0.2) !important;
+  color: #FF8B96 !important;
+}
+
+#view-dashboard:not(.active) {
+  display: none !important;
+}
+
+#view-landing.active {
+  display: block !important;
+  opacity: 1 !important;
+}
