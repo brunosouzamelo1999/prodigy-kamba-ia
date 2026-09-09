@@ -105,6 +105,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const chatInput = document.getElementById('chat-input');
   const btnSendMessage = document.getElementById('btn-send-message');
   const historyList = document.getElementById('history-list');
+  const pinnedSection = document.getElementById('pinned-section');
+  const pinnedList = document.getElementById('pinned-list');
 
   // Toast
   const kambaToast = document.getElementById('kamba-toast');
@@ -118,11 +120,28 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   let currentChatId = null;
   let isGenerating = false;
 
-  // Conversas pré-carregadas (inspiradas diretamente no ChatGPT real do usuário)
+  // Conversas pré-carregadas com suporte nativo a fixadas (pinned)
   const defaultChats = [
+    {
+      id: 'chat-rec-0',
+      title: 'Rebater notificação extrajudicial',
+      pinned: true,
+      updatedAt: Date.now() - 1800000,
+      messages: [
+        {
+          role: 'user',
+          content: 'Preciso de uma orientação estruturada para rebater uma notificação extrajudicial.'
+        },
+        {
+          role: 'ai',
+          content: `Aqui está a síntese organizada sobre **Rebater notificação extrajudicial**:\n\n• **Ponto Central:** Documento estruturado para análise rápida e verificação jurídica tempestiva.\n• **Status:** Revisado e atualizado.\n\nComo deseja prosseguir com a redação ou expansão deste tema?`
+        }
+      ]
+    },
     {
       id: 'chat-rec-1',
       title: 'Layout gráfico 2D abstrato',
+      pinned: false,
       updatedAt: Date.now() - 3600000,
       messages: [
         {
@@ -138,6 +157,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     {
       id: 'chat-rec-2',
       title: 'Branch · Layout gráfico 2D abstrato',
+      pinned: false,
       updatedAt: Date.now() - 7200000,
       messages: [
         {
@@ -153,6 +173,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     {
       id: 'chat-rec-3',
       title: 'Layout de embalagem 2D',
+      pinned: false,
       updatedAt: Date.now() - 86400000,
       messages: [
         {
@@ -168,6 +189,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     {
       id: 'chat-rec-4',
       title: 'Geração de nomes comerciais',
+      pinned: false,
       updatedAt: Date.now() - 172800000,
       messages: [
         {
@@ -183,6 +205,12 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   ];
 
   let chats = JSON.parse(localStorage.getItem('kamba_chat_history')) || defaultChats;
+  // Normalizar chats garantindo que cada um possua a flag pinned
+  chats.forEach(c => {
+    if (typeof c.pinned !== 'boolean') {
+      c.pinned = (c.title && c.title.toLowerCase().includes('notificação'));
+    }
+  });
 
   // --- TOAST NOTIFICATIONS ---
   function showToast(msg, icon = '✓') {
@@ -371,10 +399,18 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   function createNewChat() {
+    // Se o chat atual já estiver vazio e limpo, focar no input sem duplicar conversas vazias
+    const currentChat = chats.find(c => c.id === currentChatId);
+    if (currentChat && currentChat.messages.length === 0 && currentChat.title === 'Nova Conversa') {
+      if (chatInput) chatInput.focus();
+      return;
+    }
+
     const newId = 'chat-' + Date.now();
     const newChatObj = {
       id: newId,
       title: 'Nova Conversa',
+      pinned: false,
       updatedAt: Date.now(),
       messages: []
     };
@@ -390,7 +426,6 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   if (btnNewChat) btnNewChat.addEventListener('click', createNewChat);
-  if (btnTopNewChat) btnTopNewChat.addEventListener('click', createNewChat);
 
   function loadChat(chatId) {
     currentChatId = chatId;
@@ -427,34 +462,19 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     showToast('Conversa excluída.', '🗑');
   }
 
-  // Conectar conversas fixadas (simulação com tópicos instantâneos)
-  const pinnedRows = document.querySelectorAll('.gpt-chat-row.pinned');
-  pinnedRows.forEach(row => {
-    row.addEventListener('click', () => {
-      const title = row.querySelector('.chat-row-title')?.textContent || 'Conversa Fixada';
-      const existing = chats.find(c => c.title === title);
-      if (existing) {
-        loadChat(existing.id);
-      } else {
-        const newId = 'chat-' + Date.now();
-        const newChat = {
-          id: newId,
-          title: title,
-          updatedAt: Date.now(),
-          messages: [
-            { role: 'user', content: `Abrindo anotações sobre: ${title}` },
-            { role: 'ai', content: `Aqui está a síntese organizada sobre **${title}**:\n\n• **Ponto Central:** Documento estruturado para análise rápida e verificação jurídica.\n• **Status:** Revisado e atualizado.\n\nComo deseja prosseguir com a redação ou expansão deste tema?` }
-          ]
-        };
-        chats.unshift(newChat);
-        saveChatsToStorage();
-        loadChat(newId);
-      }
-      if (window.innerWidth <= 768) {
-        toggleSidebar(true);
-      }
-    });
-  });
+  // Alternar estado de fixada (Fixar / Desafixar)
+  function togglePinChat(chatId) {
+    const chat = chats.find(c => c.id === chatId);
+    if (!chat) return;
+    chat.pinned = !chat.pinned;
+    saveChatsToStorage();
+    renderHistory();
+    if (chat.pinned) {
+      showToast('Conversa fixada no topo!', '📌');
+    } else {
+      showToast('Conversa desafixada.', '✓');
+    }
+  }
 
   // --- RENDERIZAÇÃO DE MENSAGENS E STREAMING ---
   function appendMessageToDOM(role, text, isStreaming = false) {
@@ -641,34 +661,64 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     });
   }
 
-  // Renderizar histórico de conversas
+  function createChatRowElement(chat, isPinned) {
+    const li = document.createElement('li');
+    li.className = `gpt-chat-row ${chat.id === currentChatId ? 'active' : ''} ${isPinned ? 'is-pinned' : ''}`;
+
+    li.innerHTML = `
+      <span class="chat-row-icon">${isPinned ? '📌' : '💬'}</span>
+      <span class="chat-row-title" title="${escapeHtml(chat.title)}">${escapeHtml(chat.title)}</span>
+      <div class="chat-row-actions">
+        <button class="btn-action-chat btn-toggle-pin" title="${isPinned ? 'Desafixar conversa' : 'Fixar conversa'}">
+          ${isPinned ? '✕' : '📌'}
+        </button>
+        <button class="btn-action-chat btn-del-chat" title="Excluir conversa">🗑</button>
+      </div>
+    `;
+
+    li.addEventListener('click', (e) => {
+      const btnDel = e.target.closest('.btn-del-chat');
+      const btnPin = e.target.closest('.btn-toggle-pin');
+
+      if (btnDel) {
+        e.stopPropagation();
+        deleteChat(chat.id);
+      } else if (btnPin) {
+        e.stopPropagation();
+        togglePinChat(chat.id);
+      } else {
+        loadChat(chat.id);
+        if (window.innerWidth <= 768) {
+          toggleSidebar(true);
+        }
+      }
+    });
+
+    return li;
+  }
+
+  // Renderizar histórico de conversas (Fixadas & Recentes)
   function renderHistory() {
     if (!historyList) return;
     historyList.innerHTML = '';
+    if (pinnedList) pinnedList.innerHTML = '';
 
-    chats.forEach(chat => {
-      const li = document.createElement('li');
-      li.className = `gpt-chat-row ${chat.id === currentChatId ? 'active' : ''}`;
+    const pinnedChats = chats.filter(c => c.pinned);
+    const recentChats = chats.filter(c => !c.pinned);
 
-      li.innerHTML = `
-        <span class="chat-row-icon">🗨️</span>
-        <span class="chat-row-title">${escapeHtml(chat.title)}</span>
-        <button class="btn-del-chat" title="Excluir conversa">✕</button>
-      `;
+    // Exibir seção Fixadas se houver alguma conversa fixada
+    if (pinnedSection) {
+      pinnedSection.style.display = pinnedChats.length > 0 ? 'flex' : 'none';
+    }
 
-      li.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-del-chat')) {
-          e.stopPropagation();
-          deleteChat(chat.id);
-        } else {
-          loadChat(chat.id);
-          if (window.innerWidth <= 768) {
-            toggleSidebar(true);
-          }
-        }
+    if (pinnedList) {
+      pinnedChats.forEach(chat => {
+        pinnedList.appendChild(createChatRowElement(chat, true));
       });
+    }
 
-      historyList.appendChild(li);
+    recentChats.forEach(chat => {
+      historyList.appendChild(createChatRowElement(chat, false));
     });
   }
 

@@ -3063,32 +3063,60 @@ body {
   white-space: nowrap;
 }
 
+.chat-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.gpt-chat-row:hover .chat-row-actions,
+.gpt-chat-row.active .chat-row-actions {
+  opacity: 1;
+}
+
+.btn-action-chat {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-action-chat:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+}
+
+.btn-action-chat.btn-toggle-pin:hover {
+  color: #FFD100;
+  background: rgba(255, 209, 0, 0.18);
+}
+
+.btn-action-chat.btn-del-chat:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+.gpt-chat-row.is-pinned {
+  border-left: 2px solid rgba(255, 209, 0, 0.45);
+}
+
 .dot-pinned-amber {
   width: 6px;
   height: 6px;
   background: #F59E0B;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.btn-del-chat {
-  background: transparent;
-  border: none;
-  color: #9CA3AF;
-  font-size: 12px;
-  opacity: 0;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.gpt-chat-row:hover .btn-del-chat {
-  opacity: 1;
-}
-
-.btn-del-chat:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #EF4444;
 }
 
 /* Rodapé do Perfil */

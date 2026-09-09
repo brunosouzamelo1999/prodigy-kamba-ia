@@ -698,27 +698,11 @@
         </div>
 
 
-        <!-- Seção Fixada -->
-        <div class="gpt-list-section">
-          <div class="gpt-section-title">Fixada</div>
-          <ul class="gpt-chat-list pinned-list">
-            <li class="gpt-chat-row pinned">
-              <span class="chat-row-icon">🗨️</span>
-              <span class="chat-row-title">Rebater notificação extrajudicial</span>
-            </li>
-            <li class="gpt-chat-row pinned">
-              <span class="chat-row-icon">🗨️</span>
-              <span class="chat-row-title">Analisar mortes prisionais</span>
-              <span class="dot-pinned-amber"></span>
-            </li>
-            <li class="gpt-chat-row pinned">
-              <span class="chat-row-icon">🗨️</span>
-              <span class="chat-row-title">Resumo dos Embargos</span>
-            </li>
-            <li class="gpt-chat-row pinned">
-              <span class="chat-row-icon">🗨️</span>
-              <span class="chat-row-title">Resumo da contradição fát...</span>
-            </li>
+        <!-- Seção Fixadas (Dinâmica com Opção Real de Fixar / Desafixar) -->
+        <div class="gpt-list-section" id="pinned-section" style="display: none;">
+          <div class="gpt-section-title">Fixadas</div>
+          <ul class="gpt-chat-list" id="pinned-list">
+            <!-- Renderizado dinamicamente pelo JS -->
           </ul>
         </div>
 
