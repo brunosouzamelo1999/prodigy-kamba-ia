@@ -1451,7 +1451,11 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
         aiResponseText = await callGoogleGeminiAPI(geminiKey, text, attachedFileToSend, chat.messages);
       } catch (err) {
         console.error('Erro ao chamar Google Gemini API:', err);
-        aiResponseText = `**Aviso de Conexão (Google AI Studio):**\n\n${err.message}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
+        if (err.message.includes('429') || err.message.includes('Limite de requisições')) {
+          aiResponseText = `**Aviso de Cota Gratuita (Google AI Studio):**\n\n${err.message}\n\n*Nota: Sua chave está perfeitamente conectada e válida. O plano gratuito do Google renova as requisições automaticamente a cada 60 segundos.*`;
+        } else {
+          aiResponseText = `**Aviso de Conexão (Google AI Studio):**\n\n${err.message}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
+        }
       }
     } else {
       if (attachedFileToSend) {
@@ -1897,7 +1901,8 @@ DIRETRIZES DE ATUAÇÃO:
             throw new Error(`Acesso negado pelo Google (403): Esta chave não tem o serviço Gemini (Generative Language) ativado.\n\nComo resolver: Acesse https://aistudio.google.com/app/apikey e clique em "Create API key in new project" (Criar chave em novo projeto).`);
           }
           if (response.status === 429) {
-            throw new Error(`Limite de requisições do Google atingido temporariamente (429). Aguarde alguns instantes.`);
+            lastError = new Error(`Limite de requisições por minuto do Google atingido temporariamente (429). Aguarde alguns segundos para a cota renovar.`);
+            continue;
           }
         } catch (err) {
           lastError = err;
@@ -1905,7 +1910,7 @@ DIRETRIZES DE ATUAÇÃO:
             console.warn('Falha na tentativa com busca ao vivo. Tentando sem busca...', err);
             continue;
           }
-          if (err.name === 'AbortError' || err.message.includes('403') || err.message.includes('429')) {
+          if (err.name === 'AbortError' || err.message.includes('403')) {
             throw err;
           }
         }
