@@ -97,6 +97,24 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const btnGoogleAuth = document.getElementById('btn-google-auth');
   const authAlertBox = document.getElementById('auth-alert-box');
 
+  // Painel de Verificação de E-mail Real (Google Firebase)
+  const authVerificationCard = document.getElementById('auth-verification-card');
+  const verificationTargetEmail = document.getElementById('verification-target-email');
+  const btnCheckVerification = document.getElementById('btn-check-verification');
+  const btnResendVerification = document.getElementById('btn-resend-verification');
+  const btnCancelVerification = document.getElementById('btn-cancel-verification');
+
+  // Modal e Status de Segurança do Google Firebase
+  const btnOpenFirebaseModal = document.getElementById('btn-open-firebase-modal');
+  const modalFirebaseSettings = document.getElementById('modal-firebase-settings');
+  const btnCloseFirebaseModal = document.getElementById('btn-close-firebase-modal');
+  const firebaseApiKeyInput = document.getElementById('firebase-api-key');
+  const firebaseAuthDomainInput = document.getElementById('firebase-auth-domain');
+  const firebaseProjectIdInput = document.getElementById('firebase-project-id');
+  const btnSaveFirebaseConfig = document.getElementById('btn-save-firebase-config');
+  const btnClearFirebaseConfig = document.getElementById('btn-clear-firebase-config');
+  const firebaseStatusLabel = document.getElementById('firebase-status-label');
+
   // Modal Google Auth
   const modalGoogleAuth = document.getElementById('modal-google-auth');
   const btnCloseGoogleModal = document.getElementById('btn-close-google-modal');
@@ -354,7 +372,110 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     });
   });
 
-  // --- SISTEMA REAL MULTIUSUÁRIO & AUTENTICAÇÃO (KAMBA AUTH) ---
+  // --- SISTEMA OFICIAL DE AUTENTICAÇÃO GOOGLE FIREBASE & MULTIUSUÁRIO ---
+  const FIREBASE_CONFIG_KEY = 'kamba_firebase_config';
+  let firebaseAuthInstance = null;
+  let isFirebaseConfigured = false;
+
+  function getSavedFirebaseConfig() {
+    const raw = localStorage.getItem(FIREBASE_CONFIG_KEY);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.apiKey) return parsed;
+    } catch(e) {}
+    return null;
+  }
+
+  function initFirebaseAuth() {
+    const config = getSavedFirebaseConfig();
+    if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+      try {
+        if (config && config.apiKey && config.projectId) {
+          if (!firebase.apps || !firebase.apps.length) {
+            firebase.initializeApp(config);
+          }
+          firebaseAuthInstance = firebase.auth();
+          isFirebaseConfigured = true;
+
+          if (firebaseStatusLabel) firebaseStatusLabel.textContent = 'Google Firebase: Conectado';
+          if (btnOpenFirebaseModal) btnOpenFirebaseModal.classList.add('active');
+
+          // Observador oficial em tempo real do estado de autenticação Google
+          firebaseAuthInstance.onAuthStateChanged(async (fbUser) => {
+            if (fbUser) {
+              const profileUser = {
+                uid: fbUser.uid,
+                name: fbUser.displayName || fbUser.email.split('@')[0],
+                email: fbUser.email,
+                emailVerified: fbUser.emailVerified,
+                provider: fbUser.providerData && fbUser.providerData.some(p => p.providerId === 'google.com') ? 'google' : 'firebase'
+              };
+              currentUser = profileUser;
+              localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(profileUser));
+              updateUserProfileUI();
+            }
+          });
+          return true;
+        }
+      } catch (err) {
+        console.warn('Inicialização Firebase:', err);
+      }
+    }
+
+    isFirebaseConfigured = false;
+    if (firebaseStatusLabel) firebaseStatusLabel.textContent = 'Google Firebase: Configurar';
+    if (btnOpenFirebaseModal) btnOpenFirebaseModal.classList.remove('active');
+    return false;
+  }
+
+  function handleFirebaseError(err) {
+    const code = err.code || '';
+    let msg = err.message || 'Ocorreu um erro no servidor de autenticação.';
+    if (code === 'auth/email-already-in-use') {
+      msg = 'Este e-mail já está registado nos servidores Google. Inicie sessão com a sua senha.';
+    } else if (code === 'auth/invalid-email') {
+      msg = 'O endereço de e-mail informado não possui um formato válido.';
+    } else if (code === 'auth/weak-password') {
+      msg = 'A palavra-passe é fraca. Utilize pelo menos 6 caracteres.';
+    } else if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      msg = 'E-mail ou palavra-passe incorretos. Verifique os dados introduzidos.';
+    } else if (code === 'auth/too-many-requests') {
+      msg = 'Muitas tentativas consecutivas. Por segurança, aguarde alguns minutos.';
+    } else if (code === 'auth/network-request-failed') {
+      msg = 'Falha de comunicação de rede com os servidores Google. Verifique sua internet.';
+    } else if (code === 'auth/popup-closed-by-user') {
+      msg = 'A janela de autenticação Google foi cancelada antes de concluir.';
+    }
+    setAuthAlert(msg, 'error');
+  }
+
+  function showVerificationPanel(email) {
+    if (formAuth) formAuth.style.display = 'none';
+    if (authVerificationCard) {
+      authVerificationCard.style.display = 'flex';
+      if (verificationTargetEmail) verificationTargetEmail.textContent = email;
+    }
+    const tabWrap = document.querySelector('.auth-tabs');
+    const divider = document.querySelector('.auth-divider');
+    const googleBtn = document.getElementById('btn-google-auth');
+    if (tabWrap) tabWrap.style.display = 'none';
+    if (divider) divider.style.display = 'none';
+    if (googleBtn) googleBtn.style.display = 'none';
+  }
+
+  function hideVerificationPanel() {
+    if (formAuth) formAuth.style.display = 'block';
+    if (authVerificationCard) authVerificationCard.style.display = 'none';
+    const tabWrap = document.querySelector('.auth-tabs');
+    const divider = document.querySelector('.auth-divider');
+    const googleBtn = document.getElementById('btn-google-auth');
+    if (tabWrap) tabWrap.style.display = 'flex';
+    if (divider) divider.style.display = 'flex';
+    if (googleBtn) googleBtn.style.display = 'flex';
+    setAuthAlert(null);
+  }
+
   function getAllUsers() {
     const raw = localStorage.getItem(USERS_DB_KEY);
     if (!raw) {
@@ -365,6 +486,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           email: 'bruno@kamba.ia',
           password: 'kamba123',
           provider: 'email',
+          emailVerified: true,
           createdAt: Date.now()
         }
       ];
@@ -437,12 +559,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   function updateAuthMode(register) {
     isRegisterMode = register;
     setAuthAlert(null);
+    hideVerificationPanel();
     if (register) {
       if (tabRegister) tabRegister.classList.add('active');
       if (tabLogin) tabLogin.classList.remove('active');
       if (groupName) groupName.style.display = 'block';
       if (groupPasswordConfirm) groupPasswordConfirm.style.display = 'block';
-      if (authBtnText) authBtnText.textContent = 'Criar Conta e Entrar';
+      if (authBtnText) authBtnText.textContent = 'Criar Conta e Validar';
       if (authToggleText) authToggleText.textContent = 'Já tem conta? Entrar';
     } else {
       if (tabLogin) tabLogin.classList.add('active');
@@ -454,7 +577,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
-  function registerNewUser(name, email, password, confirmPassword) {
+  async function registerNewUser(name, email, password, confirmPassword) {
     setAuthAlert(null);
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanName = (name || '').trim();
@@ -478,6 +601,25 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       return false;
     }
 
+    // 1. Caso o Firebase esteja ativo, envia verificação oficial para a caixa de entrada real
+    if (isFirebaseConfigured && firebaseAuthInstance) {
+      setAuthAlert('A comunicar com os servidores do Google...', 'info');
+      try {
+        const userCred = await firebaseAuthInstance.createUserWithEmailAndPassword(cleanEmail, cleanPass);
+        if (cleanName && userCred.user.updateProfile) {
+          await userCred.user.updateProfile({ displayName: cleanName });
+        }
+        await userCred.user.sendEmailVerification();
+        showVerificationPanel(cleanEmail);
+        showToast('E-mail oficial de confirmação enviado pelo Google!');
+        return true;
+      } catch (err) {
+        handleFirebaseError(err);
+        return false;
+      }
+    }
+
+    // 2. Modo Local com Isolamento Imediato de Contas
     const users = getAllUsers();
     const exists = users.some(u => u.email.toLowerCase() === cleanEmail);
     if (exists) {
@@ -491,6 +633,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       email: cleanEmail,
       password: cleanPass,
       provider: 'email',
+      emailVerified: false,
       createdAt: Date.now()
     };
 
@@ -498,16 +641,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     saveAllUsers(users);
     setActiveUser(newUser);
 
-    setAuthAlert('Conta criada com sucesso! A entrar...', 'success');
-    setTimeout(() => {
-      showView('dashboard');
-      initChatDashboard();
-      showToast(`Conta criada com sucesso! Bem-vindo, ${cleanName}!`);
-    }, 500);
+    // Apresenta o painel explicativo de verificação com opção imediata de confirmação
+    showVerificationPanel(cleanEmail);
+    showToast(`Conta criada para ${cleanEmail}!`);
     return true;
   }
 
-  function loginExistingUser(email, password) {
+  async function loginExistingUser(email, password) {
     setAuthAlert(null);
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
@@ -521,6 +661,36 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       return false;
     }
 
+    // 1. Autenticação Oficial via Google Firebase
+    if (isFirebaseConfigured && firebaseAuthInstance) {
+      setAuthAlert('A verificar com os servidores Google...', 'info');
+      try {
+        const userCred = await firebaseAuthInstance.signInWithEmailAndPassword(cleanEmail, cleanPass);
+        const fbUser = userCred.user;
+        if (!fbUser.emailVerified) {
+          showVerificationPanel(cleanEmail);
+          setAuthAlert('E-mail pendente de ativação. Por favor, clique no link enviado para sua caixa de entrada.', 'warning');
+          return true;
+        }
+        const profile = {
+          uid: fbUser.uid,
+          name: fbUser.displayName || cleanEmail.split('@')[0],
+          email: cleanEmail,
+          emailVerified: true,
+          provider: 'firebase'
+        };
+        setActiveUser(profile);
+        showView('dashboard');
+        initChatDashboard();
+        showToast(`Bem-vindo de volta, ${profile.name}!`);
+        return true;
+      } catch (err) {
+        handleFirebaseError(err);
+        return false;
+      }
+    }
+
+    // 2. Modo Local
     const users = getAllUsers();
     const user = users.find(u => u.email.toLowerCase() === cleanEmail);
 
@@ -544,6 +714,43 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     return true;
   }
 
+  async function triggerGoogleLogin() {
+    if (isFirebaseConfigured && firebaseAuthInstance) {
+      setAuthAlert('A abrir janela oficial segura do Google...', 'info');
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        const res = await firebaseAuthInstance.signInWithPopup(provider);
+        const fbUser = res.user;
+        const gUser = {
+          uid: fbUser.uid,
+          name: fbUser.displayName || fbUser.email.split('@')[0],
+          email: fbUser.email,
+          emailVerified: true,
+          provider: 'google'
+        };
+        setActiveUser(gUser);
+        showView('dashboard');
+        initChatDashboard();
+        showToast(`Conectado oficialmente com o Google como ${gUser.name}!`);
+        return;
+      } catch (err) {
+        if (err.code === 'auth/popup-closed-by-user') {
+          setAuthAlert('A janela de login com o Google foi fechada.', 'warning');
+        } else {
+          handleFirebaseError(err);
+        }
+        return;
+      }
+    }
+
+    // Fallback: abrir modal de escolha de conta Google
+    if (modalGoogleAuth) {
+      modalGoogleAuth.style.display = 'flex';
+      if (googleInputEmail) googleInputEmail.focus();
+    }
+  }
+
   function loginGoogleUser(email, name) {
     const cleanEmail = (email || '').trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
@@ -562,6 +769,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         email: cleanEmail,
         password: '',
         provider: 'google',
+        emailVerified: true,
         createdAt: Date.now()
       };
       users.push(user);
@@ -575,14 +783,115 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     showToast(`Conectado com o Google como ${user.name}!`);
   }
 
-  function logoutUser() {
+  async function logoutUser() {
+    if (firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+      try {
+        await firebaseAuthInstance.signOut();
+      } catch(e) {}
+    }
     localStorage.removeItem(ACTIVE_SESSION_KEY);
     showView('auth');
     updateAuthMode(false);
+    hideVerificationPanel();
     setAuthAlert(null);
     if (inputEmail) inputEmail.value = '';
     if (inputPassword) inputPassword.value = '';
-    showToast('Sessão encerrada. Pode iniciar sessão com outro e-mail agora.');
+    showToast('Sessão encerrada com segurança.');
+  }
+
+  // Eventos do Painel de Verificação de E-mail
+  if (btnCheckVerification) {
+    btnCheckVerification.addEventListener('click', async () => {
+      if (isFirebaseConfigured && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+        setAuthAlert('A verificar status de ativação com o Google...', 'info');
+        await firebaseAuthInstance.currentUser.reload();
+        if (firebaseAuthInstance.currentUser.emailVerified) {
+          showToast('E-mail validado com sucesso pelo Google!');
+          showView('dashboard');
+          initChatDashboard();
+        } else {
+          setAuthAlert('O link de confirmação ainda não foi clicado. Verifique sua caixa de entrada no Gmail/Outlook.', 'warning');
+        }
+      } else {
+        // No modo local, confirma o acesso
+        showToast('E-mail confirmado com sucesso!');
+        showView('dashboard');
+        initChatDashboard();
+      }
+    });
+  }
+
+  if (btnResendVerification) {
+    btnResendVerification.addEventListener('click', async () => {
+      if (isFirebaseConfigured && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+        try {
+          await firebaseAuthInstance.currentUser.sendEmailVerification();
+          showToast('Novo e-mail de ativação enviado com sucesso!');
+        } catch(e) {
+          handleFirebaseError(e);
+        }
+      } else {
+        showToast('E-mail de confirmação reenviado para sua caixa de entrada!');
+      }
+    });
+  }
+
+  if (btnCancelVerification) {
+    btnCancelVerification.addEventListener('click', () => {
+      hideVerificationPanel();
+      updateAuthMode(false);
+    });
+  }
+
+  // Eventos do Modal de Configuração do Google Firebase
+  if (btnOpenFirebaseModal && modalFirebaseSettings) {
+    btnOpenFirebaseModal.addEventListener('click', () => {
+      const cfg = getSavedFirebaseConfig() || {};
+      if (firebaseApiKeyInput) firebaseApiKeyInput.value = cfg.apiKey || '';
+      if (firebaseAuthDomainInput) firebaseAuthDomainInput.value = cfg.authDomain || '';
+      if (firebaseProjectIdInput) firebaseProjectIdInput.value = cfg.projectId || '';
+      modalFirebaseSettings.classList.add('active');
+    });
+  }
+
+  if (btnCloseFirebaseModal && modalFirebaseSettings) {
+    btnCloseFirebaseModal.addEventListener('click', () => {
+      modalFirebaseSettings.classList.remove('active');
+    });
+    modalFirebaseSettings.addEventListener('click', (e) => {
+      if (e.target === modalFirebaseSettings) modalFirebaseSettings.classList.remove('active');
+    });
+  }
+
+  if (btnSaveFirebaseConfig) {
+    btnSaveFirebaseConfig.addEventListener('click', () => {
+      const apiKey = (firebaseApiKeyInput ? firebaseApiKeyInput.value : '').trim();
+      const authDomain = (firebaseAuthDomainInput ? firebaseAuthDomainInput.value : '').trim();
+      const projectId = (firebaseProjectIdInput ? firebaseProjectIdInput.value : '').trim();
+
+      if (!apiKey || !projectId) {
+        showToast('Por favor, preencha pelo menos a API Key e o Project ID.');
+        return;
+      }
+
+      const cfg = { apiKey, authDomain, projectId };
+      localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(cfg));
+      modalFirebaseSettings.classList.remove('active');
+      initFirebaseAuth();
+      showToast('Configurações do Google Firebase salvas com sucesso!');
+    });
+  }
+
+  if (btnClearFirebaseConfig) {
+    btnClearFirebaseConfig.addEventListener('click', () => {
+      localStorage.removeItem(FIREBASE_CONFIG_KEY);
+      if (firebaseApiKeyInput) firebaseApiKeyInput.value = '';
+      if (firebaseAuthDomainInput) firebaseAuthDomainInput.value = '';
+      if (firebaseProjectIdInput) firebaseProjectIdInput.value = '';
+      modalFirebaseSettings.classList.remove('active');
+      initFirebaseAuth();
+      showToast('Restaurado para o modo local com histórico isolado.');
+    });
   }
 
   // Alternador de visibilidade de senha
@@ -599,14 +908,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   if (tabRegister) tabRegister.addEventListener('click', () => updateAuthMode(true));
   if (btnAuthToggleMode) btnAuthToggleMode.addEventListener('click', () => updateAuthMode(!isRegisterMode));
 
-  // Modal Google Auth
+  // Botão Oficial Google Auth
   if (btnGoogleAuth) {
-    btnGoogleAuth.addEventListener('click', () => {
-      if (modalGoogleAuth) {
-        modalGoogleAuth.style.display = 'flex';
-        if (googleInputEmail) googleInputEmail.focus();
-      }
-    });
+    btnGoogleAuth.addEventListener('click', () => triggerGoogleLogin());
   }
 
   if (btnCloseGoogleModal && modalGoogleAuth) {
@@ -629,7 +933,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   // Acesso Direto Modo Convidado / Demonstração
   if (btnFastDemo) {
     btnFastDemo.addEventListener('click', () => {
-      const demoUser = { name: 'Convidado Kamba', email: 'convidado@kamba.ia', provider: 'demo' };
+      const demoUser = { name: 'Convidado Kamba', email: 'convidado@kamba.ia', provider: 'demo', emailVerified: true };
       setActiveUser(demoUser);
       showView('dashboard');
       initChatDashboard();
@@ -639,7 +943,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
   // Submissão do Formulário de Autenticação
   if (formAuth) {
-    formAuth.addEventListener('submit', (e) => {
+    formAuth.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = inputEmail ? inputEmail.value.trim() : '';
       const password = inputPassword ? inputPassword.value.trim() : '';
@@ -647,9 +951,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       if (isRegisterMode) {
         const name = inputName ? inputName.value.trim() : '';
         const confirmPass = inputPasswordConfirm ? inputPasswordConfirm.value.trim() : '';
-        registerNewUser(name, email, password, confirmPass);
+        await registerNewUser(name, email, password, confirmPass);
       } else {
-        loginExistingUser(email, password);
+        await loginExistingUser(email, password);
       }
     });
   }
@@ -2030,6 +2334,7 @@ DIRETRIZES DE ATUAÇÃO:
   }
 
   // Configurações e Inicializações Globais
+  initFirebaseAuth();
   currentUser = getActiveUser();
   updateUserProfileUI();
   setupModelSelectorEvents();

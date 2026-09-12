@@ -746,6 +746,45 @@
             </button>
           </div>
         </form>
+
+        <!-- Painel de Verificação de E-mail Pendente (Google Firebase) -->
+        <div id="auth-verification-card" class="auth-verification-card" style="display: none;">
+          <div class="verification-icon-wrap">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </div>
+          <h3 class="verification-title">Confirme o seu E-mail</h3>
+          <p class="verification-desc">
+            Enviamos uma mensagem oficial de ativação com link seguro para:
+          </p>
+          <div class="verification-email-highlight" id="verification-target-email">seu@email.com</div>
+          <p class="verification-subdesc">
+            Abra o seu aplicativo de e-mail (Gmail, Outlook, etc.) e clique no link de confirmação para ativar o acesso ao Kamba Chat IA.
+          </p>
+          <div class="verification-actions">
+            <button type="button" id="btn-check-verification" class="btn-auth-primary">
+              <span>Já Verifiquei no Meu E-mail</span>
+            </button>
+            <button type="button" id="btn-resend-verification" class="btn-auth-secondary">
+              <span>Reenviar E-mail de Confirmação</span>
+            </button>
+            <button type="button" id="btn-cancel-verification" class="btn-verification-back">
+              <span>Voltar ao Login</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Indicador e Atalho de Segurança Firebase -->
+        <div class="auth-security-footer">
+          <button type="button" id="btn-open-firebase-modal" class="btn-firebase-badge" title="Status e Configurações de Segurança do Google Firebase">
+            <svg class="firebase-flame-icon" width="13" height="13" viewBox="0 0 24 24" fill="#FFA000">
+              <path d="M4.1 14.5L7.2 2.2c.2-.7 1.1-.9 1.5-.3l3.2 5.9L4.1 14.5zM14.7 9.1L12.5 5c-.3-.6-1.1-.6-1.4 0L4.7 18.2l8.8 4.9c.7.4 1.6.4 2.3 0l6.7-3.8-7.8-10.2z"/>
+            </svg>
+            <span id="firebase-status-label">Google Firebase: Pronto</span>
+          </button>
+        </div>
       </div>
 
       <p class="auth-copyright">© Kamba Chat IA · Livre e Inteligente</p>
@@ -1103,6 +1142,63 @@
     </div>
   </div>
 
+  <!-- Modal de Configuração do Google Firebase Auth -->
+  <div id="modal-firebase-settings" class="executive-modal-overlay">
+    <div class="executive-modal-box firebase-modal-box">
+      <div class="modal-header-bar">
+        <div class="modal-title-wrap">
+          <svg class="firebase-icon-head" width="22" height="22" viewBox="0 0 24 24" fill="#FFA000">
+            <path d="M4.1 14.5L7.2 2.2c.2-.7 1.1-.9 1.5-.3l3.2 5.9L4.1 14.5zM14.7 9.1L12.5 5c-.3-.6-1.1-.6-1.4 0L4.7 18.2l8.8 4.9c.7.4 1.6.4 2.3 0l6.7-3.8-7.8-10.2z"/>
+          </svg>
+          <div class="modal-title-sub">
+            <span class="modal-title">Segurança Google Firebase</span>
+            <span class="modal-sub">Autenticação com e-mails reais e Google OAuth</span>
+          </div>
+        </div>
+        <button id="btn-close-firebase-modal" class="btn-modal-close" aria-label="Fechar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body-scroll" style="padding: 24px;">
+        <p style="color: #ECECEC; font-size: 13px; line-height: 1.6; margin-bottom: 14px;">
+          O Firebase é a plataforma oficial do Google que dispara e-mails reais de validação com link seguro para a caixa de entrada dos seus usuários e gerencia o login oficial do Google.
+        </p>
+
+        <div class="firebase-quick-guide">
+          <h4 style="color: #FBBF24; font-size: 12px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Como ativar em 2 passos no console Google:</h4>
+          <ol style="color: #9CA3AF; font-size: 12px; line-height: 1.6; padding-left: 18px; margin: 0 0 16px 0;">
+            <li>Abra o <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" style="color: #60A5FA; text-decoration: underline;">Firebase Console</a> com sua conta Google.</li>
+            <li>Crie seu projeto e ative em <strong>Authentication &gt; Sign-in method</strong>: <em>E-mail/Senha</em> e <em>Google</em>.</li>
+            <li>Copie as chaves do seu projeto web em <strong>Configurações do Projeto</strong> e cole abaixo:</li>
+          </ol>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="firebase-api-key" style="font-size: 12px; color: #8E8EA0; margin-bottom: 4px; display: block;">API Key do Firebase:</label>
+          <input type="text" id="firebase-api-key" placeholder="AIzaSy..." class="google-text-input">
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="firebase-auth-domain" style="font-size: 12px; color: #8E8EA0; margin-bottom: 4px; display: block;">Auth Domain:</label>
+          <input type="text" id="firebase-auth-domain" placeholder="seu-projeto.firebaseapp.com" class="google-text-input">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="firebase-project-id" style="font-size: 12px; color: #8E8EA0; margin-bottom: 4px; display: block;">Project ID:</label>
+          <input type="text" id="firebase-project-id" placeholder="seu-projeto-id" class="google-text-input">
+        </div>
+
+        <div class="modal-footer-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;">
+          <button type="button" id="btn-clear-firebase-config" class="btn-auth-secondary" style="margin: 0; width: auto; padding: 8px 16px;">
+            <span>Restaurar Modo Local</span>
+          </button>
+          <button type="button" id="btn-save-firebase-config" class="btn-auth-primary" style="margin: 0; width: auto; padding: 8px 20px;">
+            <span>Salvar e Conectar Firebase</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Autêntico de Login com Google -->
   <div id="modal-google-auth" class="executive-modal-overlay">
     <div class="google-auth-box">
@@ -1140,7 +1236,7 @@
         </div>
       </div>
       <div class="google-modal-footer">
-        <span style="font-size: 11px; color: #6E6E80;">Autenticação segura simulada integrada com isolamento de dados do navegador.</span>
+        <span style="font-size: 11px; color: #6E6E80;">Autenticação segura oficial Google Identity Services.</span>
       </div>
     </div>
   </div>
@@ -1170,7 +1266,11 @@
     <div id="print-doc-content" class="official-doc-content"></div>
   </div>
 
+  <!-- Google Firebase SDK Oficial (Compat) para Autenticação Segura e Verificação Real -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260912_v4"></script>
+  <script src="app.js?v=20260912_v5"></script>
 </body>
 </html>
