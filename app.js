@@ -789,6 +789,15 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   async function callGoogleGeminiAPI(apiKey, promptText, fileAttachment, historyMessages) {
     const parts = [];
 
+    const now = new Date();
+    const userLocale = navigator.language || 'pt-AO';
+    const dateStr = now.toLocaleDateString(userLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString(userLocale, { hour: '2-digit', minute: '2-digit' });
+    let userTz = 'UTC';
+    try {
+      userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    } catch(e) {}
+
     if (fileAttachment && fileAttachment.base64) {
       parts.push({
         inline_data: {
@@ -798,8 +807,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       });
     }
 
+    const temporalNotice = `[Data e horário local do dispositivo do usuário: ${dateStr}, ${timeStr} (${userTz})]`;
+    const finalPromptText = promptText 
+      ? `${temporalNotice}\n\n${promptText}` 
+      : `${temporalNotice}\n\nAnalise o arquivo anexado e forneça as principais informações ou a tradução solicitada de forma clara e profissional.`;
+
     parts.push({
-      text: promptText || "Analise o arquivo anexado e forneça as principais informações ou a tradução solicitada de forma clara e profissional."
+      text: finalPromptText
     });
 
     const contents = [];
