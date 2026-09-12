@@ -1707,8 +1707,8 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
 
     if (fileAttachment && fileAttachment.base64) {
       parts.push({
-        inline_data: {
-          mime_type: fileAttachment.type,
+        inlineData: {
+          mimeType: fileAttachment.type || 'image/jpeg',
           data: fileAttachment.base64
         }
       });
@@ -1723,15 +1723,25 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       text: finalPromptText
     });
 
-    // 1. Memória Contínua Multi-Turn (até 24 turnos anteriores)
+    // 1. Memória Contínua Multi-Turn (turnos anteriores, excluindo a mensagem atual)
     const rawHistory = [];
     if (historyMessages && historyMessages.length > 0) {
-      const recent = historyMessages.slice(-24);
+      const previousMessages = historyMessages.slice(0, -1);
+      const recent = previousMessages.slice(-20);
       for (const m of recent) {
         if (m.content && !m.content.startsWith('**Aviso de Conexão')) {
+          const contentStr = m.content;
+          // Pular comandos órfãos de imagens anteriores para não confundir o modelo
+          if (m.role === 'user' && !fileAttachment && (
+            contentStr.includes('Extract all visible text in this image') || 
+            contentStr.includes('texto visível contido nesta imagem') ||
+            contentStr.includes('Transcreva com máxima precisão todo o texto contido nesta imagem')
+          )) {
+            continue;
+          }
           rawHistory.push({
             role: m.role === 'user' ? 'user' : 'model',
-            parts: [{ text: m.content }]
+            parts: [{ text: contentStr }]
           });
         }
       }
@@ -1749,11 +1759,8 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       }
     }
 
-    if (lastRole === 'user' && contents.length > 0) {
-      contents[contents.length - 1].parts.push(...parts);
-    } else {
-      contents.push({ role: 'user', parts: parts });
-    }
+    // Adicionar o turno atual do usuário
+    contents.push({ role: 'user', parts: parts });
 
     // 2. Definir lista ordenada de endpoints conforme o modelo escolhido (Pro vs Flash)
     const tier = getSelectedModelTier();
@@ -1783,6 +1790,8 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
     const uniqueEndpoints = [...new Set(candidateEndpoints)];
     let lastError = null;
     const webSearchWanted = isWebSearchEnabled();
+    // A API Google Gemini não aceita a ferramenta google_search combinada com anexos multimodais (imagens ou PDFs)
+    const canUseSearch = webSearchWanted && !fileAttachment;
 
     // Instrução Corporativa Executiva
     const systemInstruction = {
@@ -1791,15 +1800,15 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
 A data e hora exatas no dispositivo do usuário são: ${dateStr}, às ${timeStr} (Fuso horário: ${userTz}). Utilize SEMPRE esta data como referência cronológica factual inegociável para o dia de hoje, cálculos de prazos, calendário e fatos correntes.
 DIRETRIZES DE ATUAÇÃO:
 1. EXCELÊNCIA E PRECISÃO: Suas respostas devem ser de alto padrão corporativo, objetivas, sem preâmbulos vazios e bem estruturadas com títulos claros, tópicos e tabelas comparativas quando relevante.
-2. ANÁLISE PROFUNDA DE DOCUMENTOS: Você é mestre em tradução juramentada/executiva de PDFs, relatórios técnicos, planilhas e extração OCR de imagens.
+2. ANÁLISE PROFUNDA DE DOCUMENTOS: Você possui visão computacional nativa e leitura multimodal completa. Extraia todo o texto visível de imagens com fidelidade absoluta (OCR) e faça traduções executivas de PDFs e documentos técnicos.
 3. PADRÃO VISUAL SÓBRIO: Jamais use emojis informais ou infantis.
 4. IDIOMA: Responda em português formal impecável, atendendo com fluidez internacional.`
       }]
     };
 
     for (const baseEndpoint of uniqueEndpoints) {
-      // Se busca na web estiver ativada, tentar com busca primeiro e, caso a versão recuse com 400, tentar sem busca
-      const searchAttempts = webSearchWanted ? [true, false] : [false];
+      // Se busca na web estiver permitida, tentar com busca primeiro; se falhar, tentar sem busca imediatamente
+      const searchAttempts = canUseSearch ? [true, false] : [false];
 
       for (const enableSearch of searchAttempts) {
         try {
@@ -1808,7 +1817,7 @@ DIRETRIZES DE ATUAÇÃO:
           const body = {
             contents: contents,
             generationConfig: {
-              temperature: tier === 'pro' ? 0.4 : 0.6,
+              temperature: tier === 'pro' ? 0.3 : 0.5,
               maxOutputTokens: 8192
             },
             systemInstruction: systemInstruction
@@ -1877,8 +1886,9 @@ DIRETRIZES DE ATUAÇÃO:
           const errMsg = errData.error?.message || `Erro HTTP ${response.status}`;
           lastError = new Error(errMsg);
 
-          // Se for erro 400 e a busca na web estava ligada, o próximo loop interno tentará sem a busca imediatamente
-          if (response.status === 400 && enableSearch) {
+          // Se a tentativa com busca na web falhar (400, 500, 503, etc.), tenta sem busca imediatamente
+          if (!response.ok && enableSearch) {
+            console.warn(`Tentativa com busca ao vivo falhou (${response.status}: ${errMsg}). Tentando sem busca...`);
             continue;
           }
 
@@ -1891,6 +1901,10 @@ DIRETRIZES DE ATUAÇÃO:
           }
         } catch (err) {
           lastError = err;
+          if (enableSearch) {
+            console.warn('Falha na tentativa com busca ao vivo. Tentando sem busca...', err);
+            continue;
+          }
           if (err.name === 'AbortError' || err.message.includes('403') || err.message.includes('429')) {
             throw err;
           }
@@ -1984,20 +1998,96 @@ DIRETRIZES DE ATUAÇÃO:
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const dataUrl = e.target.result;
-      const base64Data = dataUrl.split(',')[1];
+      const originalDataUrl = e.target.result;
 
-      currentAttachedFile = {
-        name: file.name,
-        size: file.size,
-        type: file.type || (isPdf ? 'application/pdf' : 'image/jpeg'),
-        dataUrl: dataUrl,
-        base64: base64Data,
-        isPdf: isPdf,
-        isImage: isImage
-      };
+      if (isImage) {
+        // Pré-carregar para otimizar dimensões e compressão sem perder qualidade de OCR
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1920;
+          let w = img.width;
+          let h = img.height;
 
-      renderAttachmentPreview();
+          // Se a imagem for razoavelmente compacta (<= 2MB e <= 1920px), usa direto
+          if (w <= maxDim && h <= maxDim && file.size <= 2 * 1024 * 1024) {
+            const base64Data = originalDataUrl.split(',')[1];
+            currentAttachedFile = {
+              name: file.name,
+              size: file.size,
+              type: file.type || 'image/png',
+              dataUrl: originalDataUrl,
+              base64: base64Data,
+              isPdf: false,
+              isImage: true
+            };
+            renderAttachmentPreview();
+            return;
+          }
+
+          // Redimensionar mantendo proporção com alta nitidez
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, w, h);
+
+          // Salvar como JPEG de altíssima qualidade (0.92) ou PNG
+          const mimeType = file.type === 'image/png' && file.size < 2 * 1024 * 1024 ? 'image/png' : 'image/jpeg';
+          const optimizedDataUrl = canvas.toDataURL(mimeType, 0.92);
+          const base64Data = optimizedDataUrl.split(',')[1];
+
+          currentAttachedFile = {
+            name: file.name,
+            size: Math.round((base64Data.length * 3) / 4),
+            type: mimeType,
+            dataUrl: optimizedDataUrl,
+            base64: base64Data,
+            isPdf: false,
+            isImage: true
+          };
+          renderAttachmentPreview();
+        };
+
+        img.onerror = () => {
+          const base64Data = originalDataUrl.split(',')[1];
+          currentAttachedFile = {
+            name: file.name,
+            size: file.size,
+            type: file.type || 'image/jpeg',
+            dataUrl: originalDataUrl,
+            base64: base64Data,
+            isPdf: false,
+            isImage: true
+          };
+          renderAttachmentPreview();
+        };
+
+        img.src = originalDataUrl;
+      } else {
+        const base64Data = originalDataUrl.split(',')[1];
+        currentAttachedFile = {
+          name: file.name,
+          size: file.size,
+          type: 'application/pdf',
+          dataUrl: originalDataUrl,
+          base64: base64Data,
+          isPdf: true,
+          isImage: false
+        };
+        renderAttachmentPreview();
+      }
     };
     reader.readAsDataURL(file);
   }
