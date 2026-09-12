@@ -1559,7 +1559,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
     const searchToggle = document.getElementById('toggle-web-search');
 
     if (tier === 'pro') {
-      if (headerName) headerName.textContent = 'Gemini 2.5 Pro';
+      if (headerName) headerName.textContent = 'Gemini 3.1 Pro';
       if (headerBadge) {
         headerBadge.textContent = 'Profundo';
         headerBadge.className = 'model-badge-mini pro';
@@ -1618,7 +1618,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
         setSelectedModelTier('pro');
         if (menu) menu.style.display = 'none';
         if (btnToggle) btnToggle.classList.remove('active');
-        showToast('Modelo alternado para Gemini 2.5 Pro (Raciocínio Profundo)');
+        showToast('Modelo alternado para Gemini 3.1 Pro (Raciocínio Profundo)');
       });
     }
 
@@ -1643,14 +1643,14 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
     if (savedModel) {
       try {
         const parsed = JSON.parse(savedModel);
-        if (parsed && parsed.tier === tier) {
+        if (parsed && parsed.tier === tier && !parsed.modelPath.includes('gemini-2.5-pro')) {
           cachedWorkingModel = parsed;
           return cachedWorkingModel;
         }
       } catch (e) {}
     }
 
-    // Listar modelos autorizados pela API oficial (v1beta é a versão oficial de Gemini 1.5 e 2.0)
+    // Listar modelos autorizados pela API oficial (v1beta é a versão oficial de Gemini)
     for (const apiVersion of ['v1beta']) {
       try {
         const listUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models?key=${encodeURIComponent(apiKey.trim())}`;
@@ -1662,9 +1662,10 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
           );
 
           if (validModels.length > 0) {
+            // gemini-2.5-pro foi descontinuado pelo Google para novos usuários, substituído por gemini-3.1-pro-preview e gemini-pro-latest
             const preferredNames = tier === 'pro'
-              ? ['gemini-2.5-pro', 'gemini-pro-latest', 'gemini-3.1-pro-preview', 'gemini-1.5-pro-latest', 'gemini-1.5-pro']
-              : ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
+              ? ['gemini-3.1-pro-preview', 'gemini-pro-latest', 'gemini-2.5-flash', 'gemini-3-flash-preview']
+              : ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview'];
 
             for (const pref of preferredNames) {
               const found = validModels.find(m => m.name === `models/${pref}` || m.name.endsWith('/' + pref));
@@ -1686,12 +1687,12 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       }
     }
 
-    // Fallback padrão conforme tier (Gemini 2.5)
+    // Fallback padrão conforme tier
     cachedWorkingModel = {
       tier,
       apiVersion: 'v1beta',
-      modelPath: tier === 'pro' ? 'models/gemini-2.5-pro' : 'models/gemini-2.5-flash',
-      displayName: tier === 'pro' ? 'Gemini 2.5 Pro' : 'Gemini 2.5 Flash'
+      modelPath: tier === 'pro' ? 'models/gemini-3.1-pro-preview' : 'models/gemini-2.5-flash',
+      displayName: tier === 'pro' ? 'Gemini 3.1 Pro' : 'Gemini 2.5 Flash'
     };
     return cachedWorkingModel;
   }
@@ -1771,23 +1772,23 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
     const discovered = await discoverWorkingGeminiModel(apiKey, tier);
 
     const candidateEndpoints = [];
-    if (discovered && discovered.modelPath) {
+    if (discovered && discovered.modelPath && !discovered.modelPath.includes('gemini-2.5-pro')) {
       candidateEndpoints.push(`https://generativelanguage.googleapis.com/${discovered.apiVersion}/${discovered.modelPath}:generateContent`);
     }
 
     if (tier === 'pro') {
       candidateEndpoints.push(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`
       );
     } else {
       candidateEndpoints.push(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent`
       );
     }
 
@@ -1893,6 +1894,12 @@ DIRETRIZES DE ATUAÇÃO:
           // Se a tentativa com busca na web falhar (400, 500, 503, etc.), tenta sem busca imediatamente
           if (!response.ok && enableSearch) {
             console.warn(`Tentativa com busca ao vivo falhou (${response.status}: ${errMsg}). Tentando sem busca...`);
+            continue;
+          }
+
+          // Se for modelo descontinuado ou não encontrado (404), tenta o próximo modelo da lista
+          if (response.status === 404) {
+            console.warn(`Modelo ${baseEndpoint} não suportado para esta chave (404). Tentando próximo modelo...`);
             continue;
           }
 
