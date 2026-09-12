@@ -1194,40 +1194,17 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   // --- MOTOR DE RESPOSTA CONVERSACIONAL UNIVERSAL ---
+  // --- AVISO DE CONEXÃO QUANDO SEM CHAVE DE INTELIGÊNCIA ---
   function generateUniversalAIResponse(userQuery) {
-    const q = userQuery.toLowerCase().trim();
+    return `### Inteligência Artificial Oficial Desconectada
 
-    // 1. Programação e Código
-    if (q.includes('código') || q.includes('program') || q.includes('javascript') || q.includes('python') || q.includes('html') || q.includes('css') || q.includes('api') || q.includes('react') || q.includes('node') || q.includes('sql') || q.includes('função') || q.includes('bug')) {
-      if (q.includes('python')) {
-        return `Com certeza! Aqui está uma solução limpa e idiomática em **Python**:\n\n\`\`\`python\ndef processar_dados(valores):\n    """Calcula estatísticas básicas de uma lista de valores numéricos."""\n    if not valores:\n        return {"total": 0, "media": 0, "maior": None, "menor": None}\n        \n    total = sum(valores)\n    media = total / len(valores)\n    return {\n        "total": total,\n        "media": round(media, 2),\n        "maior": max(valores),\n        "menor": min(valores)\n    }\n\n# Exemplo de teste:\nnumeros = [14, 28, 42, 56, 70]\nresultado = processar_dados(numeros)\nprint("Estatísticas:", resultado)\n\`\`\`\n\n**Pontos Importantes:**\n• **Tratamento de lista vazia:** Garante que a função não dispare exceções.\n• **Estruturação em dicionário:** Facilita a leitura e o consumo em APIs ou bancos de dados.\n\nDeseja que eu adapte este código para leitura de arquivos ou integração com bibliotecas como Pandas?`;
-      }
+Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários, cidades, notícias, códigos e traduções oficiais):
 
-      return `Aqui está uma implementação moderna e eficiente em **JavaScript (ES6+)**:\n\n\`\`\`javascript\n// Função utilitária assíncrona com tratamento robusto de erros\nasync function buscarComRetry(url, tentativas = 3, atraso = 1000) {\n  for (let i = 1; i <= tentativas; i++) {\n    try {\n      const resposta = await fetch(url);\n      if (!resposta.ok) throw new Error(\`Erro HTTP: \${resposta.status}\`);\n      return await resposta.json();\n    } catch (erro) {\n      if (i === tentativas) throw erro;\n      console.warn(\`Tentativa \${i} falhou. Tentando novamente em \${atraso}ms...\`);\n      await new Promise(r => setTimeout(r, atraso));\n    }\n  }\n}\n\n// Exemplo de execução:\nbuscarComRetry('https://api.exemplo.com/dados')\n  .then(dados => console.log('Dados recebidos com sucesso:', dados))\n  .catch(erro => console.error('Todas as tentativas falharam:', erro.message));\n\`\`\`\n\n**O que este código faz:**\n1. Realiza requisições com mecanismo de repetição automática (*retry*).\n2. Evita que falhas pontuais de conexão derrubem a interface do usuário.\n3. Código limpo, não bloqueante e pronto para uso em produção.\n\nPrecisa de ajustes para TypeScript, React ou back-end em Node.js?`;
-    }
+1. Clique no botão **"Google AI Studio"** no topo direito da tela.
+2. Cole a sua chave de API gratuita do **Google Gemini** (obtida no Google AI Studio).
+3. Clique em **"Salvar e Ativar Conexão"**.
 
-    // 2. Criatividade e Escrita
-    if (q.includes('história') || q.includes('poema') || q.includes('conto') || q.includes('crônica') || q.includes('escreva') || q.includes('literat') || q.includes('poesia') || q.includes('criativ')) {
-      return `Aqui está uma reflexão narrativa inspirada no seu tema:\n\n### O Farol das Constelações\n\n*No silêncio das altas madrugadas, quando as luzes da cidade começavam a adormecer uma a uma, Lucas subia até a varanda do décimo quarto andar. Levava consigo um caderno desgastado e uma xícara de café já frio.*\n\n*Ele não olhava para baixo, onde o trânsito corria com a pressa dos homens; olhava para o céu aberto. Sempre acreditou que as estrelas eram perguntas antigas deixadas por quem veio antes de nós, esperando que alguém tivesse a coragem de inventar as respostas.*\n\n*Naquela noite, uma estrela cadente cortou a escuridão como uma linha de fogo. Lucas escreveu na primeira folha em branco:*\n\n> *"O futuro não é um lugar aonde vamos, mas um horizonte que moldamos a cada escolha do presente."*\n\n---\n\n*Podemos continuar desenvolvendo este universo literário se desejar!*`;
-    }
-
-    // 3. Estudos e Ciência
-    if (q.includes('ciência') || q.includes('física') || q.includes('relatividade') || q.includes('quântic') || q.includes('espaço') || q.includes('universo') || q.includes('estud') || q.includes('matemát')) {
-      return `Aqui está uma explicação clara e intuitiva sobre o tema:\n\n1. **A Base Fundamental:** Imagine o espaço-tempo como um tecido flexível esticado. Um corpo denso (como o Sol ou a Terra) deforma essa malha, fazendo com que objetos menores sigam trajetórias curvas naturally.\n2. **A Dilatação do Tempo:** Quanto maior o campo gravitacional ou mais veloz o movimento, mais lentamente os relógios correm em relação a um observador distante.\n3. **Impacto Prático:** Os sistemas de GPS em nossos smartphones precisam compensar continuamente esses microssegundos relativísticos todos os dias para não apontarem rotas erradas.\n\nQuer se aprofundar em algum experimento específico?`;
-    }
-
-    // 4. Produtividade e Hábitos
-    if (q.includes('foco') || q.includes('produtiv') || q.includes('hábito') || q.includes('tempo') || q.includes('rotina') || q.includes('procrastina')) {
-      return `Aqui está um método comprovado em 3 passos para recuperar o foco imediato:\n\n1. **Bloco de Ouro (Primeiros 45 min):** Faça a tarefa mais pesada antes de checar redes sociais ou e-mails.\n2. **A Regra dos 2 Minutos:** Se leva menos de 2 minutos para concluir, faça na hora e limpe a mente de micro-obrigações.\n3. **Três Prioridades Diárias:** Termine o dia definindo exatamente quais são as 3 únicas entregas essenciais de amanhã.\n\nQual área da sua rotina você sente que precisa de maior ajuste hoje?`;
-    }
-
-    // 5. Saudações
-    if (q === 'olá' || q === 'ola' || q === 'oi' || q === 'bom dia' || q === 'boa tarde' || q === 'boa noite' || q.includes('quem é você')) {
-      return `Olá, Bruno! Como posso ajudar você hoje?\n\nFique à vontade para fazer qualquer pergunta, pedir ideias de design, código, análises ou redação de textos. O que vamos criar?`;
-    }
-
-    // 6. Resposta Geral Estruturada
-    return `Com certeza! Analisei a sua solicitação com precisão.\n\nSobre **"${userQuery.trim()}"**, aqui estão os pontos recomendados:\n\n1. **Clareza de Objetivo:** Definir o resultado esperado com precisão antes de avançar.\n2. **Execução Prática:** Dividir em etapas acionáveis para manter agilidade e qualidade.\n3. **Refinamento Contínuo:** Testar e iterar com base no feedback real.\n\nDeseja que eu detalhe o próximo passo ou elabore um exemplo prático?`;
+*Com a chave conectada, o ponto verde no cabeçalho acenderá e as respostas serão geradas 100% ao vivo pelos servidores do Google Gemini (Flash / Pro).*`;
   }
 
   // --- MOTOR DE GERAÇÃO NATIVA DE IMAGENS POR IA ---
