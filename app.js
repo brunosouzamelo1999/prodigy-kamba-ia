@@ -711,7 +711,81 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
-  // --- CHAMADA OFICIAL À API DO GOOGLE GEMINI 1.5 FLASH (AI STUDIO) ---
+  // --- DESCOBERTA E RESOLUÇÃO AUTOMÁTICA DE MODELOS DO GOOGLE GEMINI ---
+  let cachedWorkingModel = null;
+
+  async function discoverWorkingGeminiModel(apiKey) {
+    if (cachedWorkingModel) return cachedWorkingModel;
+
+    const savedModel = localStorage.getItem('kamba_gemini_model_config');
+    if (savedModel) {
+      try {
+        cachedWorkingModel = JSON.parse(savedModel);
+        return cachedWorkingModel;
+      } catch (e) {}
+    }
+
+    // Tentar listar os modelos permitidos para esta chave via API oficial
+    for (const apiVersion of ['v1beta', 'v1']) {
+      try {
+        const listUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models?key=${encodeURIComponent(apiKey.trim())}`;
+        const res = await fetch(listUrl);
+        if (res.ok) {
+          const data = await res.json();
+          const validModels = (data.models || []).filter(m => 
+            m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
+          );
+
+          if (validModels.length > 0) {
+            const preferredNames = [
+              'gemini-1.5-flash-latest',
+              'gemini-1.5-flash',
+              'gemini-2.0-flash',
+              'gemini-2.0-flash-exp',
+              'gemini-1.5-flash-001',
+              'gemini-1.5-flash-002',
+              'gemini-1.5-pro-latest',
+              'gemini-1.5-pro',
+              'gemini-pro'
+            ];
+
+            for (const pref of preferredNames) {
+              const found = validModels.find(m => m.name === `models/${pref}` || m.name.endsWith('/' + pref));
+              if (found) {
+                cachedWorkingModel = {
+                  apiVersion,
+                  modelPath: found.name,
+                  displayName: found.displayName || pref
+                };
+                localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
+                return cachedWorkingModel;
+              }
+            }
+
+            cachedWorkingModel = {
+              apiVersion,
+              modelPath: validModels[0].name,
+              displayName: validModels[0].displayName || validModels[0].name
+            };
+            localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
+            return cachedWorkingModel;
+          }
+        }
+      } catch (e) {
+        console.warn(`Tentativa de listagem em ${apiVersion} falhou:`, e);
+      }
+    }
+
+    // Fallback padrão se não conseguir listar
+    cachedWorkingModel = {
+      apiVersion: 'v1beta',
+      modelPath: 'models/gemini-1.5-flash-latest',
+      displayName: 'Gemini 1.5 Flash'
+    };
+    return cachedWorkingModel;
+  }
+
+  // --- CHAMADA OFICIAL À API DO GOOGLE GEMINI (COM AUTO-RECUPERAÇÃO) ---
   async function callGoogleGeminiAPI(apiKey, promptText, fileAttachment, historyMessages) {
     const parts = [];
 
@@ -746,40 +820,85 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       parts: parts
     });
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+    // 1. Descobrir modelo compatível com a chave
+    const modelConfig = await discoverWorkingGeminiModel(apiKey);
 
-    const body = {
-      contents: contents,
-      systemInstruction: {
-        parts: [{
-          text: "Você é o Kamba Chat IA, um assistente corporativo de elite. Você é especialista em criação de textos inteligentes, redação executiva, leitura e tradução precisa de documentos PDF e análise visual/tradução de imagens. Suas respostas devem ser claras, elegantes, bem estruturadas em títulos, tópicos e formatação Markdown impecável. Responda em português com alta qualidade a menos que outro idioma seja explicitamente solicitado."
-        }]
-      },
-      generationConfig: {
-        temperature: 0.6,
-        maxOutputTokens: 8192
+    // 2. Lista de endpoints candidatos para tentar automaticamente se houver 404
+    const candidateEndpoints = [
+      `https://generativelanguage.googleapis.com/${modelConfig.apiVersion}/${modelConfig.modelPath}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+    ];
+
+    const uniqueEndpoints = [...new Set(candidateEndpoints)];
+    let lastError = null;
+
+    for (const baseEndpoint of uniqueEndpoints) {
+      try {
+        const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey.trim())}`;
+        
+        const body = {
+          contents: contents,
+          generationConfig: {
+            temperature: 0.6,
+            maxOutputTokens: 8192
+          }
+        };
+
+        // Adicionar instrução de sistema apenas para modelos modernos
+        if (baseEndpoint.includes('1.5') || baseEndpoint.includes('2.0')) {
+          body.systemInstruction = {
+            parts: [{
+              text: "Você é o Kamba Chat IA, um assistente corporativo de elite. Você é especialista em criação de textos inteligentes, redação executiva, leitura e tradução precisa de documentos PDF e análise visual/tradução de imagens. Suas respostas devem ser claras, elegantes, bem estruturadas em títulos, tópicos e formatação Markdown impecável. Responda em português com alta qualidade a menos que outro idioma seja explicitamente solicitado."
+            }]
+          };
+        }
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            // Sucesso! Atualizar cache com o modelo que respondeu
+            const modelIdentifier = baseEndpoint.split('/').slice(-1)[0].replace(':generateContent', '');
+            cachedWorkingModel = {
+              apiVersion: baseEndpoint.includes('/v1/') ? 'v1' : 'v1beta',
+              modelPath: modelIdentifier.startsWith('models/') ? modelIdentifier : `models/${modelIdentifier}`,
+              displayName: modelIdentifier.replace('models/', '')
+            };
+            localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
+            updateGeminiStatusUI();
+            return text;
+          }
+        }
+
+        const errData = await response.json().catch(() => ({}));
+        lastError = new Error(errData.error?.message || `Erro HTTP ${response.status}`);
+
+        // Se o erro não for 404 de modelo não encontrado, lança o erro (ex: cota ou chave inválida)
+        if (response.status !== 404 && response.status !== 400) {
+          throw lastError;
+        }
+      } catch (err) {
+        lastError = err;
+        if (err.name === 'AbortError' || err.message.includes('Failed to fetch')) {
+          throw err;
+        }
       }
-    };
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      const msg = err.error?.message || `Erro HTTP ${response.status} na API do Google AI Studio.`;
-      throw new Error(msg);
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error("Nenhuma resposta foi retornada pela API do Google Gemini.");
-    }
-
-    return text;
+    throw lastError || new Error("Não foi possível conectar a nenhum dos modelos disponíveis do Gemini.");
   }
 
   // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO ---
@@ -792,8 +911,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   function setGeminiApiKey(key) {
     if (key && key.trim()) {
       localStorage.setItem(GEMINI_STORAGE_KEY, key.trim());
+      cachedWorkingModel = null;
+      localStorage.removeItem('kamba_gemini_model_config');
+      discoverWorkingGeminiModel(key.trim()).then(() => updateGeminiStatusUI());
     } else {
       localStorage.removeItem(GEMINI_STORAGE_KEY);
+      localStorage.removeItem('kamba_gemini_model_config');
+      cachedWorkingModel = null;
     }
     updateGeminiStatusUI();
   }
@@ -805,10 +929,19 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     const badge = document.getElementById('api-status-badge');
 
     if (key) {
+      const savedConfig = localStorage.getItem('kamba_gemini_model_config');
+      let modelLabel = 'Gemini Ativo';
+      if (savedConfig) {
+        try {
+          const cfg = JSON.parse(savedConfig);
+          if (cfg.displayName) modelLabel = cfg.displayName.replace('models/', '');
+        } catch (e) {}
+      }
+
       if (dot) dot.classList.add('active');
-      if (label) label.textContent = 'Gemini 1.5 Ativo';
+      if (label) label.textContent = modelLabel;
       if (badge) {
-        badge.textContent = 'Status: Conectado (Gemini 1.5 Flash)';
+        badge.textContent = `Status: Conectado (${modelLabel})`;
         badge.className = 'api-status-badge connected';
       }
     } else {
