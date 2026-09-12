@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Estilos Globais -->
-  <link rel="stylesheet" href="styles.css?v=20260912">
+  <link rel="stylesheet" href="styles.css?v=20260912_v3">
 </head>
 <body>
 
@@ -805,10 +805,73 @@
         <!-- Topbar Superior Minimalista -->
         <header class="gpt-viewport-header">
           <div class="gpt-header-left">
-            <div class="gpt-model-pill" title="Modelo de IA ativo">
-              <span class="gpt-model-dot"></span>
-              <span>Kamba Chat IA</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            <div class="gpt-model-dropdown-wrap" id="gpt-model-dropdown-wrap">
+              <button class="gpt-model-pill" id="btn-toggle-model-menu" title="Alternar modelo de inteligência artificial" type="button" aria-haspopup="true" aria-expanded="false">
+                <span class="gpt-model-dot" id="header-model-dot"></span>
+                <span id="header-model-name">Gemini 1.5 Flash</span>
+                <span class="model-badge-mini" id="header-model-badge">Rápido</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="chevron-model"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+
+              <!-- Dropdown Menu de Seleção de Inteligência -->
+              <div class="gpt-model-menu" id="gpt-model-menu" style="display: none;">
+                <div class="model-menu-header">
+                  <span>Modelo de Inteligência</span>
+                </div>
+
+                <div class="model-options-list">
+                  <!-- Opção 1: Gemini 1.5 Flash -->
+                  <div class="model-option-card active" id="opt-model-flash" data-model="flash">
+                    <div class="model-opt-icon flash-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <div class="model-opt-content">
+                      <div class="model-opt-title-row">
+                        <span class="model-opt-title">Gemini 1.5 Flash</span>
+                        <span class="model-opt-tag">Rápido</span>
+                      </div>
+                      <p class="model-opt-desc">Respostas instantâneas e alta taxa de uso (1.500/dia). Ideal para conversas diárias, redações e traduções.</p>
+                    </div>
+                    <div class="model-opt-check">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- Opção 2: Gemini 1.5 Pro -->
+                  <div class="model-option-card" id="opt-model-pro" data-model="pro">
+                    <div class="model-opt-icon pro-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4"/></svg>
+                    </div>
+                    <div class="model-opt-content">
+                      <div class="model-opt-title-row">
+                        <span class="model-opt-title">Gemini 1.5 Pro</span>
+                        <span class="model-opt-tag pro-tag">Profundo</span>
+                      </div>
+                      <p class="model-opt-desc">Raciocínio lógico superior e análise densa de contratos, códigos de programação e documentos técnicos.</p>
+                    </div>
+                    <div class="model-opt-check">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="model-menu-divider"></div>
+
+                <!-- Ferramenta: Busca na Web ao Vivo -->
+                <div class="model-search-toggle-box">
+                  <div class="search-toggle-info">
+                    <div class="search-toggle-title">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                      <span>Pesquisa na Web ao Vivo</span>
+                    </div>
+                    <span class="search-toggle-desc">Busca no Google em tempo real para fatos atuais, cotações e notícias.</span>
+                  </div>
+                  <label class="kamba-toggle-switch">
+                    <input type="checkbox" id="toggle-web-search" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1023,6 +1086,6 @@
   </div>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260912"></script>
+  <script src="app.js?v=20260912_v3"></script>
 </body>
 </html>

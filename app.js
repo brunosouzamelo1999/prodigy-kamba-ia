@@ -637,7 +637,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
     if (geminiKey) {
       if (streamContainer) {
-        streamContainer.innerHTML = '<em>Consultando Google Gemini 1.5 Flash...</em>';
+        const tier = getSelectedModelTier();
+        const searchActive = isWebSearchEnabled();
+        const modelName = tier === 'pro' ? 'Gemini 1.5 Pro' : 'Gemini 1.5 Flash';
+        const searchMsg = searchActive ? ' (com busca ao vivo na Web)' : '';
+        streamContainer.innerHTML = `<em>Consultando Google ${modelName}${searchMsg}...</em>`;
       }
       try {
         aiResponseText = await callGoogleGeminiAPI(geminiKey, text, attachedFileToSend, chat.messages);
@@ -711,21 +715,134 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
+  // --- GERENCIAMENTO DE MODELO E INTELIGÊNCIA AVANÇADA ---
+  const MODEL_TIER_STORAGE_KEY = 'kamba_selected_model_tier';
+  const WEB_SEARCH_STORAGE_KEY = 'kamba_web_search_enabled';
+
+  function getSelectedModelTier() {
+    return localStorage.getItem(MODEL_TIER_STORAGE_KEY) || 'flash';
+  }
+
+  function setSelectedModelTier(tier) {
+    localStorage.setItem(MODEL_TIER_STORAGE_KEY, tier);
+    cachedWorkingModel = null;
+    localStorage.removeItem('kamba_gemini_model_config');
+    updateModelSelectorUI();
+  }
+
+  function isWebSearchEnabled() {
+    const val = localStorage.getItem(WEB_SEARCH_STORAGE_KEY);
+    return val === null ? true : val === 'true';
+  }
+
+  function setWebSearchEnabled(enabled) {
+    localStorage.setItem(WEB_SEARCH_STORAGE_KEY, String(enabled));
+    updateModelSelectorUI();
+  }
+
+  function updateModelSelectorUI() {
+    const tier = getSelectedModelTier();
+    const searchEnabled = isWebSearchEnabled();
+
+    const headerName = document.getElementById('header-model-name');
+    const headerBadge = document.getElementById('header-model-badge');
+    const optFlash = document.getElementById('opt-model-flash');
+    const optPro = document.getElementById('opt-model-pro');
+    const searchToggle = document.getElementById('toggle-web-search');
+
+    if (tier === 'pro') {
+      if (headerName) headerName.textContent = 'Gemini 1.5 Pro';
+      if (headerBadge) {
+        headerBadge.textContent = 'Profundo';
+        headerBadge.className = 'model-badge-mini pro';
+      }
+      if (optFlash) optFlash.classList.remove('active');
+      if (optPro) optPro.classList.add('active');
+    } else {
+      if (headerName) headerName.textContent = 'Gemini 1.5 Flash';
+      if (headerBadge) {
+        headerBadge.textContent = 'Rápido';
+        headerBadge.className = 'model-badge-mini';
+      }
+      if (optFlash) optFlash.classList.add('active');
+      if (optPro) optPro.classList.remove('active');
+    }
+
+    if (searchToggle) {
+      searchToggle.checked = searchEnabled;
+    }
+  }
+
+  function setupModelSelectorEvents() {
+    const btnToggle = document.getElementById('btn-toggle-model-menu');
+    const menu = document.getElementById('gpt-model-menu');
+    const optFlash = document.getElementById('opt-model-flash');
+    const optPro = document.getElementById('opt-model-pro');
+    const searchToggle = document.getElementById('toggle-web-search');
+
+    if (btnToggle && menu) {
+      btnToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = menu.style.display !== 'none';
+        menu.style.display = isOpen ? 'none' : 'block';
+        btnToggle.classList.toggle('active', !isOpen);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !btnToggle.contains(e.target)) {
+          menu.style.display = 'none';
+          btnToggle.classList.remove('active');
+        }
+      });
+    }
+
+    if (optFlash) {
+      optFlash.addEventListener('click', () => {
+        setSelectedModelTier('flash');
+        if (menu) menu.style.display = 'none';
+        if (btnToggle) btnToggle.classList.remove('active');
+        showToast('Modelo alternado para Gemini 1.5 Flash (Rápido e Fluido)');
+      });
+    }
+
+    if (optPro) {
+      optPro.addEventListener('click', () => {
+        setSelectedModelTier('pro');
+        if (menu) menu.style.display = 'none';
+        if (btnToggle) btnToggle.classList.remove('active');
+        showToast('Modelo alternado para Gemini 1.5 Pro (Raciocínio Profundo)');
+      });
+    }
+
+    if (searchToggle) {
+      searchToggle.addEventListener('change', (e) => {
+        setWebSearchEnabled(e.target.checked);
+        showToast(e.target.checked ? 'Busca na Web ao Vivo ativada' : 'Busca na Web desativada');
+      });
+    }
+  }
+
   // --- DESCOBERTA E RESOLUÇÃO AUTOMÁTICA DE MODELOS DO GOOGLE GEMINI ---
   let cachedWorkingModel = null;
 
-  async function discoverWorkingGeminiModel(apiKey) {
-    if (cachedWorkingModel) return cachedWorkingModel;
+  async function discoverWorkingGeminiModel(apiKey, requestedTier) {
+    const tier = requestedTier || getSelectedModelTier();
+    if (cachedWorkingModel && cachedWorkingModel.tier === tier) {
+      return cachedWorkingModel;
+    }
 
     const savedModel = localStorage.getItem('kamba_gemini_model_config');
     if (savedModel) {
       try {
-        cachedWorkingModel = JSON.parse(savedModel);
-        return cachedWorkingModel;
+        const parsed = JSON.parse(savedModel);
+        if (parsed && parsed.tier === tier) {
+          cachedWorkingModel = parsed;
+          return cachedWorkingModel;
+        }
       } catch (e) {}
     }
 
-    // Tentar listar os modelos permitidos para esta chave via API oficial
+    // Listar modelos autorizados pela API oficial
     for (const apiVersion of ['v1beta', 'v1']) {
       try {
         const listUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models?key=${encodeURIComponent(apiKey.trim())}`;
@@ -737,22 +854,15 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           );
 
           if (validModels.length > 0) {
-            const preferredNames = [
-              'gemini-1.5-flash-latest',
-              'gemini-1.5-flash',
-              'gemini-2.0-flash',
-              'gemini-2.0-flash-exp',
-              'gemini-1.5-flash-001',
-              'gemini-1.5-flash-002',
-              'gemini-1.5-pro-latest',
-              'gemini-1.5-pro',
-              'gemini-pro'
-            ];
+            const preferredNames = tier === 'pro'
+              ? ['gemini-1.5-pro-latest', 'gemini-1.5-pro', 'gemini-1.5-pro-001', 'gemini-1.5-pro-002', 'gemini-pro']
+              : ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-001', 'gemini-1.5-flash-002'];
 
             for (const pref of preferredNames) {
               const found = validModels.find(m => m.name === `models/${pref}` || m.name.endsWith('/' + pref));
               if (found) {
                 cachedWorkingModel = {
+                  tier,
                   apiVersion,
                   modelPath: found.name,
                   displayName: found.displayName || pref
@@ -761,14 +871,6 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
                 return cachedWorkingModel;
               }
             }
-
-            cachedWorkingModel = {
-              apiVersion,
-              modelPath: validModels[0].name,
-              displayName: validModels[0].displayName || validModels[0].name
-            };
-            localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
-            return cachedWorkingModel;
           }
         }
       } catch (e) {
@@ -776,16 +878,17 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       }
     }
 
-    // Fallback padrão se não conseguir listar
+    // Fallback padrão conforme tier
     cachedWorkingModel = {
+      tier,
       apiVersion: 'v1beta',
-      modelPath: 'models/gemini-1.5-flash-latest',
-      displayName: 'Gemini 1.5 Flash'
+      modelPath: tier === 'pro' ? 'models/gemini-1.5-pro-latest' : 'models/gemini-1.5-flash-latest',
+      displayName: tier === 'pro' ? 'Gemini 1.5 Pro' : 'Gemini 1.5 Flash'
     };
     return cachedWorkingModel;
   }
 
-  // --- CHAMADA OFICIAL À API DO GOOGLE GEMINI (COM AUTO-RECUPERAÇÃO) ---
+  // --- CHAMADA OFICIAL À API DO GOOGLE GEMINI (COM BUSCA AO VIVO, MEMÓRIA E AUTO-RECUPERAÇÃO) ---
   async function callGoogleGeminiAPI(apiKey, promptText, fileAttachment, historyMessages) {
     const parts = [];
 
@@ -816,12 +919,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       text: finalPromptText
     });
 
-    const contents = [];
+    // 1. Memória Contínua Multi-Turn (até 24 turnos anteriores)
+    const rawHistory = [];
     if (historyMessages && historyMessages.length > 0) {
-      const recent = historyMessages.slice(-6);
+      const recent = historyMessages.slice(-24);
       for (const m of recent) {
-        if (m.content) {
-          contents.push({
+        if (m.content && !m.content.startsWith('**Aviso de Conexão')) {
+          rawHistory.push({
             role: m.role === 'user' ? 'user' : 'model',
             parts: [{ text: m.content }]
           });
@@ -829,94 +933,169 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       }
     }
 
-    contents.push({
-      role: 'user',
-      parts: parts
-    });
+    // Sanitizar alternância estrita entre 'user' e 'model' exigida pelo Google
+    const contents = [];
+    let lastRole = null;
+    for (const msg of rawHistory) {
+      if (msg.role === lastRole && contents.length > 0) {
+        contents[contents.length - 1].parts.push(...msg.parts);
+      } else {
+        contents.push({ role: msg.role, parts: [...msg.parts] });
+        lastRole = msg.role;
+      }
+    }
 
-    // 1. Descobrir modelo compatível com a chave
-    const modelConfig = await discoverWorkingGeminiModel(apiKey);
+    if (lastRole === 'user' && contents.length > 0) {
+      contents[contents.length - 1].parts.push(...parts);
+    } else {
+      contents.push({ role: 'user', parts: parts });
+    }
 
-    // 2. Lista de endpoints candidatos para tentar automaticamente se houver 404
-    const candidateEndpoints = [
-      `https://generativelanguage.googleapis.com/${modelConfig.apiVersion}/${modelConfig.modelPath}:generateContent`,
+    // 2. Definir lista ordenada de endpoints conforme o modelo escolhido (Pro vs Flash)
+    const tier = getSelectedModelTier();
+    const discovered = await discoverWorkingGeminiModel(apiKey, tier);
+
+    const candidateEndpoints = [];
+    if (discovered && discovered.modelPath) {
+      candidateEndpoints.push(`https://generativelanguage.googleapis.com/${discovered.apiVersion}/${discovered.modelPath}:generateContent`);
+    }
+
+    if (tier === 'pro') {
+      candidateEndpoints.push(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-001:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-002:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+      );
+    } else {
+      candidateEndpoints.push(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent`
+      );
+    }
+
+    // Fallbacks universais de segurança
+    candidateEndpoints.push(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`,
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
-    ];
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent`
+    );
 
     const uniqueEndpoints = [...new Set(candidateEndpoints)];
     let lastError = null;
+    const webSearchWanted = isWebSearchEnabled();
+
+    // Instrução Corporativa Executiva
+    const systemInstruction = {
+      parts: [{
+        text: `Você é o Kamba Chat IA, um assistente corporativo executivo de inteligência artificial de padrão internacional.
+A data e hora exatas no dispositivo do usuário são: ${dateStr}, às ${timeStr} (Fuso horário: ${userTz}). Utilize SEMPRE esta data como referência cronológica factual inegociável para o dia de hoje, cálculos de prazos, calendário e fatos correntes.
+DIRETRIZES DE ATUAÇÃO:
+1. EXCELÊNCIA E PRECISÃO: Suas respostas devem ser de alto padrão corporativo, objetivas, sem preâmbulos vazios e bem estruturadas com títulos claros, tópicos e tabelas comparativas quando relevante.
+2. ANÁLISE PROFUNDA DE DOCUMENTOS: Você é mestre em tradução juramentada/executiva de PDFs, relatórios técnicos, planilhas e extração OCR de imagens.
+3. PADRÃO VISUAL SÓBRIO: Jamais use emojis informais ou infantis.
+4. IDIOMA: Responda em português formal impecável, atendendo com fluidez internacional.`
+      }]
+    };
 
     for (const baseEndpoint of uniqueEndpoints) {
-      try {
-        const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey.trim())}`;
-        
-        const body = {
-          contents: contents,
-          generationConfig: {
-            temperature: 0.6,
-            maxOutputTokens: 8192
-          }
-        };
+      // Se busca na web estiver ativada, tentar com busca primeiro e, caso a versão recuse com 400, tentar sem busca
+      const searchAttempts = webSearchWanted ? [true, false] : [false];
 
-        const now = new Date();
-        const userLocale = navigator.language || 'pt-AO';
-        const dateStr = now.toLocaleDateString(userLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = now.toLocaleTimeString(userLocale, { hour: '2-digit', minute: '2-digit' });
-        let userTz = 'UTC';
+      for (const enableSearch of searchAttempts) {
         try {
-          userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-        } catch(e) {}
-
-        // Adicionar instrução de sistema apenas para modelos modernos
-        if (baseEndpoint.includes('1.5') || baseEndpoint.includes('2.0')) {
-          body.systemInstruction = {
-            parts: [{
-              text: `Você é o Kamba Chat IA, um assistente corporativo de elite. A data e hora exata de hoje no dispositivo do usuário são: ${dateStr}, às ${timeStr} (Fuso horário: ${userTz}). Utilize SEMPRE esta data como referência temporal precisa para o dia de hoje, cálculos de prazos, calendário e eventos. Você é especialista em criação de textos inteligentes, redação executiva, leitura e tradução precisa de documentos PDF e análise visual/tradução de imagens. Suas respostas devem ser claras, elegantes, bem estruturadas em títulos, tópicos e formatação Markdown impecável. Responda em português com alta qualidade a menos que outro idioma seja explicitamente solicitado.`
-            }]
+          const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey.trim())}`;
+          
+          const body = {
+            contents: contents,
+            generationConfig: {
+              temperature: tier === 'pro' ? 0.4 : 0.6,
+              maxOutputTokens: 8192
+            },
+            systemInstruction: systemInstruction
           };
-        }
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            // Sucesso! Atualizar cache com o modelo que respondeu
-            const modelIdentifier = baseEndpoint.split('/').slice(-1)[0].replace(':generateContent', '');
-            cachedWorkingModel = {
-              apiVersion: baseEndpoint.includes('/v1/') ? 'v1' : 'v1beta',
-              modelPath: modelIdentifier.startsWith('models/') ? modelIdentifier : `models/${modelIdentifier}`,
-              displayName: modelIdentifier.replace('models/', '')
-            };
-            localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
-            updateGeminiStatusUI();
-            return text;
+          if (enableSearch) {
+            body.tools = [{ google_search: {} }];
           }
-        }
 
-        const errData = await response.json().catch(() => ({}));
-        lastError = new Error(errData.error?.message || `Erro HTTP ${response.status}`);
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
 
-        // Se o erro não for 404 de modelo não encontrado, lança o erro (ex: cota ou chave inválida)
-        if (response.status !== 404 && response.status !== 400) {
-          throw lastError;
-        }
-      } catch (err) {
-        lastError = err;
-        if (err.name === 'AbortError' || err.message.includes('Failed to fetch')) {
-          throw err;
+          if (response.ok) {
+            const data = await response.json();
+            const candidate = data.candidates?.[0];
+            let text = candidate?.content?.parts?.[0]?.text;
+
+            if (text) {
+              // Extrair citações e links da pesquisa ao vivo (Google Search Grounding)
+              if (candidate.groundingMetadata) {
+                const chunks = candidate.groundingMetadata.groundingChunks || [];
+                const sources = [];
+                const seenUrls = new Set();
+
+                for (const chunk of chunks) {
+                  if (chunk.web && chunk.web.uri && !seenUrls.has(chunk.web.uri)) {
+                    seenUrls.add(chunk.web.uri);
+                    let title = chunk.web.title;
+                    if (!title) {
+                      try {
+                        title = new URL(chunk.web.uri).hostname.replace(/^www\./, '');
+                      } catch(e) {
+                        title = chunk.web.uri;
+                      }
+                    }
+                    sources.push({ title, uri: chunk.web.uri });
+                  }
+                }
+
+                if (sources.length > 0) {
+                  text += '\n\n---\n\n#### Fontes consultadas em tempo real na Web:\n';
+                  sources.slice(0, 5).forEach(s => {
+                    text += `• [${s.title}](${s.uri})\n`;
+                  });
+                }
+              }
+
+              // Atualizar cache de modelo funcional
+              const modelIdentifier = baseEndpoint.split('/').slice(-1)[0].replace(':generateContent', '');
+              cachedWorkingModel = {
+                tier,
+                apiVersion: baseEndpoint.includes('/v1/') ? 'v1' : 'v1beta',
+                modelPath: modelIdentifier.startsWith('models/') ? modelIdentifier : `models/${modelIdentifier}`,
+                displayName: modelIdentifier.replace('models/', '')
+              };
+              localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
+              updateGeminiStatusUI();
+              return text;
+            }
+          }
+
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData.error?.message || `Erro HTTP ${response.status}`;
+          lastError = new Error(errMsg);
+
+          // Se for erro 400 e a busca na web estava ligada, o próximo loop interno tentará sem a busca imediatamente
+          if (response.status === 400 && enableSearch) {
+            continue;
+          }
+
+          // Se for cota esgotada (429) ou chave inválida (403), repassa imediatamente para notificar o usuário
+          if (response.status === 429 || response.status === 403) {
+            throw lastError;
+          }
+        } catch (err) {
+          lastError = err;
+          if (err.name === 'AbortError' || err.message.includes('429') || err.message.includes('403')) {
+            throw err;
+          }
         }
       }
     }
@@ -1277,11 +1456,23 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     // Código inline `codigo`
     formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
 
+    // Headers Markdown
+    formatted = formatted.replace(/^#### (.*$)/gm, '<h5 style="color:#ECECEC;margin:10px 0 4px 0;font-size:14px;font-weight:700;">$1</h5>');
+    formatted = formatted.replace(/^### (.*$)/gm, '<h4 style="color:#ECECEC;margin:12px 0 6px 0;font-size:15px;font-weight:700;">$1</h4>');
+    formatted = formatted.replace(/^## (.*$)/gm, '<h3 style="color:#ECECEC;margin:14px 0 6px 0;font-size:16px;font-weight:700;">$1</h3>');
+    formatted = formatted.replace(/^# (.*$)/gm, '<h2 style="color:#ECECEC;margin:16px 0 8px 0;font-size:18px;font-weight:800;">$1</h2>');
+
     // Negrito **texto**
     formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
     // Itálico *texto* ou _texto_
     formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+    // Links Web [Texto](url)
+    formatted = formatted.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--angola-yellow);text-decoration:underline;word-break:break-all;">$1</a>');
+
+    // Linha horizontal divisória ---
+    formatted = formatted.replace(/^(?:---|___|\*\*\*)$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">');
 
     // Citações > texto
     formatted = formatted.replace(/^>\s?(.*)$/gm, '<blockquote style="border-left:3px solid #EAB308;padding-left:10px;margin:8px 0;color:#9CA3AF;font-style:italic;">$1</blockquote>');
@@ -1314,6 +1505,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       localStorage.setItem('gpt_sidebar_collapsed', 'false');
     }
     updateGeminiStatusUI();
+    updateModelSelectorUI();
     renderHistory();
     if (chats.length === 0) {
       createNewChat();
@@ -1322,7 +1514,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
-  // Atualizar UI de status inicial
+  // Configurar eventos do Seletor de Modelo e inicializar UI
+  setupModelSelectorEvents();
+  updateModelSelectorUI();
   updateGeminiStatusUI();
 
   // Iniciar na landing page ou restaurar rota
