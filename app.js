@@ -1646,8 +1646,8 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       } catch (e) {}
     }
 
-    // Listar modelos autorizados pela API oficial
-    for (const apiVersion of ['v1beta', 'v1']) {
+    // Listar modelos autorizados pela API oficial (v1beta é a versão oficial de Gemini 1.5 e 2.0)
+    for (const apiVersion of ['v1beta']) {
       try {
         const listUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models?key=${encodeURIComponent(apiKey.trim())}`;
         const res = await fetch(listUrl);
@@ -1766,28 +1766,19 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
 
     if (tier === 'pro') {
       candidateEndpoints.push(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-001:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-002:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`
       );
     } else {
       candidateEndpoints.push(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
       );
     }
-
-    // Fallbacks universais de segurança
-    candidateEndpoints.push(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent`,
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent`
-    );
 
     const uniqueEndpoints = [...new Set(candidateEndpoints)];
     let lastError = null;
@@ -1891,20 +1882,23 @@ DIRETRIZES DE ATUAÇÃO:
             continue;
           }
 
-          // Se for cota esgotada (429) ou chave inválida (403), repassa imediatamente para notificar o usuário
-          if (response.status === 429 || response.status === 403) {
-            throw lastError;
+          // Se for cota esgotada (429) ou chave sem permissão (403), notifica com diagnóstico preciso
+          if (response.status === 403) {
+            throw new Error(`Acesso negado pelo Google (403): Esta chave não tem o serviço Gemini (Generative Language) ativado.\n\nComo resolver: Acesse https://aistudio.google.com/app/apikey e clique em "Create API key in new project" (Criar chave em novo projeto).`);
+          }
+          if (response.status === 429) {
+            throw new Error(`Limite de requisições do Google atingido temporariamente (429). Aguarde alguns instantes.`);
           }
         } catch (err) {
           lastError = err;
-          if (err.name === 'AbortError' || err.message.includes('429') || err.message.includes('403')) {
+          if (err.name === 'AbortError' || err.message.includes('403') || err.message.includes('429')) {
             throw err;
           }
         }
       }
     }
 
-    throw lastError || new Error("Não foi possível conectar a nenhum dos modelos disponíveis do Gemini.");
+    throw lastError || new Error("Não foi possível conectar aos servidores do Google Gemini. Verifique a sua chave no botão Google AI Studio.");
   }
 
   // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO ---
