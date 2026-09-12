@@ -86,11 +86,35 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const inputName = document.getElementById('auth-name');
   const inputEmail = document.getElementById('auth-email');
   const inputPassword = document.getElementById('auth-password');
+  const groupPasswordConfirm = document.getElementById('group-password-confirm');
+  const inputPasswordConfirm = document.getElementById('auth-password-confirm');
+  const btnToggleAuthPass = document.getElementById('btn-toggle-auth-pass');
   const btnAuthSubmit = document.getElementById('btn-auth-submit');
   const authBtnText = document.getElementById('auth-btn-text');
   const btnAuthToggleMode = document.getElementById('btn-auth-toggle-mode');
   const authToggleText = document.getElementById('auth-toggle-text');
   const btnFastDemo = document.getElementById('btn-fast-demo');
+  const btnGoogleAuth = document.getElementById('btn-google-auth');
+  const authAlertBox = document.getElementById('auth-alert-box');
+
+  // Modal Google Auth
+  const modalGoogleAuth = document.getElementById('modal-google-auth');
+  const btnCloseGoogleModal = document.getElementById('btn-close-google-modal');
+  const btnConfirmGoogleAuth = document.getElementById('btn-confirm-google-auth');
+  const googleInputName = document.getElementById('google-input-name');
+  const googleInputEmail = document.getElementById('google-input-email');
+
+  // Modal Imagem Preview
+  const modalImagePreview = document.getElementById('modal-image-preview');
+  const btnCloseImageModal = document.getElementById('btn-close-image-modal');
+  const modalPreviewImg = document.getElementById('modal-preview-img');
+  const modalPreviewPrompt = document.getElementById('modal-preview-prompt');
+  const btnModalDownloadImage = document.getElementById('btn-modal-download-image');
+
+  // Ações Rápidas no Hero do Chat
+  const btnWelcomeImage = document.getElementById('btn-welcome-image');
+  const btnWelcomePdf = document.getElementById('btn-welcome-pdf');
+  const btnWelcomeWeb = document.getElementById('btn-welcome-web');
 
   // --- ELEMENTOS DO CHAT IA (KAMBA CHAT IA) ---
   const gptLayout = document.getElementById('gpt-layout');
@@ -99,6 +123,10 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const btnNewChat = document.getElementById('btn-new-chat');
   const btnDashHome = document.getElementById('btn-dash-home');
   const btnUserProfile = document.getElementById('btn-user-profile');
+  const btnSidebarLogout = document.getElementById('btn-sidebar-logout');
+  const displayUserAvatar = document.getElementById('display-user-avatar');
+  const displayUserName = document.getElementById('display-user-name');
+  const displayUserEmail = document.getElementById('display-user-email');
 
   const welcomeCenter = document.getElementById('gpt-welcome-center');
   const chatMessages = document.getElementById('chat-messages');
@@ -114,11 +142,16 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const toastIcon = document.getElementById('toast-icon');
   let toastTimer = null;
 
+  // --- CONSTANTES DO SISTEMA MULTIUSUÁRIO ---
+  const USERS_DB_KEY = 'kamba_registered_users_db';
+  const ACTIVE_SESSION_KEY = 'kamba_active_session_user';
+
   // --- ESTADO DA APLICAÇÃO ---
   let isRegisterMode = false;
-  let currentUser = JSON.parse(localStorage.getItem('kamba_chat_user')) || { name: 'Bruno Souza', email: 'bruno@kamba.ia' };
+  let currentUser = null;
   let currentChatId = null;
   let isGenerating = false;
+  let chats = [];
 
   // Conversas pré-carregadas com suporte nativo a fixadas (pinned)
   const defaultChats = [
@@ -204,13 +237,31 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   ];
 
-  let chats = JSON.parse(localStorage.getItem('kamba_chat_history')) || defaultChats;
-  // Normalizar chats garantindo que cada um possua a flag pinned
-  chats.forEach(c => {
-    if (typeof c.pinned !== 'boolean') {
-      c.pinned = (c.title && c.title.toLowerCase().includes('notificação'));
+  // Funções de Isolamento de Conversas por Usuário
+  function getStorageKeyForUserChats(email) {
+    const safeEmail = (email || 'default').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    return `kamba_user_chats_${safeEmail}`;
+  }
+
+  function loadUserChats(email) {
+    const storageKey = getStorageKeyForUserChats(email);
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      try {
+        const loaded = JSON.parse(raw);
+        if (Array.isArray(loaded) && loaded.length > 0) {
+          chats = loaded;
+          renderHistory();
+          return;
+        }
+      } catch (e) {}
     }
-  });
+
+    // Inicializar conversas padrão para este usuário se for primeira vez
+    chats = JSON.parse(JSON.stringify(defaultChats));
+    saveChatsToStorage();
+    renderHistory();
+  }
 
   // --- TOAST NOTIFICATIONS ---
   function showToast(msg) {
@@ -303,47 +354,311 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     });
   });
 
-  // --- AUTENTICAÇÃO E SESSÃO ---
+  // --- SISTEMA REAL MULTIUSUÁRIO & AUTENTICAÇÃO (KAMBA AUTH) ---
+  function getAllUsers() {
+    const raw = localStorage.getItem(USERS_DB_KEY);
+    if (!raw) {
+      const defaultUsers = [
+        {
+          id: 'usr_admin',
+          name: 'Bruno Souza',
+          email: 'bruno@kamba.ia',
+          password: 'kamba123',
+          provider: 'email',
+          createdAt: Date.now()
+        }
+      ];
+      localStorage.setItem(USERS_DB_KEY, JSON.stringify(defaultUsers));
+      return defaultUsers;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function saveAllUsers(users) {
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
+  }
+
+  function getActiveUser() {
+    const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        if (u && u.email) return u;
+      } catch(e) {}
+    }
+    const all = getAllUsers();
+    return all.length > 0 ? all[0] : { name: 'Bruno Souza', email: 'bruno@kamba.ia' };
+  }
+
+  function setActiveUser(user) {
+    currentUser = user;
+    localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(user));
+    localStorage.setItem('kamba_chat_user', JSON.stringify(user));
+    updateUserProfileUI();
+    loadUserChats(user.email);
+  }
+
+  function updateUserProfileUI() {
+    if (!currentUser) return;
+    const name = currentUser.name || 'Usuário';
+    const email = currentUser.email || 'usuario@kamba.ia';
+    
+    // Iniciais elegantes (ex: "BS" ou "AD")
+    const parts = name.trim().split(/\s+/);
+    const initials = parts.length > 1
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : (parts[0].slice(0, 2)).toUpperCase();
+
+    if (displayUserAvatar) displayUserAvatar.textContent = initials;
+    if (displayUserName) displayUserName.textContent = name;
+    if (displayUserEmail) displayUserEmail.textContent = email;
+  }
+
+  function setAuthAlert(msg, type = 'error') {
+    if (!authAlertBox) return;
+    if (!msg) {
+      authAlertBox.style.display = 'none';
+      authAlertBox.innerHTML = '';
+      return;
+    }
+    authAlertBox.className = `auth-alert-box ${type}`;
+    authAlertBox.style.display = 'flex';
+    const icon = type === 'error'
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>`;
+    authAlertBox.innerHTML = `${icon}<span>${escapeHtml(msg)}</span>`;
+  }
+
   function updateAuthMode(register) {
     isRegisterMode = register;
+    setAuthAlert(null);
     if (register) {
       if (tabRegister) tabRegister.classList.add('active');
       if (tabLogin) tabLogin.classList.remove('active');
       if (groupName) groupName.style.display = 'block';
+      if (groupPasswordConfirm) groupPasswordConfirm.style.display = 'block';
       if (authBtnText) authBtnText.textContent = 'Criar Conta e Entrar';
       if (authToggleText) authToggleText.textContent = 'Já tem conta? Entrar';
     } else {
       if (tabLogin) tabLogin.classList.add('active');
       if (tabRegister) tabRegister.classList.remove('active');
       if (groupName) groupName.style.display = 'none';
+      if (groupPasswordConfirm) groupPasswordConfirm.style.display = 'none';
       if (authBtnText) authBtnText.textContent = 'Entrar';
-      if (authToggleText) authToggleText.textContent = 'Criar Nova Conta';
+      if (authToggleText) authToggleText.textContent = 'Não tem conta? Criar Nova Conta';
     }
   }
 
-  function handleLoginSuccess(user) {
-    currentUser = user;
-    localStorage.setItem('kamba_chat_user', JSON.stringify(user));
-    showView('dashboard');
-    initChatDashboard();
+  function registerNewUser(name, email, password, confirmPassword) {
+    setAuthAlert(null);
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanName = (name || '').trim();
+    const cleanPass = (password || '').trim();
+    const cleanConfirm = (confirmPassword || '').trim();
+
+    if (!cleanName) {
+      setAuthAlert('Por favor, informe o seu nome completo.');
+      return false;
+    }
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setAuthAlert('Por favor, insira um endereço de e-mail válido.');
+      return false;
+    }
+    if (cleanPass.length < 6) {
+      setAuthAlert('A palavra-passe deve conter pelo menos 6 caracteres.');
+      return false;
+    }
+    if (cleanPass !== cleanConfirm) {
+      setAuthAlert('As palavras-passe não coincidem. Confirme novamente.');
+      return false;
+    }
+
+    const users = getAllUsers();
+    const exists = users.some(u => u.email.toLowerCase() === cleanEmail);
+    if (exists) {
+      setAuthAlert('Este e-mail já está registado. Aceda à conta com a sua senha.');
+      return false;
+    }
+
+    const newUser = {
+      id: 'usr_' + Date.now(),
+      name: cleanName,
+      email: cleanEmail,
+      password: cleanPass,
+      provider: 'email',
+      createdAt: Date.now()
+    };
+
+    users.push(newUser);
+    saveAllUsers(users);
+    setActiveUser(newUser);
+
+    setAuthAlert('Conta criada com sucesso! A entrar...', 'success');
+    setTimeout(() => {
+      showView('dashboard');
+      initChatDashboard();
+      showToast(`Conta criada com sucesso! Bem-vindo, ${cleanName}!`);
+    }, 500);
+    return true;
   }
 
+  function loginExistingUser(email, password) {
+    setAuthAlert(null);
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    if (!cleanEmail) {
+      setAuthAlert('Por favor, insira o seu e-mail.');
+      return false;
+    }
+    if (!cleanPass) {
+      setAuthAlert('Por favor, insira a sua palavra-passe.');
+      return false;
+    }
+
+    const users = getAllUsers();
+    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+
+    if (!user) {
+      setAuthAlert('Nenhuma conta registada com este e-mail. Crie uma nova conta.');
+      return false;
+    }
+
+    if (user.password !== cleanPass) {
+      setAuthAlert('Palavra-passe incorreta. Verifique os seus dados.');
+      return false;
+    }
+
+    setActiveUser(user);
+    setAuthAlert('Autenticado com sucesso! A carregar conversas...', 'success');
+    setTimeout(() => {
+      showView('dashboard');
+      initChatDashboard();
+      showToast(`Sessão iniciada como ${user.name}!`);
+    }, 350);
+    return true;
+  }
+
+  function loginGoogleUser(email, name) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      showToast('Por favor, informe um e-mail do Google válido.');
+      return;
+    }
+
+    const users = getAllUsers();
+    let user = users.find(u => u.email.toLowerCase() === cleanEmail);
+
+    if (!user) {
+      const gName = (name || '').trim() || cleanEmail.split('@')[0];
+      user = {
+        id: 'usr_g_' + Date.now(),
+        name: gName,
+        email: cleanEmail,
+        password: '',
+        provider: 'google',
+        createdAt: Date.now()
+      };
+      users.push(user);
+      saveAllUsers(users);
+    }
+
+    if (modalGoogleAuth) modalGoogleAuth.style.display = 'none';
+    setActiveUser(user);
+    showView('dashboard');
+    initChatDashboard();
+    showToast(`Conectado com o Google como ${user.name}!`);
+  }
+
+  function logoutUser() {
+    localStorage.removeItem(ACTIVE_SESSION_KEY);
+    showView('auth');
+    updateAuthMode(false);
+    setAuthAlert(null);
+    if (inputEmail) inputEmail.value = '';
+    if (inputPassword) inputPassword.value = '';
+    showToast('Sessão encerrada. Pode iniciar sessão com outro e-mail agora.');
+  }
+
+  // Alternador de visibilidade de senha
+  if (btnToggleAuthPass && inputPassword) {
+    btnToggleAuthPass.addEventListener('click', () => {
+      const isPass = inputPassword.type === 'password';
+      inputPassword.type = isPass ? 'text' : 'password';
+      if (inputPasswordConfirm) inputPasswordConfirm.type = isPass ? 'text' : 'password';
+    });
+  }
+
+  // Eventos de Abas Login / Registo
   if (tabLogin) tabLogin.addEventListener('click', () => updateAuthMode(false));
   if (tabRegister) tabRegister.addEventListener('click', () => updateAuthMode(true));
   if (btnAuthToggleMode) btnAuthToggleMode.addEventListener('click', () => updateAuthMode(!isRegisterMode));
 
-  if (btnFastDemo) {
-    btnFastDemo.addEventListener('click', () => {
-      handleLoginSuccess({ name: 'Bruno Souza', email: 'bruno@kamba.ia' });
+  // Modal Google Auth
+  if (btnGoogleAuth) {
+    btnGoogleAuth.addEventListener('click', () => {
+      if (modalGoogleAuth) {
+        modalGoogleAuth.style.display = 'flex';
+        if (googleInputEmail) googleInputEmail.focus();
+      }
     });
   }
 
+  if (btnCloseGoogleModal && modalGoogleAuth) {
+    btnCloseGoogleModal.addEventListener('click', () => {
+      modalGoogleAuth.style.display = 'none';
+    });
+    modalGoogleAuth.addEventListener('click', (e) => {
+      if (e.target === modalGoogleAuth) modalGoogleAuth.style.display = 'none';
+    });
+  }
+
+  if (btnConfirmGoogleAuth) {
+    btnConfirmGoogleAuth.addEventListener('click', () => {
+      const gEmail = googleInputEmail ? googleInputEmail.value.trim() : '';
+      const gName = googleInputName ? googleInputName.value.trim() : '';
+      loginGoogleUser(gEmail, gName);
+    });
+  }
+
+  // Acesso Direto Modo Convidado / Demonstração
+  if (btnFastDemo) {
+    btnFastDemo.addEventListener('click', () => {
+      const demoUser = { name: 'Convidado Kamba', email: 'convidado@kamba.ia', provider: 'demo' };
+      setActiveUser(demoUser);
+      showView('dashboard');
+      initChatDashboard();
+      showToast('Acesso como Convidado ativado!');
+    });
+  }
+
+  // Submissão do Formulário de Autenticação
   if (formAuth) {
     formAuth.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = inputEmail ? inputEmail.value.trim() : '';
-      const name = isRegisterMode && inputName ? inputName.value.trim() : (email.split('@')[0] || 'Bruno Souza');
-      handleLoginSuccess({ name: name || 'Bruno Souza', email: email || 'bruno@kamba.ia' });
+      const password = inputPassword ? inputPassword.value.trim() : '';
+
+      if (isRegisterMode) {
+        const name = inputName ? inputName.value.trim() : '';
+        const confirmPass = inputPasswordConfirm ? inputPasswordConfirm.value.trim() : '';
+        registerNewUser(name, email, password, confirmPass);
+      } else {
+        loginExistingUser(email, password);
+      }
+    });
+  }
+
+  // Botão Sair da Conta (Logout) na barra lateral
+  if (btnSidebarLogout) {
+    btnSidebarLogout.addEventListener('click', (e) => {
+      e.stopPropagation();
+      logoutUser();
     });
   }
 
@@ -355,7 +670,10 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   [btnHeaderStart, btnHeroStart, btnTerminalTry, btnBannerStart].forEach(btn => {
     if (btn) {
       btn.addEventListener('click', () => {
-        handleLoginSuccess({ name: currentUser?.name || 'Bruno Souza', email: currentUser?.email || 'bruno@kamba.ia' });
+        const active = getActiveUser();
+        setActiveUser(active);
+        showView('dashboard');
+        initChatDashboard();
       });
     }
   });
@@ -393,9 +711,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   });
 
-  // --- GERENCIAMENTO DE CONVERSAS (NOVO CHAT / HISTÓRICO) ---
+  // --- GERENCIAMENTO DE CONVERSAS COM ISOLAMENTO DE HISTÓRICO ---
   function saveChatsToStorage() {
-    localStorage.setItem('kamba_chat_history', JSON.stringify(chats));
+    if (!currentUser || !currentUser.email) return;
+    const storageKey = getStorageKeyForUserChats(currentUser.email);
+    localStorage.setItem(storageKey, JSON.stringify(chats));
   }
 
   function createNewChat() {
@@ -439,7 +759,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     } else {
       if (welcomeCenter) welcomeCenter.style.display = 'none';
       chat.messages.forEach(msg => {
-        appendMessageToDOM(msg.role, msg.content, false, msg.file || null);
+        appendMessageToDOM(msg.role, msg.content, false, msg.file || null, msg.image || null);
       });
     }
 
@@ -477,7 +797,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   // --- RENDERIZAÇÃO DE MENSAGENS E STREAMING ---
-  function appendMessageToDOM(role, text, isStreaming = false, fileAttachment = null) {
+  function appendMessageToDOM(role, text, isStreaming = false, fileAttachment = null, imageResult = null) {
     if (!chatMessages) return null;
     if (welcomeCenter) welcomeCenter.style.display = 'none';
 
@@ -507,6 +827,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           ${!isStreaming ? createMessageActionsHtml(text) : ''}
         </div>
       `;
+
+      if (imageResult) {
+        const contentAiDiv = row.querySelector('.gpt-msg-content-ai');
+        if (contentAiDiv) renderGeneratedImageMessage(imageResult, contentAiDiv);
+      }
 
       if (!isStreaming) {
         attachMessageActionEvents(row, text);
@@ -589,6 +914,159 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     return `Com certeza! Analisei a sua solicitação com precisão.\n\nSobre **"${userQuery.trim()}"**, aqui estão os pontos recomendados:\n\n1. **Clareza de Objetivo:** Definir o resultado esperado com precisão antes de avançar.\n2. **Execução Prática:** Dividir em etapas acionáveis para manter agilidade e qualidade.\n3. **Refinamento Contínuo:** Testar e iterar com base no feedback real.\n\nDeseja que eu detalhe o próximo passo ou elabore um exemplo prático?`;
   }
 
+  // --- MOTOR DE GERAÇÃO NATIVA DE IMAGENS POR IA ---
+  function detectImageIntent(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase().trim();
+    return (
+      lower.startsWith('gere uma imagem') ||
+      lower.startsWith('crie uma imagem') ||
+      lower.startsWith('desenhe') ||
+      lower.startsWith('ilustre') ||
+      lower.startsWith('gere uma foto') ||
+      lower.startsWith('crie uma foto') ||
+      lower.startsWith('generate an image') ||
+      lower.startsWith('create an image') ||
+      lower.startsWith('draw a picture') ||
+      lower.includes('gerar imagem') ||
+      lower.includes('criar imagem')
+    );
+  }
+
+  function cleanImagePrompt(userText) {
+    return userText
+      .replace(/^(?:por favor,?\s*)?(?:gere|crie|desenhe|ilustre|faça|monte|generate|create|draw)\s+(?:uma\s+)?(?:imagem|foto|ilustra[çc][ãa]o|desenho|arte|quadro|banner|picture|image)\s+(?:de|do|da|dos|das|of|about)?\s*/i, '')
+      .replace(/^(?:me dê|mostre)\s+(?:uma\s+imagem\s+de)?/i, '')
+      .trim() || userText;
+  }
+
+  async function generateAIImage(promptText) {
+    const cleanPrompt = cleanImagePrompt(promptText);
+    const geminiKey = getGeminiApiKey();
+
+    // 1. Tentar Google Imagen 3 se houver chave conectada
+    if (geminiKey) {
+      try {
+        const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${encodeURIComponent(geminiKey.trim())}`;
+        const response = await fetch(imagenUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instances: [{ prompt: cleanPrompt }],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: '1:1',
+              personGeneration: 'ALLOW_ADULT'
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const base64Img = data.predictions?.[0]?.bytesBase64Encoded;
+          if (base64Img) {
+            return {
+              url: `data:image/jpeg;base64,${base64Img}`,
+              prompt: cleanPrompt,
+              engine: 'Google Imagen 3'
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('Google Imagen 3 não respondeu, utilizando motor de alta fidelidade alternativo:', err);
+      }
+    }
+
+    // 2. Motor de Alta Resolução Fallback (Flux / Pollinations AI - 100% estável)
+    const seed = Math.floor(Math.random() * 1000000);
+    const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&nologo=true&seed=${seed}`;
+
+    return {
+      url: fallbackUrl,
+      prompt: cleanPrompt,
+      engine: 'Motor Gráfico Neural Kamba IA'
+    };
+  }
+
+  function renderGeneratedImageMessage(imageResult, container) {
+    if (!container) return;
+    const card = document.createElement('div');
+    card.className = 'ai-generated-image-card';
+    card.innerHTML = `
+      <div class="ai-image-wrap" title="Clique para ampliar em tela cheia">
+        <img src="${escapeHtml(imageResult.url)}" alt="${escapeHtml(imageResult.prompt)}" loading="lazy">
+      </div>
+      <div class="ai-image-toolbar">
+        <span class="ai-image-prompt-badge" title="${escapeHtml(imageResult.prompt)}">Prompt: "${escapeHtml(imageResult.prompt)}"</span>
+        <div class="ai-image-btn-group">
+          <a href="${escapeHtml(imageResult.url)}" download="kamba-ia-${Date.now()}.jpg" target="_blank" class="btn-ai-img-action" title="Baixar arquivo de imagem">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Baixar</span>
+          </a>
+          <button type="button" class="btn-ai-img-action btn-zoom-image" title="Ampliar em tela cheia">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <span>Zoom</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    const imgWrap = card.querySelector('.ai-image-wrap');
+    const btnZoom = card.querySelector('.btn-zoom-image');
+    const openZoom = () => {
+      if (modalImagePreview && modalPreviewImg && modalPreviewPrompt && btnModalDownloadImage) {
+        modalPreviewImg.src = imageResult.url;
+        modalPreviewPrompt.textContent = imageResult.prompt;
+        btnModalDownloadImage.href = imageResult.url;
+        btnModalDownloadImage.download = `kamba-ia-${Date.now()}.jpg`;
+        modalImagePreview.style.display = 'flex';
+      }
+    };
+
+    if (imgWrap) imgWrap.addEventListener('click', openZoom);
+    if (btnZoom) btnZoom.addEventListener('click', openZoom);
+
+    container.appendChild(card);
+  }
+
+  function setupImagePreviewEvents() {
+    if (btnCloseImageModal && modalImagePreview) {
+      btnCloseImageModal.addEventListener('click', () => {
+        modalImagePreview.style.display = 'none';
+      });
+      modalImagePreview.addEventListener('click', (e) => {
+        if (e.target === modalImagePreview) modalImagePreview.style.display = 'none';
+      });
+    }
+  }
+
+  function setupWelcomePillsEvents() {
+    if (btnWelcomeImage) {
+      btnWelcomeImage.addEventListener('click', () => {
+        if (chatInput) {
+          chatInput.value = 'Gere uma imagem de ';
+          chatInput.focus();
+          chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+        }
+      });
+    }
+    if (btnWelcomePdf) {
+      btnWelcomePdf.addEventListener('click', () => {
+        const fileInput = document.getElementById('chat-file-input');
+        if (fileInput) fileInput.click();
+      });
+    }
+    if (btnWelcomeWeb) {
+      btnWelcomeWeb.addEventListener('click', () => {
+        setWebSearchEnabled(true);
+        if (chatInput) {
+          chatInput.value = 'Quais são as principais notícias de tecnologia e economia de hoje?';
+          chatInput.focus();
+        }
+      });
+    }
+  }
+
   // --- ENVIO DE MENSAGENS E STREAMING ---
   async function sendMessage() {
     if (!chatInput) return;
@@ -631,6 +1109,39 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     const streamContainer = aiRow.querySelector('.msg-text-stream');
     const contentAiDiv = aiRow.querySelector('.gpt-msg-content-ai');
     const cursor = aiRow.querySelector('.typing-cursor');
+
+    // Interceptar e executar geração de imagem por IA
+    if (detectImageIntent(text)) {
+      if (streamContainer) {
+        streamContainer.innerHTML = '<em>Criando imagem em alta resolução com Inteligência Artificial...</em>';
+      }
+      try {
+        const imageResult = await generateAIImage(text);
+        if (streamContainer) streamContainer.innerHTML = '';
+        if (cursor) cursor.remove();
+
+        const introText = `### Imagem Criada com Sucesso\n\n*(Processada com ${imageResult.engine})*\n\n> **Prompt interpretado:** "${escapeHtml(imageResult.prompt)}"`;
+        if (streamContainer) streamContainer.innerHTML = formatMarkdown(introText);
+
+        renderGeneratedImageMessage(imageResult, contentAiDiv);
+        scrollToBottom();
+
+        chat.messages.push({
+          role: 'ai',
+          content: `${introText}\n\n![${escapeHtml(imageResult.prompt)}](${imageResult.url})`,
+          image: imageResult
+        });
+        saveChatsToStorage();
+        renderHistory();
+
+        isGenerating = false;
+        if (btnSendMessage) btnSendMessage.disabled = false;
+        return;
+      } catch (err) {
+        console.error('Erro ao gerar imagem:', err);
+        aiResponseText = `**Aviso de Geração de Imagem:**\n\nNão foi possível renderizar a imagem solicitada: ${err.message}`;
+      }
+    }
 
     let aiResponseText = '';
     const geminiKey = getGeminiApiKey();
@@ -1504,9 +2015,13 @@ DIRETRIZES DE ATUAÇÃO:
       gptLayout.classList.remove('sidebar-collapsed');
       localStorage.setItem('gpt_sidebar_collapsed', 'false');
     }
+    currentUser = getActiveUser();
+    updateUserProfileUI();
     updateGeminiStatusUI();
     updateModelSelectorUI();
-    renderHistory();
+    if (currentUser) {
+      loadUserChats(currentUser.email);
+    }
     if (chats.length === 0) {
       createNewChat();
     } else {
@@ -1514,10 +2029,14 @@ DIRETRIZES DE ATUAÇÃO:
     }
   }
 
-  // Configurar eventos do Seletor de Modelo e inicializar UI
+  // Configurações e Inicializações Globais
+  currentUser = getActiveUser();
+  updateUserProfileUI();
   setupModelSelectorEvents();
   updateModelSelectorUI();
   updateGeminiStatusUI();
+  setupImagePreviewEvents();
+  setupWelcomePillsEvents();
 
   // Iniciar na landing page ou restaurar rota
   if (window.location.hash === '#chat') {
