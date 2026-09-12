@@ -374,17 +374,27 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
   // --- SISTEMA OFICIAL DE AUTENTICAÇÃO GOOGLE FIREBASE & MULTIUSUÁRIO ---
   const FIREBASE_CONFIG_KEY = 'kamba_firebase_config';
+  const DEFAULT_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCWbN4zMvsUGMMNVHPNA9p0sKAHI_AjKhA",
+    authDomain: "bruno-teste-kamba.firebaseapp.com",
+    projectId: "bruno-teste-kamba",
+    storageBucket: "bruno-teste-kamba.firebasestorage.app",
+    messagingSenderId: "704788185428",
+    appId: "1:704788185428:web:5c98c3c3e12f39027a08c1",
+    measurementId: "G-SFTZHF77J2"
+  };
+
   let firebaseAuthInstance = null;
   let isFirebaseConfigured = false;
 
   function getSavedFirebaseConfig() {
     const raw = localStorage.getItem(FIREBASE_CONFIG_KEY);
-    if (!raw) return null;
+    if (!raw) return DEFAULT_FIREBASE_CONFIG;
     try {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.apiKey) return parsed;
     } catch(e) {}
-    return null;
+    return DEFAULT_FIREBASE_CONFIG;
   }
 
   function initFirebaseAuth() {
@@ -446,6 +456,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       msg = 'Falha de comunicação de rede com os servidores Google. Verifique sua internet.';
     } else if (code === 'auth/popup-closed-by-user') {
       msg = 'A janela de autenticação Google foi cancelada antes de concluir.';
+    } else if (code === 'auth/operation-not-allowed') {
+      msg = 'Este método de login precisa ser ativado na aba Sign-in method do Firebase Console.';
     }
     setAuthAlert(msg, 'error');
   }
