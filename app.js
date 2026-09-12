@@ -851,11 +851,19 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           }
         };
 
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        let userTz = 'America/Manaus';
+        try {
+          userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || userTz;
+        } catch(e) {}
+
         // Adicionar instrução de sistema apenas para modelos modernos
         if (baseEndpoint.includes('1.5') || baseEndpoint.includes('2.0')) {
           body.systemInstruction = {
             parts: [{
-              text: "Você é o Kamba Chat IA, um assistente corporativo de elite. Você é especialista em criação de textos inteligentes, redação executiva, leitura e tradução precisa de documentos PDF e análise visual/tradução de imagens. Suas respostas devem ser claras, elegantes, bem estruturadas em títulos, tópicos e formatação Markdown impecável. Responda em português com alta qualidade a menos que outro idioma seja explicitamente solicitado."
+              text: `Você é o Kamba Chat IA, um assistente corporativo de elite. A data e hora exata de hoje no dispositivo do usuário são: ${dateStr}, às ${timeStr} (Fuso horário: ${userTz}). Utilize SEMPRE esta data como referência temporal precisa para o dia de hoje, cálculos de prazos, calendário e eventos. Você é especialista em criação de textos inteligentes, redação executiva, leitura e tradução precisa de documentos PDF e análise visual/tradução de imagens. Suas respostas devem ser claras, elegantes, bem estruturadas em títulos, tópicos e formatação Markdown impecável. Responda em português com alta qualidade a menos que outro idioma seja explicitamente solicitado.`
             }]
           };
         }
