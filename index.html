@@ -813,6 +813,10 @@
           </div>
 
           <div class="gpt-header-right">
+            <button class="gpt-api-status-pill" id="btn-open-api-modal" title="Conectar ao Google AI Studio">
+              <span class="api-status-dot" id="api-status-dot"></span>
+              <span id="api-status-label">Google AI Studio</span>
+            </button>
             <button class="gpt-exit-btn" id="btn-dash-home" title="Sair do Chat e voltar à Página Inicial">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -839,9 +843,28 @@
 
         <!-- Barra Inferior de Entrada (Pill Exata do ChatGPT) -->
         <div class="gpt-input-area">
+          <input type="file" id="chat-file-input" accept="application/pdf,image/png,image/jpeg,image/webp" style="display: none;">
+          
           <div class="gpt-input-box">
             
-            <button class="gpt-btn-attach" title="Adicionar anexo ou contexto">
+            <!-- Barra de Pré-visualização de Anexo (PDF ou Imagem) -->
+            <div id="attachment-preview-container" class="attachment-preview-container" style="display: none;">
+              <div class="attachment-chip">
+                <span class="attachment-icon" id="attachment-icon"></span>
+                <div class="attachment-info">
+                  <span class="attachment-filename" id="attachment-filename">documento.pdf</span>
+                  <span class="attachment-filesize" id="attachment-filesize">0 KB</span>
+                </div>
+                <button type="button" id="btn-remove-attachment" class="btn-remove-attachment" title="Remover anexo">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="attachment-quick-actions" id="attachment-quick-actions">
+                <!-- Pílulas rápidas de tradução/análise dinâmicas -->
+              </div>
+            </div>
+
+            <button class="gpt-btn-attach" id="btn-attach-file" title="Anexar documento PDF ou Imagem">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -943,6 +966,53 @@
         </button>
         <button id="btn-modal-print-now" class="btn-print-confirm">
           <span>Guardar Texto / Imprimir</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Configuração do Google AI Studio -->
+  <div id="modal-api-settings" class="executive-modal-overlay">
+    <div class="executive-modal-box api-modal-box">
+      <div class="modal-header-bar">
+        <div class="modal-title-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--angola-yellow)" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          <span class="modal-title-text">Conexão Google AI Studio (Gemini 1.5 Flash)</span>
+        </div>
+        <button id="btn-close-api-modal" class="btn-modal-close" aria-label="Fechar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body-scroll" style="padding: 24px;">
+        <div class="api-modal-desc">
+          <p style="color: #ECECEC; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+            Conecte a sua chave de API gratuita do <strong>Google AI Studio</strong> para conversar com inteligência artificial real, processar <strong>documentos PDF inteiros</strong> e traduzir <strong>textos em imagens</strong> instantaneamente.
+          </p>
+          <div class="api-status-card" id="api-status-card">
+            <span class="api-status-badge" id="api-status-badge">Status: Não Conectado (Modo Demonstração)</span>
+            <span style="font-size: 12.5px; color: #8E8EA0;">A chave é salva apenas no seu navegador local de forma segura.</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 18px;">
+          <label for="input-api-key" style="display: block; font-size: 13px; font-weight: 600; color: #FFD100; margin-bottom: 8px;">Chave de API (Gemini):</label>
+          <div class="api-input-wrap">
+            <input type="password" id="input-api-key" placeholder="Cole sua chave aqui (ex: AIzaSy...)" autocomplete="off">
+            <button type="button" id="btn-toggle-key-visibility" class="btn-toggle-key" title="Mostrar/Ocultar chave">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="7" r="3"/></svg>
+            </button>
+          </div>
+          <p style="font-size: 12px; color: #8E8EA0; margin-top: 10px; line-height: 1.5;">
+            Não tem uma chave ainda? Obtenha grátis em 1 minuto em <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" style="color: #FFD100; text-decoration: underline;">aistudio.google.com</a> (Get API key &rarr; Create API key).
+          </p>
+        </div>
+      </div>
+
+      <div class="modal-actions-footer">
+        <button id="btn-clear-api-key" class="btn-msg-action" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.3);">Remover Chave</button>
+        <button id="btn-save-api-key" class="btn-print-confirm">
+          <span>Salvar e Ativar Conexão</span>
         </button>
       </div>
     </div>

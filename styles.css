@@ -3700,3 +3700,235 @@ body {
   display: block !important;
   opacity: 1 !important;
 }
+
+/* ============================================================ */
+/* CONEXÃO GOOGLE AI STUDIO & ANEXO DE ARQUIVOS (PDF / IMAGENS)  */
+/* ============================================================ */
+.gpt-api-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ECECEC;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+
+.gpt-api-status-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 209, 0, 0.4);
+  color: #FFFFFF;
+}
+
+.api-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8E8EA0;
+  transition: all 0.2s ease;
+}
+
+.api-status-dot.active {
+  background: #22C55E;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+}
+
+.attachment-preview-container {
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 209, 0, 0.35);
+  padding: 6px 12px;
+  border-radius: 8px;
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+.attachment-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--angola-yellow);
+  flex-shrink: 0;
+}
+
+.attachment-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.attachment-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+.attachment-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ECECEC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.attachment-filesize {
+  font-size: 11px;
+  color: #8E8EA0;
+}
+
+.btn-remove-attachment {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  margin-left: 6px;
+}
+
+.btn-remove-attachment:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+.attachment-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 209, 0, 0.1);
+  border: 1px solid rgba(255, 209, 0, 0.28);
+  color: #FFD100;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.action-pill:hover {
+  background: var(--angola-yellow);
+  color: #000000;
+  border-color: var(--angola-yellow);
+  transform: translateY(-1px);
+}
+
+.msg-attached-file-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 209, 0, 0.35);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFD100;
+  margin-bottom: 8px;
+  max-width: 100%;
+}
+
+.msg-attached-file-badge svg {
+  flex-shrink: 0;
+}
+
+.api-modal-box {
+  max-width: 560px !important;
+}
+
+.api-status-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.api-status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #F59E0B;
+}
+
+.api-status-badge.connected {
+  color: #22C55E;
+}
+
+.api-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.api-input-wrap input {
+  width: 100%;
+  background: #171717;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  padding: 10px 42px 10px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: monospace;
+}
+
+.api-input-wrap input:focus {
+  outline: none;
+  border-color: var(--angola-yellow);
+}
+
+.btn-toggle-key {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: #8E8EA0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.btn-toggle-key:hover {
+  color: #ECECEC;
+}
+

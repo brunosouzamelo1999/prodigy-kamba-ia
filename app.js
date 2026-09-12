@@ -439,7 +439,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     } else {
       if (welcomeCenter) welcomeCenter.style.display = 'none';
       chat.messages.forEach(msg => {
-        appendMessageToDOM(msg.role, msg.content, false);
+        appendMessageToDOM(msg.role, msg.content, false, msg.file || null);
       });
     }
 
@@ -477,7 +477,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   // --- RENDERIZAÇÃO DE MENSAGENS E STREAMING ---
-  function appendMessageToDOM(role, text, isStreaming = false) {
+  function appendMessageToDOM(role, text, isStreaming = false, fileAttachment = null) {
     if (!chatMessages) return null;
     if (welcomeCenter) welcomeCenter.style.display = 'none';
 
@@ -485,7 +485,15 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     row.className = `gpt-msg-row ${role}`;
 
     if (role === 'user') {
-      row.innerHTML = `<div class="gpt-msg-bubble-user">${escapeHtml(text)}</div>`;
+      let fileBadgeHtml = '';
+      if (fileAttachment) {
+        const isPdf = fileAttachment.isPdf || (fileAttachment.type && fileAttachment.type.includes('pdf')) || (fileAttachment.name && fileAttachment.name.toLowerCase().endsWith('.pdf'));
+        const iconSvg = isPdf 
+          ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
+          : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+        fileBadgeHtml = `<div class="msg-attached-file-badge">${iconSvg}<span>${escapeHtml(fileAttachment.name)}</span></div>`;
+      }
+      row.innerHTML = `<div class="gpt-msg-bubble-user">${fileBadgeHtml}<div>${escapeHtml(text)}</div></div>`;
     } else {
       row.innerHTML = `
         <div class="gpt-msg-avatar-ai">
@@ -590,15 +598,25 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     const chat = chats.find(c => c.id === currentChatId);
     if (!chat) return;
 
+    const attachedFileToSend = currentAttachedFile;
+
     // Registrar mensagem do usuário
-    chat.messages.push({ role: 'user', content: text });
-    appendMessageToDOM('user', text, false);
+    chat.messages.push({ 
+      role: 'user', 
+      content: text,
+      file: attachedFileToSend ? { name: attachedFileToSend.name, type: attachedFileToSend.type, size: attachedFileToSend.size, isPdf: attachedFileToSend.isPdf } : null
+    });
+    appendMessageToDOM('user', text, false, attachedFileToSend);
     chatInput.value = '';
     chatInput.style.height = 'auto';
 
+    // Limpar pré-visualização de anexo
+    clearAttachment();
+
     // Renomear chat se for a primeira mensagem
     if (chat.title === 'Nova Conversa') {
-      chat.title = text.length > 28 ? text.substring(0, 28) + '...' : text;
+      const baseTitle = text || (attachedFileToSend ? attachedFileToSend.name : 'Conversa com Arquivo');
+      chat.title = baseTitle.length > 28 ? baseTitle.substring(0, 28) + '...' : baseTitle;
     }
     chat.updatedAt = Date.now();
     saveChatsToStorage();
@@ -606,8 +624,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     isGenerating = true;
     if (btnSendMessage) btnSendMessage.disabled = true;
 
-    // Resposta AI
-    const aiResponseText = generateUniversalAIResponse(text);
+    // Linha de resposta da IA
     const aiRow = appendMessageToDOM('ai', '', true);
     if (!aiRow) return;
 
@@ -615,8 +632,30 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     const contentAiDiv = aiRow.querySelector('.gpt-msg-content-ai');
     const cursor = aiRow.querySelector('.typing-cursor');
 
+    let aiResponseText = '';
+    const geminiKey = getGeminiApiKey();
+
+    if (geminiKey) {
+      if (streamContainer) {
+        streamContainer.innerHTML = '<em>Consultando Google Gemini 1.5 Flash...</em>';
+      }
+      try {
+        aiResponseText = await callGoogleGeminiAPI(geminiKey, text, attachedFileToSend, chat.messages);
+      } catch (err) {
+        console.error('Erro ao chamar Google Gemini API:', err);
+        aiResponseText = `**Aviso de Conexão (Google AI Studio):**\n\n${err.message}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
+      }
+    } else {
+      if (attachedFileToSend) {
+        aiResponseText = generateSimulatedFileResponse(attachedFileToSend, text);
+      } else {
+        aiResponseText = generateUniversalAIResponse(text);
+      }
+    }
+
+    if (streamContainer) streamContainer.innerHTML = '';
     let currentText = '';
-    const speed = 7; // Digitação natural
+    const speed = geminiKey ? 5 : 7;
 
     for (let i = 0; i < aiResponseText.length; i++) {
       currentText += aiResponseText[i];
@@ -643,8 +682,352 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
+  // --- MOTOR SIMULADO DE DOCUMENTOS (QUANDO SEM CHAVE ATIVA) ---
+  function generateSimulatedFileResponse(file, userPrompt) {
+    const isPdf = file.isPdf || file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const fileName = escapeHtml(file.name);
+    
+    if (isPdf) {
+      return `### Análise e Tradução do Documento: **${fileName}**\n\n` +
+        `*(Processado com o motor Kamba IA — Base Google Gemini 1.5 Flash)*\n\n` +
+        `---\n\n` +
+        `#### Síntese Executiva do Documento:\n` +
+        `• **Identificação:** Documento PDF corporativo/técnico processado com sucesso.\n` +
+        `• **Estrutura identificada:** Seções numeradas, cláusulas contratuais e termos operacionais.\n\n` +
+        `#### Exemplo de Tradução Oficial Aplicada:\n` +
+        `> *"Todas as diretrizes e prazos estipulados neste instrumento entram em vigor imediatamente a partir da data de ratificação, garantindo conformidade com os padrões regulatórios internacionais e salvaguarda plena das partes envolvidas."*\n\n` +
+        `---\n\n` +
+        `**Ativação em Produção:** Esta é uma visualização prévia da estrutura do Kamba. Para traduzir **este arquivo real na íntegra** linha por linha com inteligência artificial ao vivo, basta colar sua chave gratuita do **Google AI Studio** clicando no botão **Google AI Studio** no topo da tela!`;
+    } else {
+      return `### Leitura e Tradução de Imagem: **${fileName}**\n\n` +
+        `*(Visão Computacional e OCR Kamba IA)*\n\n` +
+        `---\n\n` +
+        `#### Texto Detectado na Imagem (OCR):\n` +
+        `O sistema de visão computacional identificou com sucesso os caracteres tipográficos contidos na imagem enviada.\n\n` +
+        `#### Tradução Direta para Português:\n` +
+        `> *"Acesso liberado aos procedimentos operacionais e conformidade estabelecida conforme os termos vigentes."*\n\n` +
+        `---\n\n` +
+        `**Dica de Produção:** Conecte sua chave gratuita do **Google AI Studio** no botão superior para realizar a leitura, extração e tradução 100% real de qualquer foto, recibo ou captura de tela!`;
+    }
+  }
+
+  // --- CHAMADA OFICIAL À API DO GOOGLE GEMINI 1.5 FLASH (AI STUDIO) ---
+  async function callGoogleGeminiAPI(apiKey, promptText, fileAttachment, historyMessages) {
+    const parts = [];
+
+    if (fileAttachment && fileAttachment.base64) {
+      parts.push({
+        inline_data: {
+          mime_type: fileAttachment.type,
+          data: fileAttachment.base64
+        }
+      });
+    }
+
+    parts.push({
+      text: promptText || "Analise o arquivo anexado e forneça as principais informações ou a tradução solicitada de forma clara e profissional."
+    });
+
+    const contents = [];
+    if (historyMessages && historyMessages.length > 0) {
+      const recent = historyMessages.slice(-6);
+      for (const m of recent) {
+        if (m.content) {
+          contents.push({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+          });
+        }
+      }
+    }
+
+    contents.push({
+      role: 'user',
+      parts: parts
+    });
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+
+    const body = {
+      contents: contents,
+      systemInstruction: {
+        parts: [{
+          text: "Você é o Kamba Chat IA, um assistente corporativo de elite. Você é especialista em criação de textos inteligentes, redação executiva, leitura e tradução precisa de documentos PDF e análise visual/tradução de imagens. Suas respostas devem ser claras, elegantes, bem estruturadas em títulos, tópicos e formatação Markdown impecável. Responda em português com alta qualidade a menos que outro idioma seja explicitamente solicitado."
+        }]
+      },
+      generationConfig: {
+        temperature: 0.6,
+        maxOutputTokens: 8192
+      }
+    };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const msg = err.error?.message || `Erro HTTP ${response.status} na API do Google AI Studio.`;
+      throw new Error(msg);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error("Nenhuma resposta foi retornada pela API do Google Gemini.");
+    }
+
+    return text;
+  }
+
+  // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO ---
+  const GEMINI_STORAGE_KEY = 'kamba_gemini_api_key';
+
+  function getGeminiApiKey() {
+    return (localStorage.getItem(GEMINI_STORAGE_KEY) || '').trim();
+  }
+
+  function setGeminiApiKey(key) {
+    if (key && key.trim()) {
+      localStorage.setItem(GEMINI_STORAGE_KEY, key.trim());
+    } else {
+      localStorage.removeItem(GEMINI_STORAGE_KEY);
+    }
+    updateGeminiStatusUI();
+  }
+
+  function updateGeminiStatusUI() {
+    const key = getGeminiApiKey();
+    const dot = document.getElementById('api-status-dot');
+    const label = document.getElementById('api-status-label');
+    const badge = document.getElementById('api-status-badge');
+
+    if (key) {
+      if (dot) dot.classList.add('active');
+      if (label) label.textContent = 'Gemini 1.5 Ativo';
+      if (badge) {
+        badge.textContent = 'Status: Conectado (Gemini 1.5 Flash)';
+        badge.className = 'api-status-badge connected';
+      }
+    } else {
+      if (dot) dot.classList.remove('active');
+      if (label) label.textContent = 'Google AI Studio';
+      if (badge) {
+        badge.textContent = 'Status: Não Conectado (Modo Demonstração)';
+        badge.className = 'api-status-badge';
+      }
+    }
+  }
+
+  // --- GERENCIAMENTO DE ANEXO DE ARQUIVOS (PDF E IMAGENS) ---
+  let currentAttachedFile = null;
+
+  function clearAttachment() {
+    currentAttachedFile = null;
+    const container = document.getElementById('attachment-preview-container');
+    const fileInput = document.getElementById('chat-file-input');
+    if (container) container.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+  }
+
+  function handleFileSelection(file) {
+    if (!file) return;
+
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const isImage = file.type.startsWith('image/');
+
+    if (!isPdf && !isImage) {
+      showToast('Por favor, selecione um documento PDF ou uma imagem (PNG/JPG/WEBP).');
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      showToast('O arquivo selecionado excede o limite de 20 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const base64Data = dataUrl.split(',')[1];
+
+      currentAttachedFile = {
+        name: file.name,
+        size: file.size,
+        type: file.type || (isPdf ? 'application/pdf' : 'image/jpeg'),
+        dataUrl: dataUrl,
+        base64: base64Data,
+        isPdf: isPdf,
+        isImage: isImage
+      };
+
+      renderAttachmentPreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function renderAttachmentPreview() {
+    const container = document.getElementById('attachment-preview-container');
+    const iconSpan = document.getElementById('attachment-icon');
+    const filenameSpan = document.getElementById('attachment-filename');
+    const filesizeSpan = document.getElementById('attachment-filesize');
+    const quickActionsDiv = document.getElementById('attachment-quick-actions');
+
+    if (!container || !currentAttachedFile) return;
+
+    filenameSpan.textContent = currentAttachedFile.name;
+    const sizeInKb = Math.round(currentAttachedFile.size / 1024);
+    filesizeSpan.textContent = sizeInKb > 1024 ? `${(sizeInKb / 1024).toFixed(1)} MB` : `${sizeInKb} KB`;
+
+    if (currentAttachedFile.isImage) {
+      iconSpan.innerHTML = `<img src="${currentAttachedFile.dataUrl}" alt="Preview">`;
+    } else {
+      iconSpan.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+    }
+
+    let pills = [];
+    if (currentAttachedFile.isPdf) {
+      pills = [
+        { label: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span>Traduzir para Português</span>', prompt: 'Por favor, traduza todo o conteúdo deste documento PDF para o Português, mantendo a estrutura oficial, títulos e formatação executiva.' },
+        { label: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span>Traduzir para Inglês</span>', prompt: 'Please translate the full content of this PDF document into professional English, preserving structure, headers and formatting.' },
+        { label: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span>Resumo Executivo</span>', prompt: 'Faça um resumo executivo detalhado dos principais tópicos e conclusões deste documento PDF.' },
+        { label: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> <span>Analisar Documento</span>', prompt: 'Analise detalhadamente este documento e aponte os dados essenciais, cláusulas ou métricas mais importantes.' }
+      ];
+    } else {
+      pills = [
+        { label: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> <span>Ler e Traduzir Texto</span>', prompt: 'Identifique com precisão todo o texto visível contido nesta imagem e traduza-o para o Português.' },
+        { label: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span>Traduzir para Inglês</span>', prompt: 'Extract all visible text in this image and translate it to English.' },
+        { label: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> <span>Transcrever Texto</span>', prompt: 'Transcreva com máxima precisão todo o texto contido nesta imagem, preservando a pontuação.' }
+      ];
+    }
+
+    quickActionsDiv.innerHTML = pills.map(p => `
+      <button type="button" class="action-pill" data-prompt="${escapeHtml(p.prompt)}">
+        ${p.label}
+      </button>
+    `).join('');
+
+    quickActionsDiv.querySelectorAll('.action-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const prompt = btn.getAttribute('data-prompt');
+        if (chatInput) chatInput.value = prompt;
+        sendMessage();
+      });
+    });
+
+    container.style.display = 'flex';
+  }
+
+  // Eventos de Anexo
+  const btnAttachFile = document.getElementById('btn-attach-file');
+  const chatFileInput = document.getElementById('chat-file-input');
+  const btnRemoveAttachment = document.getElementById('btn-remove-attachment');
+
+  if (btnAttachFile && chatFileInput) {
+    btnAttachFile.addEventListener('click', () => {
+      chatFileInput.click();
+    });
+
+    chatFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFileSelection(e.target.files[0]);
+      }
+    });
+  }
+
+  if (btnRemoveAttachment) {
+    btnRemoveAttachment.addEventListener('click', clearAttachment);
+  }
+
+  // Suporte a Arrastar e Soltar (Drag and Drop) no chat
+  const chatInputArea = document.querySelector('.gpt-input-area');
+  if (chatInputArea) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      chatInputArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        chatInputArea.style.borderColor = 'var(--angola-yellow)';
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      chatInputArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        chatInputArea.style.borderColor = '';
+      }, false);
+    });
+
+    chatInputArea.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files[0]) {
+        handleFileSelection(dt.files[0]);
+      }
+    });
+  }
+
+  // Eventos do Modal do Google AI Studio
+  const btnOpenApiModal = document.getElementById('btn-open-api-modal');
+  const modalApiSettings = document.getElementById('modal-api-settings');
+  const btnCloseApiModal = document.getElementById('btn-close-api-modal');
+  const inputApiKey = document.getElementById('input-api-key');
+  const btnToggleKeyVisibility = document.getElementById('btn-toggle-key-visibility');
+  const btnSaveApiKey = document.getElementById('btn-save-api-key');
+  const btnClearApiKey = document.getElementById('btn-clear-api-key');
+
+  if (btnOpenApiModal && modalApiSettings) {
+    btnOpenApiModal.addEventListener('click', () => {
+      const currentKey = getGeminiApiKey();
+      if (inputApiKey) inputApiKey.value = currentKey;
+      updateGeminiStatusUI();
+      modalApiSettings.classList.add('active');
+    });
+  }
+
+  if (btnCloseApiModal && modalApiSettings) {
+    btnCloseApiModal.addEventListener('click', () => {
+      modalApiSettings.classList.remove('active');
+    });
+  }
+
+  if (modalApiSettings) {
+    modalApiSettings.addEventListener('click', (e) => {
+      if (e.target === modalApiSettings) {
+        modalApiSettings.classList.remove('active');
+      }
+    });
+  }
+
+  if (btnToggleKeyVisibility && inputApiKey) {
+    btnToggleKeyVisibility.addEventListener('click', () => {
+      inputApiKey.type = inputApiKey.type === 'password' ? 'text' : 'password';
+    });
+  }
+
+  if (btnSaveApiKey && inputApiKey && modalApiSettings) {
+    btnSaveApiKey.addEventListener('click', () => {
+      const val = inputApiKey.value.trim();
+      if (!val) {
+        showToast('Por favor, cole a sua chave de API ou clique em Remover.');
+        return;
+      }
+      setGeminiApiKey(val);
+      modalApiSettings.classList.remove('active');
+      showToast('Conexão Google AI Studio ativada com sucesso!');
+    });
+  }
+
+  if (btnClearApiKey && inputApiKey && modalApiSettings) {
+    btnClearApiKey.addEventListener('click', () => {
+      setGeminiApiKey('');
+      inputApiKey.value = '';
+      modalApiSettings.classList.remove('active');
+      showToast('Chave de API removida.');
+    });
+  }
+
   if (btnSendMessage) {
-    btnSendMessage.addEventListener('click', sendMessage);
+    btnSendMessage.addEventListener('click', () => sendMessage());
   }
 
   if (chatInput) {
@@ -774,6 +1157,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       gptLayout.classList.remove('sidebar-collapsed');
       localStorage.setItem('gpt_sidebar_collapsed', 'false');
     }
+    updateGeminiStatusUI();
     renderHistory();
     if (chats.length === 0) {
       createNewChat();
@@ -781,6 +1165,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       loadChat(chats[0].id);
     }
   }
+
+  // Atualizar UI de status inicial
+  updateGeminiStatusUI();
 
   // Iniciar na landing page ou restaurar rota
   if (window.location.hash === '#chat') {
