@@ -852,11 +852,12 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         };
 
         const now = new Date();
-        const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        let userTz = 'America/Manaus';
+        const userLocale = navigator.language || 'pt-AO';
+        const dateStr = now.toLocaleDateString(userLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const timeStr = now.toLocaleTimeString(userLocale, { hour: '2-digit', minute: '2-digit' });
+        let userTz = 'UTC';
         try {
-          userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || userTz;
+          userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
         } catch(e) {}
 
         // Adicionar instrução de sistema apenas para modelos modernos
