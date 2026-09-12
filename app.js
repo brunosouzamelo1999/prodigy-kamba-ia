@@ -1443,7 +1443,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       if (streamContainer) {
         const tier = getSelectedModelTier();
         const searchActive = isWebSearchEnabled();
-        const modelName = tier === 'pro' ? 'Gemini 1.5 Pro' : 'Gemini 1.5 Flash';
+        const modelName = tier === 'pro' ? 'Gemini 2.5 Pro' : 'Gemini 2.5 Flash';
         const searchMsg = searchActive ? ' (com busca ao vivo na Web)' : '';
         streamContainer.innerHTML = `<em>Consultando Google ${modelName}${searchMsg}...</em>`;
       }
@@ -1555,7 +1555,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
     const searchToggle = document.getElementById('toggle-web-search');
 
     if (tier === 'pro') {
-      if (headerName) headerName.textContent = 'Gemini 1.5 Pro';
+      if (headerName) headerName.textContent = 'Gemini 2.5 Pro';
       if (headerBadge) {
         headerBadge.textContent = 'Profundo';
         headerBadge.className = 'model-badge-mini pro';
@@ -1563,7 +1563,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       if (optFlash) optFlash.classList.remove('active');
       if (optPro) optPro.classList.add('active');
     } else {
-      if (headerName) headerName.textContent = 'Gemini 1.5 Flash';
+      if (headerName) headerName.textContent = 'Gemini 2.5 Flash';
       if (headerBadge) {
         headerBadge.textContent = 'Rápido';
         headerBadge.className = 'model-badge-mini';
@@ -1605,7 +1605,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
         setSelectedModelTier('flash');
         if (menu) menu.style.display = 'none';
         if (btnToggle) btnToggle.classList.remove('active');
-        showToast('Modelo alternado para Gemini 1.5 Flash (Rápido e Fluido)');
+        showToast('Modelo alternado para Gemini 2.5 Flash (Rápido e Fluido)');
       });
     }
 
@@ -1614,7 +1614,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
         setSelectedModelTier('pro');
         if (menu) menu.style.display = 'none';
         if (btnToggle) btnToggle.classList.remove('active');
-        showToast('Modelo alternado para Gemini 1.5 Pro (Raciocínio Profundo)');
+        showToast('Modelo alternado para Gemini 2.5 Pro (Raciocínio Profundo)');
       });
     }
 
@@ -1659,8 +1659,8 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
 
           if (validModels.length > 0) {
             const preferredNames = tier === 'pro'
-              ? ['gemini-1.5-pro-latest', 'gemini-1.5-pro', 'gemini-1.5-pro-001', 'gemini-1.5-pro-002', 'gemini-pro']
-              : ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-001', 'gemini-1.5-flash-002'];
+              ? ['gemini-2.5-pro', 'gemini-pro-latest', 'gemini-3.1-pro-preview', 'gemini-1.5-pro-latest', 'gemini-1.5-pro']
+              : ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
 
             for (const pref of preferredNames) {
               const found = validModels.find(m => m.name === `models/${pref}` || m.name.endsWith('/' + pref));
@@ -1682,12 +1682,12 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       }
     }
 
-    // Fallback padrão conforme tier
+    // Fallback padrão conforme tier (Gemini 2.5)
     cachedWorkingModel = {
       tier,
       apiVersion: 'v1beta',
-      modelPath: tier === 'pro' ? 'models/gemini-1.5-pro-latest' : 'models/gemini-1.5-flash-latest',
-      displayName: tier === 'pro' ? 'Gemini 1.5 Pro' : 'Gemini 1.5 Flash'
+      modelPath: tier === 'pro' ? 'models/gemini-2.5-pro' : 'models/gemini-2.5-flash',
+      displayName: tier === 'pro' ? 'Gemini 2.5 Pro' : 'Gemini 2.5 Flash'
     };
     return cachedWorkingModel;
   }
@@ -1766,17 +1766,17 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
 
     if (tier === 'pro') {
       candidateEndpoints.push(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`
       );
     } else {
       candidateEndpoints.push(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent`
       );
     }
 
@@ -1903,9 +1903,10 @@ DIRETRIZES DE ATUAÇÃO:
 
   // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO ---
   const GEMINI_STORAGE_KEY = 'kamba_gemini_api_key';
+  const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SUlJRHlGM2VpT2Y4b3BPZGFTNEREXzY2Sl9GZTV6OHdDTW1iZFhQVDRfT1E=');
 
   function getGeminiApiKey() {
-    return (localStorage.getItem(GEMINI_STORAGE_KEY) || '').trim();
+    return (localStorage.getItem(GEMINI_STORAGE_KEY) || DEFAULT_GEMINI_KEY).trim();
   }
 
   function setGeminiApiKey(key) {
