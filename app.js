@@ -169,6 +169,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   let currentUser = null;
   let currentChatId = null;
   let isGenerating = false;
+  let currentAbortController = null;
+  let activeSpeakingButton = null;
+  let isVoiceRecording = false;
   let chats = [];
 
   // Conversas pré-carregadas com suporte nativo a fixadas (pinned)
@@ -458,6 +461,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       msg = 'A janela de autenticação Google foi cancelada antes de concluir.';
     } else if (code === 'auth/operation-not-allowed') {
       msg = 'Este método de login precisa ser ativado na aba Sign-in method do Firebase Console.';
+    } else if (code === 'auth/unauthorized-domain') {
+      msg = `O domínio atual (${window.location.hostname}) não está autorizado no Firebase Console. Adicione-o em Authentication > Settings > Authorized domains.`;
     }
     setAuthAlert(msg, 'error');
   }
@@ -1035,6 +1040,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   function createNewChat() {
+    stopSpeaking();
+    if (currentAbortController && isGenerating) {
+      currentAbortController.abort();
+    }
+
     // Se o chat atual já estiver vazio e limpo, focar no input sem duplicar conversas vazias
     const currentChat = chats.find(c => c.id === currentChatId);
     if (currentChat && currentChat.messages.length === 0 && currentChat.title === 'Nova Conversa') {
@@ -1064,6 +1074,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   if (btnNewChat) btnNewChat.addEventListener('click', createNewChat);
 
   function loadChat(chatId) {
+    stopSpeaking();
+    if (currentAbortController && isGenerating) {
+      currentAbortController.abort();
+    }
+
     currentChatId = chatId;
     const chat = chats.find(c => c.id === chatId);
     if (!chat) return;
@@ -1075,7 +1090,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     } else {
       if (welcomeCenter) welcomeCenter.style.display = 'none';
       chat.messages.forEach(msg => {
-        appendMessageToDOM(msg.role, msg.content, false, msg.file || null, msg.image || null);
+        const row = appendMessageToDOM(msg.role, msg.content, false, msg.file || null, msg.image || null);
+        if (row) applyCodeHighlighting(row);
       });
     }
 
@@ -1112,6 +1128,249 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
+  // --- CONTROLE DE ESTADO DO BOTÃO DE ENVIO / PARADA ---
+  function setGenerationState(generating) {
+    isGenerating = generating;
+    if (!btnSendMessage) return;
+
+    if (generating) {
+      btnSendMessage.disabled = false;
+      btnSendMessage.classList.add('stop-mode');
+      btnSendMessage.setAttribute('title', 'Parar geração');
+      btnSendMessage.setAttribute('aria-label', 'Parar geração');
+      btnSendMessage.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="5" y="5" width="14" height="14" rx="2" ry="2"/>
+        </svg>
+      `;
+    } else {
+      btnSendMessage.classList.remove('stop-mode');
+      btnSendMessage.setAttribute('title', 'Enviar Mensagem');
+      btnSendMessage.setAttribute('aria-label', 'Enviar Mensagem');
+      btnSendMessage.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="19" x2="12" y2="5"/>
+          <polyline points="5 12 12 5 19 12"/>
+        </svg>
+      `;
+    }
+  }
+
+  // --- APLICAÇÃO DE SYNTAX HIGHLIGHTING & CÓPIA DE CÓDIGO ---
+  function applyCodeHighlighting(container) {
+    if (!container) return;
+
+    // Destacar blocos de código com Highlight.js
+    if (window.hljs) {
+      container.querySelectorAll('pre code:not(.hljs-applied)').forEach(block => {
+        window.hljs.highlightElement(block);
+        block.classList.add('hljs-applied');
+      });
+    }
+
+    // Vincular botões de cópia de código
+    container.querySelectorAll('.btn-copy-code:not([data-copy-bound])').forEach(btn => {
+      btn.setAttribute('data-copy-bound', 'true');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const codeEl = btn.closest('.code-block-wrapper')?.querySelector('pre code');
+        const codeText = codeEl ? codeEl.innerText : '';
+        if (codeText) {
+          navigator.clipboard.writeText(codeText).then(() => {
+            const originalHtml = btn.innerHTML;
+            btn.classList.add('copied');
+            btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Copiado!</span>`;
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              btn.innerHTML = originalHtml;
+            }, 2000);
+          }).catch(() => {
+            showToast('Código copiado com sucesso.');
+          });
+        }
+      });
+    });
+  }
+
+  // --- SÍNTESE DE VOZ (TEXT-TO-SPEECH) ---
+  function stopSpeaking() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (activeSpeakingButton) {
+      activeSpeakingButton.classList.remove('is-speaking');
+      const span = activeSpeakingButton.querySelector('span');
+      if (span) span.textContent = 'Ouvir';
+      activeSpeakingButton = null;
+    }
+  }
+
+  function speakMessage(text, buttonEl) {
+    if (!('speechSynthesis' in window)) {
+      showToast('A síntese de voz não é suportada pelo seu navegador.');
+      return;
+    }
+
+    if (activeSpeakingButton === buttonEl) {
+      stopSpeaking();
+      return;
+    }
+
+    stopSpeaking();
+
+    // Limpar markdown para fala natural
+    const cleanText = text
+      .replace(/```[\s\S]*?```/g, 'Bloco de código.')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/[*#_>~-]/g, ' ')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\n+/g, ' ')
+      .trim();
+
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'pt-PT';
+
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoice = voices.find(v => v.lang.startsWith('pt')) || null;
+    if (ptVoice) utterance.voice = ptVoice;
+
+    utterance.onstart = () => {
+      activeSpeakingButton = buttonEl;
+      buttonEl.classList.add('is-speaking');
+      const span = buttonEl.querySelector('span');
+      if (span) span.textContent = 'Parar';
+    };
+
+    utterance.onend = () => {
+      stopSpeaking();
+    };
+
+    utterance.onerror = () => {
+      stopSpeaking();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // --- RECONHECIMENTO DE VOZ (SPEECH-TO-TEXT / MICROFONE) ---
+  function setupVoiceInput() {
+    const btnVoice = document.getElementById('btn-voice-input') || document.querySelector('.gpt-btn-mic');
+    if (!btnVoice) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      btnVoice.addEventListener('click', () => {
+        showToast('O reconhecimento de voz não é suportado pelo seu navegador.');
+      });
+      return;
+    }
+
+    let recognition = null;
+    try {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'pt-AO';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+    } catch(e) {
+      return;
+    }
+
+    let baseText = '';
+
+    recognition.onstart = () => {
+      isVoiceRecording = true;
+      btnVoice.classList.add('recording');
+      btnVoice.setAttribute('title', 'A escutar... Clique para parar');
+      baseText = chatInput ? chatInput.value : '';
+      showToast('A escutar... Fale agora.');
+    };
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      if (chatInput) {
+        const separator = baseText && !baseText.endsWith(' ') ? ' ' : '';
+        chatInput.value = baseText + separator + (finalTranscript || interimTranscript);
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.warn('Aviso de reconhecimento de voz:', event.error);
+      if (event.error === 'not-allowed') {
+        showToast('Permissão de microfone não autorizada no navegador.');
+      } else if (event.error !== 'no-speech') {
+        showToast(`Aviso de voz: ${event.error}`);
+      }
+      isVoiceRecording = false;
+      btnVoice.classList.remove('recording');
+      btnVoice.setAttribute('title', 'Entrada por voz');
+    };
+
+    recognition.onend = () => {
+      isVoiceRecording = false;
+      btnVoice.classList.remove('recording');
+      btnVoice.setAttribute('title', 'Entrada por voz');
+    };
+
+    btnVoice.addEventListener('click', () => {
+      if (isVoiceRecording) {
+        recognition.stop();
+      } else {
+        try {
+          recognition.start();
+        } catch (e) {
+          recognition.stop();
+          setTimeout(() => recognition.start(), 200);
+        }
+      }
+    });
+  }
+
+  // --- REGENERAR ÚLTIMA RESPOSTA DA IA ---
+  async function regenerateLastResponse(aiRowElement) {
+    if (isGenerating) return;
+    const chat = chats.find(c => c.id === currentChatId);
+    if (!chat || chat.messages.length === 0) return;
+
+    let lastUserIndex = -1;
+    for (let i = chat.messages.length - 1; i >= 0; i--) {
+      if (chat.messages[i].role === 'user') {
+        lastUserIndex = i;
+        break;
+      }
+    }
+
+    if (lastUserIndex === -1) {
+      showToast('Nenhuma pergunta anterior para regenerar.');
+      return;
+    }
+
+    const userMsg = chat.messages[lastUserIndex];
+    
+    // Truncar mensagens a partir da pergunta do usuário (remove a resposta da IA atual)
+    chat.messages = chat.messages.slice(0, lastUserIndex + 1);
+    saveChatsToStorage();
+
+    // Recarregar histórico até a pergunta do usuário
+    loadChat(currentChatId);
+
+    // Disparar nova geração
+    await executeAIGeneration(userMsg.content, userMsg.file || null);
+  }
+
   // --- RENDERIZAÇÃO DE MENSAGENS E STREAMING ---
   function appendMessageToDOM(role, text, isStreaming = false, fileAttachment = null, imageResult = null) {
     if (!chatMessages) return null;
@@ -1133,9 +1392,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     } else {
       row.innerHTML = `
         <div class="gpt-msg-avatar-ai">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD100">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-          </svg>
+          <img src="assets/logo-meu-kota-circle.png" alt="Meu Kota" class="kota-avatar-msg-img">
         </div>
         <div class="gpt-msg-content-ai">
           <div class="msg-text-stream">${formatMarkdown(text)}</div>
@@ -1151,6 +1408,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
       if (!isStreaming) {
         attachMessageActionEvents(row, text);
+        applyCodeHighlighting(row);
       }
     }
 
@@ -1169,6 +1427,20 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           </svg>
           <span>Copiar</span>
         </button>
+        <button class="gpt-action-small-btn btn-speak-msg" title="Ouvir resposta em voz alta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <span>Ouvir</span>
+        </button>
+        <button class="gpt-action-small-btn btn-regenerate-msg" title="Regenerar resposta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>Regenerar</span>
+        </button>
       </div>
     `;
   }
@@ -1182,6 +1454,20 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         }).catch(() => {
           showToast('Texto copiado com sucesso.');
         });
+      });
+    }
+
+    const btnSpeak = rowElement.querySelector('.btn-speak-msg');
+    if (btnSpeak) {
+      btnSpeak.addEventListener('click', () => {
+        speakMessage(text, btnSpeak);
+      });
+    }
+
+    const btnRegenerate = rowElement.querySelector('.btn-regenerate-msg');
+    if (btnRegenerate) {
+      btnRegenerate.addEventListener('click', () => {
+        regenerateLastResponse(rowElement);
       });
     }
   }
@@ -1198,7 +1484,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   function generateUniversalAIResponse(userQuery) {
     return `### Inteligência Artificial Oficial Desconectada
 
-Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários, cidades, notícias, códigos e traduções oficiais):
+Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, cidades, notícias, códigos e traduções oficiais):
 
 1. Clique no botão **"Google AI Studio"** no topo direito da tela.
 2. Cole a sua chave de API gratuita do **Google Gemini** (obtida no Google AI Studio).
@@ -1362,9 +1648,17 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
 
   // --- ENVIO DE MENSAGENS E STREAMING ---
   async function sendMessage() {
+    if (isGenerating) {
+      // Se estiver gerando e o usuário clicar no botão (modo Parar), interrompe imediatamente
+      if (currentAbortController) {
+        currentAbortController.abort();
+      }
+      return;
+    }
+
     if (!chatInput) return;
     const text = chatInput.value.trim();
-    if (!text || isGenerating) return;
+    if (!text) return;
 
     const chat = chats.find(c => c.id === currentChatId);
     if (!chat) return;
@@ -1392,12 +1686,23 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
     chat.updatedAt = Date.now();
     saveChatsToStorage();
 
-    isGenerating = true;
-    if (btnSendMessage) btnSendMessage.disabled = true;
+    await executeAIGeneration(text, attachedFileToSend);
+  }
+
+  async function executeAIGeneration(text, attachedFileToSend) {
+    const chat = chats.find(c => c.id === currentChatId);
+    if (!chat) return;
+
+    setGenerationState(true);
+    currentAbortController = new AbortController();
+    const abortSignal = currentAbortController.signal;
 
     // Linha de resposta da IA
     const aiRow = appendMessageToDOM('ai', '', true);
-    if (!aiRow) return;
+    if (!aiRow) {
+      setGenerationState(false);
+      return;
+    }
 
     const streamContainer = aiRow.querySelector('.msg-text-stream');
     const contentAiDiv = aiRow.querySelector('.gpt-msg-content-ai');
@@ -1410,11 +1715,15 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       }
       try {
         const imageResult = await generateAIImage(text);
+        if (abortSignal.aborted) {
+          throw new DOMException('Aborted', 'AbortError');
+        }
         if (streamContainer) streamContainer.innerHTML = '';
         if (cursor) cursor.remove();
 
         const introText = `### Imagem Criada com Sucesso\n\n*(Processada com ${imageResult.engine})*\n\n> **Prompt interpretado:** "${escapeHtml(imageResult.prompt)}"`;
         if (streamContainer) streamContainer.innerHTML = formatMarkdown(introText);
+        applyCodeHighlighting(streamContainer);
 
         renderGeneratedImageMessage(imageResult, contentAiDiv);
         scrollToBottom();
@@ -1427,70 +1736,112 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
         saveChatsToStorage();
         renderHistory();
 
-        isGenerating = false;
-        if (btnSendMessage) btnSendMessage.disabled = false;
+        setGenerationState(false);
         return;
       } catch (err) {
+        if (err.name === 'AbortError' || abortSignal.aborted) {
+          if (cursor) cursor.remove();
+          if (streamContainer) streamContainer.innerHTML = '<em>Geração de imagem cancelada.</em>';
+          setGenerationState(false);
+          showToast('Geração de imagem interrompida.');
+          return;
+        }
         console.error('Erro ao gerar imagem:', err);
-        aiResponseText = `**Aviso de Geração de Imagem:**\n\nNão foi possível renderizar a imagem solicitada: ${err.message}`;
+        const errNotice = `**Aviso de Geração de Imagem:**\n\nNão foi possível renderizar a imagem solicitada: ${err.message}`;
+        if (streamContainer) streamContainer.innerHTML = formatMarkdown(errNotice);
+        if (cursor) cursor.remove();
+        setGenerationState(false);
+        return;
       }
     }
 
-    let aiResponseText = '';
+    let finalAiResponseText = '';
     const geminiKey = getGeminiApiKey();
 
-    if (geminiKey) {
-      if (streamContainer) {
-        const tier = getSelectedModelTier();
-        const searchActive = isWebSearchEnabled();
-        const modelName = tier === 'pro' ? 'Gemini 2.5 Pro' : 'Gemini 2.5 Flash';
-        const searchMsg = searchActive ? ' (com busca ao vivo na Web)' : '';
-        streamContainer.innerHTML = `<em>Consultando Google ${modelName}${searchMsg}...</em>`;
+    try {
+      if (geminiKey) {
+        if (streamContainer) {
+          const tier = getSelectedModelTier();
+          const searchActive = isWebSearchEnabled();
+          const modelName = tier === 'pro' ? 'Gemini 3.1 Pro' : 'Gemini 2.5 Flash';
+          const searchMsg = searchActive ? ' (com busca ao vivo na Web)' : '';
+          streamContainer.innerHTML = `<em>Consultando Google ${modelName}${searchMsg}...</em>`;
+        }
+
+        finalAiResponseText = await callGoogleGeminiStreamingAPI(
+          geminiKey, 
+          text, 
+          attachedFileToSend, 
+          chat.messages,
+          (streamedText) => {
+            if (streamContainer) {
+              streamContainer.innerHTML = formatMarkdown(streamedText);
+              applyCodeHighlighting(streamContainer);
+            }
+            scrollToBottom();
+          },
+          abortSignal
+        );
+      } else {
+        // Fallback simulado com streaming dinâmico e suporte a parada
+        const fallbackText = attachedFileToSend 
+          ? generateSimulatedFileResponse(attachedFileToSend, text) 
+          : generateUniversalAIResponse(text);
+
+        if (streamContainer) streamContainer.innerHTML = '';
+        let currentText = '';
+        const step = 2;
+        for (let i = 0; i < fallbackText.length; i += step) {
+          if (abortSignal.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+          }
+          currentText += fallbackText.substring(i, i + step);
+          if (streamContainer) {
+            streamContainer.innerHTML = formatMarkdown(currentText);
+            applyCodeHighlighting(streamContainer);
+          }
+          scrollToBottom();
+          await new Promise(r => setTimeout(r, 10));
+        }
+        finalAiResponseText = currentText;
       }
-      try {
-        aiResponseText = await callGoogleGeminiAPI(geminiKey, text, attachedFileToSend, chat.messages);
-      } catch (err) {
-        console.error('Erro ao chamar Google Gemini API:', err);
-        if (err.message.includes('429') || err.message.includes('Limite de requisições')) {
-          aiResponseText = `**Aviso de Cota Gratuita (Google AI Studio):**\n\n${err.message}\n\n*Nota: Sua chave está perfeitamente conectada e válida. O plano gratuito do Google renova as requisições automaticamente a cada 60 segundos.*`;
+    } catch (err) {
+      if (err.name === 'AbortError' || abortSignal.aborted) {
+        showToast('Geração interrompida.');
+        if (!finalAiResponseText && streamContainer) {
+          finalAiResponseText = streamContainer.innerText.trim() || '*(Geração interrompida pelo usuário)*';
+        }
+      } else {
+        console.error('Erro ao gerar resposta:', err);
+        if (err.message && (err.message.includes('429') || err.message.includes('Limite de requisições'))) {
+          finalAiResponseText = `**Aviso de Cota Gratuita (Google AI Studio):**\n\n${err.message}\n\n*Nota: Sua chave está perfeitamente conectada e válida. O plano gratuito do Google renova as requisições automaticamente a cada 60 segundos.*`;
         } else {
-          aiResponseText = `**Aviso de Conexão (Google AI Studio):**\n\n${err.message}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
+          finalAiResponseText = `**Aviso de Conexão (Google AI Studio):**\n\n${err.message || 'Erro de comunicação.'}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
+        }
+        if (streamContainer) {
+          streamContainer.innerHTML = formatMarkdown(finalAiResponseText);
+          applyCodeHighlighting(streamContainer);
         }
       }
-    } else {
-      if (attachedFileToSend) {
-        aiResponseText = generateSimulatedFileResponse(attachedFileToSend, text);
-      } else {
-        aiResponseText = generateUniversalAIResponse(text);
-      }
-    }
-
-    if (streamContainer) streamContainer.innerHTML = '';
-    let currentText = '';
-    const speed = geminiKey ? 5 : 7;
-
-    for (let i = 0; i < aiResponseText.length; i++) {
-      currentText += aiResponseText[i];
-      if (streamContainer) streamContainer.innerHTML = formatMarkdown(currentText);
-      scrollToBottom();
-      await new Promise(r => setTimeout(r, speed));
     }
 
     if (cursor) cursor.remove();
-    isGenerating = false;
-    if (btnSendMessage) btnSendMessage.disabled = false;
+    setGenerationState(false);
 
-    // Salvar na memória
-    chat.messages.push({ role: 'ai', content: aiResponseText });
-    saveChatsToStorage();
-    renderHistory();
+    if (finalAiResponseText) {
+      chat.messages.push({ role: 'ai', content: finalAiResponseText });
+      saveChatsToStorage();
+      renderHistory();
 
-    // Botão de copiar
-    if (contentAiDiv) {
-      const actions = document.createElement('div');
-      actions.innerHTML = createMessageActionsHtml(aiResponseText);
-      contentAiDiv.appendChild(actions.firstElementChild);
-      attachMessageActionEvents(aiRow, aiResponseText);
+      if (contentAiDiv) {
+        const existingActions = contentAiDiv.querySelector('.gpt-msg-actions');
+        if (existingActions) existingActions.remove();
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.innerHTML = createMessageActionsHtml(finalAiResponseText);
+        contentAiDiv.appendChild(actionsDiv.firstElementChild);
+        attachMessageActionEvents(aiRow, finalAiResponseText);
+      }
     }
   }
 
@@ -1697,8 +2048,8 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
     return cachedWorkingModel;
   }
 
-  // --- CHAMADA OFICIAL À API DO GOOGLE GEMINI (COM BUSCA AO VIVO, MEMÓRIA E AUTO-RECUPERAÇÃO) ---
-  async function callGoogleGeminiAPI(apiKey, promptText, fileAttachment, historyMessages) {
+  // --- CHAMADA OFICIAL EM STREAMING À API DO GOOGLE GEMINI (SSE REAL) ---
+  async function callGoogleGeminiStreamingAPI(apiKey, promptText, fileAttachment, historyMessages, onChunk, abortSignal) {
     const parts = [];
 
     const now = new Date();
@@ -1728,7 +2079,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       text: finalPromptText
     });
 
-    // 1. Memória Contínua Multi-Turn (turnos anteriores, excluindo a mensagem atual)
+    // 1. Memória Contínua Multi-Turn (turnos anteriores)
     const rawHistory = [];
     if (historyMessages && historyMessages.length > 0) {
       const previousMessages = historyMessages.slice(0, -1);
@@ -1736,7 +2087,6 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       for (const m of recent) {
         if (m.content && !m.content.startsWith('**Aviso de Conexão')) {
           const contentStr = m.content;
-          // Pular comandos órfãos de imagens anteriores para não confundir o modelo
           if (m.role === 'user' && !fileAttachment && (
             contentStr.includes('Extract all visible text in this image') || 
             contentStr.includes('texto visível contido nesta imagem') ||
@@ -1752,7 +2102,7 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
       }
     }
 
-    // Sanitizar alternância estrita entre 'user' e 'model' exigida pelo Google
+    // Sanitizar alternância estrita entre 'user' e 'model'
     const contents = [];
     let lastRole = null;
     for (const msg of rawHistory) {
@@ -1763,8 +2113,6 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
         lastRole = msg.role;
       }
     }
-
-    // Adicionar o turno atual do usuário
     contents.push({ role: 'user', parts: parts });
 
     // 2. Definir lista ordenada de endpoints conforme o modelo escolhido (Pro vs Flash)
@@ -1773,51 +2121,53 @@ Para que o **Kamba Chat IA** responda a perguntas em tempo real (como horários,
 
     const candidateEndpoints = [];
     if (discovered && discovered.modelPath && !discovered.modelPath.includes('gemini-2.5-pro')) {
-      candidateEndpoints.push(`https://generativelanguage.googleapis.com/${discovered.apiVersion}/${discovered.modelPath}:generateContent`);
+      candidateEndpoints.push(`https://generativelanguage.googleapis.com/${discovered.apiVersion}/${discovered.modelPath}`);
     }
 
     if (tier === 'pro') {
       candidateEndpoints.push(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview`
       );
     } else {
       candidateEndpoints.push(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview`
       );
     }
 
     const uniqueEndpoints = [...new Set(candidateEndpoints)];
     let lastError = null;
     const webSearchWanted = isWebSearchEnabled();
-    // A API Google Gemini não aceita a ferramenta google_search combinada com anexos multimodais (imagens ou PDFs)
     const canUseSearch = webSearchWanted && !fileAttachment;
 
-    // Instrução Corporativa Executiva
     const systemInstruction = {
       parts: [{
-        text: `Você é o Kamba Chat IA, um assistente corporativo executivo de inteligência artificial de padrão internacional.
+        text: `Você é o Meu Kota IA, um assistente corporativo executivo e conselheiro sábio de inteligência artificial de padrão internacional.
 A data e hora exatas no dispositivo do usuário são: ${dateStr}, às ${timeStr} (Fuso horário: ${userTz}). Utilize SEMPRE esta data como referência cronológica factual inegociável para o dia de hoje, cálculos de prazos, calendário e fatos correntes.
 DIRETRIZES DE ATUAÇÃO:
-1. EXCELÊNCIA E PRECISÃO: Suas respostas devem ser de alto padrão corporativo, objetivas, sem preâmbulos vazios e bem estruturadas com títulos claros, tópicos e tabelas comparativas quando relevante.
-2. ANÁLISE PROFUNDA DE DOCUMENTOS: Você possui visão computacional nativa e leitura multimodal completa. Extraia todo o texto visível de imagens com fidelidade absoluta (OCR) e faça traduções executivas de PDFs e documentos técnicos.
-3. PADRÃO VISUAL SÓBRIO: Jamais use emojis informais ou infantis.
-4. IDIOMA: Responda em português formal impecável, atendendo com fluidez internacional.`
+1. EXCELÊNCIA E PRECISÃO: Suas respostas devem ser de alto padrão corporativo, sábias, empáticas, objetivas, sem preâmbulos vazios e bem estruturadas com títulos claros, tópicos e tabelas comparativas quando relevante.
+2. CÓDIGO LIMPO E FORMATADO: Sempre que fornecer códigos de programação, utilize blocos com identificador de linguagem (ex: \`\`\`javascript ou \`\`\`python).
+3. ANÁLISE PROFUNDA DE DOCUMENTOS: Você possui visão computacional nativa e leitura multimodal completa. Extraia todo o texto visível de imagens com fidelidade absoluta (OCR) e faça traduções executivas de PDFs e documentos técnicos.
+4. PADRÃO VISUAL SÓBRIO: Jamais use emojis informais ou infantis.
+5. IDIOMA: Responda em português formal impecável com acolhimento e respeito dignos de um Kota (mentor sábio e experiente).`
       }]
     };
 
-    for (const baseEndpoint of uniqueEndpoints) {
-      // Se busca na web estiver permitida, tentar com busca primeiro; se falhar, tentar sem busca imediatamente
+    for (const baseModelUrl of uniqueEndpoints) {
       const searchAttempts = canUseSearch ? [true, false] : [false];
 
       for (const enableSearch of searchAttempts) {
+        if (abortSignal && abortSignal.aborted) {
+          throw new DOMException('Aborted', 'AbortError');
+        }
+
         try {
-          const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey.trim())}`;
+          const streamUrl = `${baseModelUrl}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey.trim())}`;
           
           const body = {
             contents: contents,
@@ -1832,99 +2182,133 @@ DIRETRIZES DE ATUAÇÃO:
             body.tools = [{ google_search: {} }];
           }
 
-          const response = await fetch(url, {
+          const response = await fetch(streamUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            signal: abortSignal
           });
 
           if (response.ok) {
-            const data = await response.json();
-            const candidate = data.candidates?.[0];
-            let text = candidate?.content?.parts?.[0]?.text;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let buffer = '';
+            let fullText = '';
+            const sources = [];
+            const seenUrls = new Set();
 
-            if (text) {
-              // Extrair citações e links da pesquisa ao vivo (Google Search Grounding)
-              if (candidate.groundingMetadata) {
-                const chunks = candidate.groundingMetadata.groundingChunks || [];
-                const sources = [];
-                const seenUrls = new Set();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
 
-                for (const chunk of chunks) {
-                  if (chunk.web && chunk.web.uri && !seenUrls.has(chunk.web.uri)) {
-                    seenUrls.add(chunk.web.uri);
-                    let title = chunk.web.title;
-                    if (!title) {
-                      try {
-                        title = new URL(chunk.web.uri).hostname.replace(/^www\./, '');
-                      } catch(e) {
-                        title = chunk.web.uri;
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop();
+
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('data: ')) {
+                  const jsonStr = trimmed.slice(6).trim();
+                  if (!jsonStr || jsonStr === '[DONE]') continue;
+
+                  try {
+                    const parsed = JSON.parse(jsonStr);
+                    const candidate = parsed.candidates?.[0];
+                    const partText = candidate?.content?.parts?.[0]?.text;
+                    if (partText) {
+                      fullText += partText;
+                      if (onChunk) onChunk(fullText);
+                    }
+
+                    if (candidate?.groundingMetadata?.groundingChunks) {
+                      for (const chunk of candidate.groundingMetadata.groundingChunks) {
+                        if (chunk.web && chunk.web.uri && !seenUrls.has(chunk.web.uri)) {
+                          seenUrls.add(chunk.web.uri);
+                          let title = chunk.web.title;
+                          if (!title) {
+                            try {
+                              title = new URL(chunk.web.uri).hostname.replace(/^www\./, '');
+                            } catch(e) {
+                              title = chunk.web.uri;
+                            }
+                          }
+                          sources.push({ title, uri: chunk.web.uri });
+                        }
                       }
                     }
-                    sources.push({ title, uri: chunk.web.uri });
+                  } catch(e) {
+                    // Chunk JSON incompleto, aguardar próxima linha
                   }
                 }
-
-                if (sources.length > 0) {
-                  text += '\n\n---\n\n#### Fontes consultadas em tempo real na Web:\n';
-                  sources.slice(0, 5).forEach(s => {
-                    text += `• [${s.title}](${s.uri})\n`;
-                  });
-                }
               }
-
-              // Atualizar cache de modelo funcional
-              const modelIdentifier = baseEndpoint.split('/').slice(-1)[0].replace(':generateContent', '');
-              cachedWorkingModel = {
-                tier,
-                apiVersion: baseEndpoint.includes('/v1/') ? 'v1' : 'v1beta',
-                modelPath: modelIdentifier.startsWith('models/') ? modelIdentifier : `models/${modelIdentifier}`,
-                displayName: modelIdentifier.replace('models/', '')
-              };
-              localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
-              updateGeminiStatusUI();
-              return text;
             }
+
+            if (sources.length > 0) {
+              fullText += '\n\n---\n\n#### Fontes consultadas em tempo real na Web:\n';
+              sources.slice(0, 5).forEach(s => {
+                fullText += `• [${s.title}](${s.uri})\n`;
+              });
+              if (onChunk) onChunk(fullText);
+            }
+
+            // Atualizar cache de modelo funcional
+            const modelIdentifier = baseModelUrl.split('/').slice(-1)[0];
+            cachedWorkingModel = {
+              tier,
+              apiVersion: baseModelUrl.includes('/v1/') ? 'v1' : 'v1beta',
+              modelPath: modelIdentifier.startsWith('models/') ? modelIdentifier : `models/${modelIdentifier}`,
+              displayName: modelIdentifier.replace('models/', '')
+            };
+            localStorage.setItem('kamba_gemini_model_config', JSON.stringify(cachedWorkingModel));
+            updateGeminiStatusUI();
+            return fullText;
+          }
+
+          if (abortSignal && abortSignal.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
           }
 
           const errData = await response.json().catch(() => ({}));
           const errMsg = errData.error?.message || `Erro HTTP ${response.status}`;
           lastError = new Error(errMsg);
 
-          // Se a tentativa com busca na web falhar (400, 500, 503, etc.), tenta sem busca imediatamente
           if (!response.ok && enableSearch) {
             console.warn(`Tentativa com busca ao vivo falhou (${response.status}: ${errMsg}). Tentando sem busca...`);
             continue;
           }
 
-          // Se for modelo descontinuado ou não encontrado (404), tenta o próximo modelo da lista
           if (response.status === 404) {
-            console.warn(`Modelo ${baseEndpoint} não suportado para esta chave (404). Tentando próximo modelo...`);
+            console.warn(`Modelo ${baseModelUrl} não suportado para esta chave (404). Tentando próximo modelo...`);
             continue;
           }
 
-          // Se for cota esgotada (429) ou chave sem permissão (403), notifica com diagnóstico preciso
           if (response.status === 403) {
-            throw new Error(`Acesso negado pelo Google (403): Esta chave não tem o serviço Gemini (Generative Language) ativado.\n\nComo resolver: Acesse https://aistudio.google.com/app/apikey e clique em "Create API key in new project" (Criar chave em novo projeto).`);
+            throw new Error(`Acesso negado pelo Google (403): Esta chave não tem o serviço Gemini (Generative Language) ativado.\n\nComo resolver: Acesse https://aistudio.google.com/app/apikey e crie uma nova chave.`);
           }
+
           if (response.status === 429) {
             lastError = new Error(`Limite de requisições por minuto do Google atingido temporariamente (429). Aguarde alguns segundos para a cota renovar.`);
             continue;
           }
         } catch (err) {
+          if (err.name === 'AbortError' || (abortSignal && abortSignal.aborted)) {
+            throw err;
+          }
           lastError = err;
           if (enableSearch) {
             console.warn('Falha na tentativa com busca ao vivo. Tentando sem busca...', err);
             continue;
-          }
-          if (err.name === 'AbortError' || err.message.includes('403')) {
-            throw err;
           }
         }
       }
     }
 
     throw lastError || new Error("Não foi possível conectar aos servidores do Google Gemini. Verifique a sua chave no botão Google AI Studio.");
+  }
+
+  // Alias para compatibilidade síncrona se necessário
+  async function callGoogleGeminiAPI(apiKey, promptText, fileAttachment, historyMessages) {
+    return callGoogleGeminiStreamingAPI(apiKey, promptText, fileAttachment, historyMessages, null, null);
   }
 
   // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO ---
@@ -2346,13 +2730,28 @@ DIRETRIZES DE ATUAÇÃO:
     });
   }
 
-  // --- FORMATAÇÃO MARKDOWN LEVE & SEGURA ---
+  // --- FORMATAÇÃO MARKDOWN LEVE, SEGURA E COM DESTAQUE DE CÓDIGO ---
   function formatMarkdown(text) {
     if (!text) return '';
     let formatted = escapeHtml(text);
 
-    // Blocos de código pré-formatados ```codigo```
-    formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    // Extrair blocos de código em placeholders para não quebrar quebras de linha com <br>
+    const codeBlocks = [];
+
+    // 1. Blocos de código com identificador de linguagem (ex: ```javascript ... ```)
+    formatted = formatted.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const id = `___KAMBA_CODE_BLOCK_${codeBlocks.length}___`;
+      const cleanLang = (lang || 'code').trim().toLowerCase();
+      codeBlocks.push({ lang: cleanLang, code: code.replace(/\n$/, '') });
+      return id;
+    });
+
+    // 2. Blocos de código genéricos (ex: ```...```)
+    formatted = formatted.replace(/```([\s\S]*?)```/g, (match, code) => {
+      const id = `___KAMBA_CODE_BLOCK_${codeBlocks.length}___`;
+      codeBlocks.push({ lang: 'code', code: code.replace(/\n$/, '') });
+      return id;
+    });
 
     // Código inline `codigo`
     formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -2378,11 +2777,27 @@ DIRETRIZES DE ATUAÇÃO:
     // Citações > texto
     formatted = formatted.replace(/^>\s?(.*)$/gm, '<blockquote style="border-left:3px solid #EAB308;padding-left:10px;margin:8px 0;color:#9CA3AF;font-style:italic;">$1</blockquote>');
 
-    // Quebras de linha para <br>
+    // Quebras de linha de texto livre para <br>
     formatted = formatted.replace(/\n/g, '<br>');
 
     // Marcadores de lista •
     formatted = formatted.replace(/•\s?/g, '<span style="color:#EAB308;margin-right:6px;">●</span>');
+
+    // Restaurar blocos de código com containers profissionais e botões de cópia
+    codeBlocks.forEach((item, index) => {
+      const codeHtml = `<div class="code-block-wrapper" data-lang="${item.lang}">` +
+        `<div class="code-block-header">` +
+          `<span class="code-lang-tag">${item.lang}</span>` +
+          `<button type="button" class="btn-copy-code" title="Copiar código para a área de transferência">` +
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>` +
+            `<span>Copiar código</span>` +
+          `</button>` +
+        `</div>` +
+        `<pre><code class="hljs language-${item.lang}">${item.code}</code></pre>` +
+      `</div>`;
+
+      formatted = formatted.replace(`___KAMBA_CODE_BLOCK_${index}___`, codeHtml);
+    });
 
     return formatted;
   }
@@ -2419,6 +2834,56 @@ DIRETRIZES DE ATUAÇÃO:
     }
   }
 
+  // --- PROGRESSIVE WEB APP (PWA) & INSTALAÇÃO ---
+  let deferredPwaPrompt = null;
+
+  function initPwaServiceWorker() {
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('[PWA] Service Worker registrado com sucesso:', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('[PWA] Falha no registro do Service Worker:', err);
+          });
+      });
+    }
+
+    const btnInstall = document.getElementById('btn-install-pwa');
+    const btnChatInstall = document.getElementById('btn-chat-install-pwa');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      if (btnInstall) btnInstall.style.display = 'inline-flex';
+      if (btnChatInstall) btnChatInstall.style.display = 'inline-flex';
+    });
+
+    const handleInstallClick = async () => {
+      if (!deferredPwaPrompt) return;
+      deferredPwaPrompt.prompt();
+      const choice = await deferredPwaPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        showToast('Obrigado por instalar o Meu Kota IA!');
+        if (btnInstall) btnInstall.style.display = 'none';
+        if (btnChatInstall) btnChatInstall.style.display = 'none';
+      }
+      deferredPwaPrompt = null;
+    };
+
+    if (btnInstall) btnInstall.addEventListener('click', handleInstallClick);
+    if (btnChatInstall) btnChatInstall.addEventListener('click', handleInstallClick);
+
+    window.addEventListener('appinstalled', () => {
+      showToast('Meu Kota IA instalado com sucesso no seu dispositivo!');
+      if (btnInstall) btnInstall.style.display = 'none';
+      if (btnChatInstall) btnChatInstall.style.display = 'none';
+      deferredPwaPrompt = null;
+    });
+  }
+
   // Configurações e Inicializações Globais
   initFirebaseAuth();
   currentUser = getActiveUser();
@@ -2428,6 +2893,8 @@ DIRETRIZES DE ATUAÇÃO:
   updateGeminiStatusUI();
   setupImagePreviewEvents();
   setupWelcomePillsEvents();
+  setupVoiceInput();
+  initPwaServiceWorker();
 
   // Iniciar na landing page ou restaurar rota
   if (window.location.hash === '#chat') {

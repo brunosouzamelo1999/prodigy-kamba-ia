@@ -651,7 +651,8 @@ body {
   border-radius: var(--radius-md);
 }
 
-.response-badge-kamba {
+.response-badge-kamba,
+.response-badge-kota {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1208,6 +1209,15 @@ body {
   width: 100%;
   height: 100%;
   filter: drop-shadow(0 0 16px rgba(255, 209, 0, 0.5));
+}
+
+.auth-logo-img {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 25px rgba(255, 209, 0, 0.5), 0 0 50px rgba(216, 26, 45, 0.35);
+  display: block;
 }
 
 .auth-logo-text {
@@ -2868,13 +2878,15 @@ body {
   padding: 2px 4px;
 }
 
-.kamba-chat-brand {
+.kamba-chat-brand,
+.kota-chat-brand {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.kamba-mini-logo {
+.kamba-mini-logo,
+.kota-mini-logo {
   width: 28px;
   height: 28px;
   display: flex;
@@ -3458,6 +3470,86 @@ body {
   color: #FFFFFF;
 }
 
+.gpt-action-small-btn.btn-speak-msg.is-speaking {
+  color: #FFD100;
+  background: rgba(255, 209, 0, 0.12);
+  border: 1px solid rgba(255, 209, 0, 0.3);
+}
+
+.gpt-action-small-btn.btn-regenerate-msg:hover {
+  color: #FFD100;
+}
+
+/* Blocos de Código Formatados com Destaque de Sintaxe */
+.code-block-wrapper {
+  margin: 14px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0D111A;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 14px;
+  background: #161B26;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  user-select: none;
+}
+
+.code-lang-tag {
+  font-family: var(--font-mono, 'Geist Mono', monospace);
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-copy-code {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  font-size: 12px;
+  font-family: var(--font-geist, sans-serif);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-code:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.btn-copy-code.copied {
+  color: #34D399;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: transparent !important;
+  font-family: var(--font-mono, 'Geist Mono', monospace);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.code-block-wrapper pre code.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+  font-family: inherit;
+  font-size: inherit;
+}
+
 /* ÁREA INFERIOR DE ENTRADA (PILL EXATA DO CHATGPT) */
 .gpt-input-area {
   width: 100%;
@@ -3473,20 +3565,22 @@ body {
 .gpt-input-box {
   width: 100%;
   max-width: 768px;
+  min-height: 52px;
   background: #2F2F2F;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  padding: 8px 14px;
+  border-radius: 26px;
   display: flex;
   align-items: center;
+  padding: 8px 12px 8px 14px;
   gap: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .gpt-input-box:focus-within {
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .gpt-btn-attach {
@@ -3566,12 +3660,30 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .gpt-btn-mic:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #FFFFFF;
+}
+
+.gpt-btn-mic.recording {
+  color: #EF4444 !important;
+  background: rgba(239, 68, 68, 0.18) !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.5);
+  animation: micRecordingPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes micRecordingPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.75);
+  }
 }
 
 .gpt-btn-send {
@@ -3597,6 +3709,27 @@ body {
   opacity: 0.4;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Modo Parar Geração (Stop Button) */
+.gpt-btn-send.stop-mode {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  animation: stopBtnPop 0.2s ease;
+}
+
+.gpt-btn-send.stop-mode:hover {
+  transform: scale(1.08);
+  background: #EF4444 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes stopBtnPop {
+  0% { transform: scale(0.85); }
+  100% { transform: scale(1); }
 }
 
 .gpt-legal-disclaimer {
@@ -4809,4 +4942,103 @@ body {
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 16px;
+}
+
+/* ============================================================
+   LOGOTIPOS OFICIAIS MEU KOTA & ASSETS
+   ============================================================ */
+.kota-logo-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 14px rgba(255, 209, 0, 0.35);
+  display: block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.brand-logo:hover .kota-logo-img {
+  transform: scale(1.06);
+  box-shadow: 0 0 20px rgba(255, 209, 0, 0.55);
+}
+
+.kota-mini-logo-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 8px rgba(255, 209, 0, 0.3);
+}
+
+.monolith-kota-img {
+  width: 144px;
+  height: 144px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 35px rgba(255, 209, 0, 0.45), 0 0 70px rgba(216, 26, 45, 0.35);
+  display: block;
+  margin: 0 auto;
+  animation: floatKota 4s ease-in-out infinite;
+}
+
+@keyframes floatKota {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.kota-avatar-msg-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ============================================================
+   BOTÃO DE INSTALAÇÃO PROGRESSIVE WEB APP (PWA)
+   ============================================================ */
+.btn-pwa-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 209, 0, 0.12);
+  border: 1px solid rgba(255, 209, 0, 0.45);
+  color: var(--angola-yellow);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-geist, sans-serif);
+}
+
+.btn-pwa-install:hover {
+  background: var(--angola-yellow);
+  color: #000000;
+  box-shadow: 0 0 16px rgba(255, 209, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-pwa-install-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 209, 0, 0.12);
+  border: 1px solid rgba(255, 209, 0, 0.4);
+  color: var(--angola-yellow);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-geist, sans-serif);
+}
+
+.btn-pwa-install-mini:hover {
+  background: var(--angola-yellow);
+  color: #000000;
+  box-shadow: 0 0 12px rgba(255, 209, 0, 0.35);
 }

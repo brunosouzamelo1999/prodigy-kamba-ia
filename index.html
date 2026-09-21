@@ -3,16 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kamba Chat IA — Inteligência Artificial Conversacional para Qualquer Assunto</title>
-  <meta name="description" content="Kamba Chat IA: O seu assistente de inteligência artificial interativo para qualquer conversa, dúvida ou criação. Na palma da mão, tablet ou computador.">
+  <title>Meu Kota IA — Inteligência Artificial Conversacional para Qualquer Assunto</title>
+  <meta name="description" content="Meu Kota IA: O seu assistente de inteligência artificial interativo para qualquer conversa, dúvida ou criação. Na palma da mão, tablet ou computador.">
   
+  <!-- Configurações PWA & Mobile Web App -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#171717">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Meu Kota">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/favicon.png">
+
   <!-- Tipografia Oficial Geist & Geist Mono (Vercel Style) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+  <!-- Highlight.js - Tema Dark Elegante para Códigos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  
   <!-- Estilos Globais -->
-  <link rel="stylesheet" href="styles.css?v=20260912_v4">
+  <link rel="stylesheet" href="styles.css?v=20260921_kota3">
 </head>
 <body>
 
@@ -23,7 +35,7 @@
     
     <!-- Faixa Superior de Anúncio -->
     <div class="vercel-top-banner">
-      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 6px;"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>O seu novo Chat IA: Converse livremente sobre qualquer assunto.</span>
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 6px;"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>O seu novo Chat IA: Converse livremente com o Meu Kota sobre qualquer assunto.</span>
       <a href="#features">Experimente a demonstração interativa →</a>
     </div>
 
@@ -38,17 +50,11 @@
       <div class="header-container">
         <div class="brand-logo" id="logo-refresh">
           <div class="logo-symbol">
-            <svg viewBox="0 0 100 100" class="palanca-svg" aria-label="Logo Kamba Chat IA">
-              <circle cx="50" cy="50" r="45" fill="#D81A2D" stroke="#FFD100" stroke-width="2"/>
-              <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="#FFD100"/>
-              <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="#FFD100"/>
-              <path d="M58 44 L64 74 L70 74 L68 50 Z" fill="#FFD100"/>
-              <circle cx="78" cy="30" r="2.5" fill="#000000"/>
-            </svg>
+            <img src="assets/logo-meu-kota-circle.png" alt="Logo Meu Kota IA" class="kota-logo-img">
           </div>
           <div class="brand-text">
-            <span class="brand-title">KAMBA</span>
-            <span class="brand-subtitle">CHAT IA</span>
+            <span class="brand-title">MEU KOTA</span>
+            <span class="brand-subtitle">IA</span>
           </div>
         </div>
 
@@ -63,8 +69,12 @@
 
         <!-- Botões de Ação Rápida -->
         <div class="header-cta-group">
+          <button id="btn-install-pwa" class="btn-pwa-install" style="display: none;" title="Instalar Meu Kota no seu dispositivo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Instalar App</span>
+          </button>
           <button id="btn-goto-login" class="btn-vercel-pill-ghost">Aceder</button>
-          <button id="btn-header-start" class="btn-vercel-pill-solid">Abrir Chat IA</button>
+          <button id="btn-header-start" class="btn-vercel-pill-solid">Abrir Meu Kota</button>
         </div>
       </div>
     </header>
@@ -81,17 +91,17 @@
           </div>
 
           <h1 class="vercel-big-title">
-            Converse livremente.
+            Converse com o Meu Kota.
             <span>Em qualquer lugar.</span>
           </h1>
 
           <p class="hero-description-text" style="color: var(--text-muted); font-size: 16.5px; line-height: 1.65; margin-bottom: 28px;">
-            O seu assistente de IA fluido e interativo para <strong>qualquer assunto</strong>. Tire dúvidas complexas, resolva códigos, escreva textos inspiradores ou simplesmente bata um papo inteligente — na palma da sua mão, no tablet ou no computador.
+            O seu assistente de IA sábio, fluido e interativo para <strong>qualquer assunto</strong>. Tire dúvidas complexas, resolva códigos, escreva textos inspiradores ou simplesmente converse com o Kota — na palma da sua mão, no tablet ou no computador.
           </p>
 
           <div class="hero-btn-group-vercel">
             <button id="btn-hero-start" class="btn-pill-primary">
-              <span>Conversar com a IA Agora</span>
+              <span>Conversar com o Kota Agora</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
@@ -107,19 +117,7 @@
           <div class="monolith-aura-box">
             <div class="monolith-back-glow"></div>
             <div class="monolith-prism">
-              <svg viewBox="0 0 100 100" class="monolith-palanca-svg">
-                <defs>
-                  <linearGradient id="goldMono" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#FFF066"/>
-                    <stop offset="60%" stop-color="#FFD100"/>
-                    <stop offset="100%" stop-color="#D97706"/>
-                  </linearGradient>
-                </defs>
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#D81A2D" stroke-width="3"/>
-                <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="url(#goldMono)"/>
-                <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="url(#goldMono)"/>
-                <path d="M58 44 L64 74 L70 74 L68 50 Z" fill="url(#goldMono)"/>
-              </svg>
+              <img src="assets/logo-meu-kota-circle.png" alt="Emblema Meu Kota IA" class="monolith-kota-img">
             </div>
           </div>
         </div>
@@ -235,11 +233,9 @@
           </div>
 
           <div class="terminal-response">
-            <div class="response-badge-kamba">
-              <span class="avatar-mini-kamba">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
-              </span>
-              <strong>Kamba Chat IA</strong>
+            <div class="response-badge-kota">
+              <img src="assets/logo-meu-kota-circle.png" alt="Meu Kota IA" class="kota-mini-logo-img" style="width: 18px; height: 18px;">
+              <strong>Meu Kota IA</strong>
               <span class="tag-speed">&lt; 25ms</span>
             </div>
             <div class="response-body-text" id="interactive-ai-response">
@@ -274,7 +270,7 @@
         <span class="text-gradient-gold">Uma experiência fluida em qualquer tela.</span>
       </h2>
       <p style="text-align: center; color: var(--text-muted); max-width: 680px; margin: 12px auto 0; font-size: 15.5px; line-height: 1.6;">
-        O Kamba Chat IA foi desenhado para acompanhar a sua rotina onde quer que você esteja, com respostas instantâneas e sem peso de download.
+        O Meu Kota IA foi desenhado para acompanhar a sua rotina onde quer que você esteja, com respostas instantâneas e sem peso de download.
       </p>
 
       <div class="devices-grid">
@@ -361,7 +357,7 @@
             </div>
             <h3 class="bento-title">Conversa Livre sem Bloqueios de Assunto</h3>
             <p class="bento-desc">
-              Diferente de assistentes travados em um único nicho, o Kamba Chat IA está pronto para debater filosofia, sugerir receitas culinárias, compor letras de música, resolver exercícios escolares ou tirar dúvidas de tecnologia.
+              Diferente de assistentes travados em um único nicho, o Meu Kota IA está pronto para debater filosofia, sugerir receitas culinárias, compor letras de música, resolver exercícios escolares ou tirar dúvidas de tecnologia.
             </p>
             <div class="bento-chart-preview">
               <div class="chart-label-row">
@@ -430,14 +426,14 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TABELA COMPARATIVA — O QUE TORNA O KAMBA CHAT ESPECIAL        -->
+    <!-- TABELA COMPARATIVA — O QUE TORNA O MEU KOTA ESPECIAL        -->
     <!-- ============================================================ -->
     <section id="comparison" class="vercel-comparison-section">
       <div class="section-badge-center">
         <span class="badge-mini-angola">POR QUE ESCOLHER</span>
       </div>
       <h2 class="section-title-vercel">
-        Como o Kamba Chat se destaca <br>
+        Como o Meu Kota se destaca <br>
         <span class="text-gradient-red">na sua experiência de conversa?</span>
       </h2>
 
@@ -447,7 +443,7 @@
             <tr>
               <th>Critério</th>
               <th class="th-legacy">Outros Apps Convencionais</th>
-              <th class="th-kamba">Kamba Chat IA (Acesso Aberto)</th>
+              <th class="th-kamba">Meu Kota IA (Acesso Aberto)</th>
             </tr>
           </thead>
           <tbody>
@@ -501,7 +497,7 @@
               <span class="roi-res-desc">Abrir dezenas de abas, ler artigos extensos e filtrar informações repetidas</span>
             </div>
             <div class="roi-res-box kamba">
-              <span class="roi-res-label">Com o Kamba Chat IA</span>
+              <span class="roi-res-label">Com o Meu Kota IA</span>
               <span class="roi-res-cost text-gold" id="roi-kamba-cost">~35 minutos</span>
               <span class="roi-res-desc">Respostas diretas, síntese inteligente e explicação no nível que você precisa</span>
             </div>
@@ -524,7 +520,7 @@
       </div>
       <h2 class="section-title-vercel">
         Perguntas frequentes sobre o <br>
-        <span class="text-gradient-gold">Kamba Chat IA</span>
+        <span class="text-gradient-gold">Meu Kota IA</span>
       </h2>
 
       <div class="faq-container">
@@ -534,7 +530,7 @@
             <span class="faq-icon">+</span>
           </button>
           <div class="faq-answer">
-            <p>Sim! O Kamba Chat IA foi criado para ser um assistente aberto e universal. Você pode pedir ajuda para programar, escrever histórias, criar roteiros de estudo, resumir textos, pedir conselhos de produtividade ou simplesmente bater um papo descontraído.</p>
+            <p>Sim! O Meu Kota IA foi criado para ser um assistente aberto e universal. Você pode pedir ajuda para programar, escrever histórias, criar roteiros de estudo, resumir textos, pedir conselhos de produtividade ou simplesmente bater um papo descontraído.</p>
           </div>
         </div>
 
@@ -605,9 +601,12 @@
       <div class="footer-container">
         <div class="footer-col-brand">
           <div class="brand-logo">
+            <div class="logo-symbol">
+              <img src="assets/logo-meu-kota-circle.png" alt="Meu Kota IA" class="kota-logo-img" style="width: 32px; height: 32px;">
+            </div>
             <div class="brand-text">
-              <span class="brand-title">KAMBA</span>
-              <span class="brand-subtitle">CHAT IA</span>
+              <span class="brand-title">MEU KOTA</span>
+              <span class="brand-subtitle">IA</span>
             </div>
           </div>
           <p class="footer-tagline">
@@ -645,7 +644,7 @@
       </div>
 
       <div class="footer-bottom-bar">
-        <p>© Kamba Chat IA · Desenvolvido por Bruno Souza Melo · Todos os direitos reservados</p>
+        <p>© Meu Kota IA · Desenvolvido por Bruno Souza Melo · Todos os direitos reservados</p>
         <span class="footer-status-pill">● Servidores Online · Latência Baixa</span>
       </div>
     </footer>
@@ -669,15 +668,9 @@
 
       <div class="auth-brand-center">
         <div class="palanca-badge-large">
-          <svg viewBox="0 0 100 100" class="palanca-svg-large">
-            <circle cx="50" cy="50" r="45" fill="#D81A2D" stroke="#FFD100" stroke-width="2"/>
-            <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="#FFD100"/>
-            <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="#FFD100"/>
-            <path d="M58 44 L64 74 L70 74 L68 50 Z" fill="#FFD100"/>
-            <circle cx="78" cy="30" r="2.5" fill="#000000"/>
-          </svg>
+          <img src="assets/logo-meu-kota-circle.png" alt="Meu Kota IA" class="auth-logo-img">
         </div>
-        <h2 class="auth-logo-text">KAMBA CHAT IA</h2>
+        <h2 class="auth-logo-text">MEU KOTA IA</h2>
       </div>
 
       <div class="auth-card">
@@ -761,7 +754,7 @@
           </p>
           <div class="verification-email-highlight" id="verification-target-email">seu@email.com</div>
           <p class="verification-subdesc">
-            Abra o seu aplicativo de e-mail (Gmail, Outlook, etc.) e clique no link de confirmação para ativar o acesso ao Kamba Chat IA.
+            Abra o seu aplicativo de e-mail (Gmail, Outlook, etc.) e clique no link de confirmação para ativar o acesso ao Meu Kota IA.
           </p>
           <div class="verification-actions">
             <button type="button" id="btn-check-verification" class="btn-auth-primary">
@@ -787,7 +780,7 @@
         </div>
       </div>
 
-      <p class="auth-copyright">© Kamba Chat IA · Livre e Inteligente</p>
+      <p class="auth-copyright">© Meu Kota IA · Livre e Inteligente</p>
     </div>
   </section>
 
@@ -805,14 +798,9 @@
           <div class="gpt-brand-row">
             <div class="kamba-chat-brand">
               <div class="kamba-mini-logo">
-                <svg viewBox="0 0 100 100" class="palanca-svg-mini">
-                  <circle cx="50" cy="50" r="45" fill="#D81A2D" stroke="#FFD100" stroke-width="2"/>
-                  <path d="M22 68 C28 62 34 54 44 48 C50 44 58 42 66 40 C72 39 78 35 82 28 C80 32 75 36 70 38 C76 34 84 26 88 16 C83 23 76 28 68 31 C64 26 56 22 48 24 C40 26 34 32 30 38 C26 44 24 52 22 68 Z" fill="#FFD100"/>
-                  <path d="M42 49 L36 76 L44 76 L48 56 Z" fill="#FFD100"/>
-                  <path d="M58 44 L64 74 L70 74 L68 50 Z" fill="#FFD100"/>
-                </svg>
+                <img src="assets/logo-meu-kota-circle.png" alt="Meu Kota" class="kota-mini-logo-img">
               </div>
-              <span class="gpt-brand-name">Kamba Chat IA</span>
+              <span class="gpt-brand-name">Meu Kota IA</span>
             </div>
           </div>
 
@@ -849,7 +837,7 @@
             <div class="gpt-user-avatar" id="display-user-avatar">BS</div>
             <div class="gpt-user-details">
               <span class="gpt-user-name" id="display-user-name">Bruno Souza</span>
-              <span class="gpt-user-email" id="display-user-email">usuario@kamba.ia</span>
+              <span class="gpt-user-email" id="display-user-email">usuario@meukota.ia</span>
             </div>
             <button class="btn-sidebar-logout" id="btn-sidebar-logout" title="Sair da Conta (Logout)" type="button">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -937,6 +925,10 @@
           </div>
 
           <div class="gpt-header-right">
+            <button id="btn-chat-install-pwa" class="btn-pwa-install-mini" style="display: none;" title="Instalar Meu Kota no seu dispositivo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Instalar</span>
+            </button>
             <button class="gpt-api-status-pill" id="btn-open-api-modal" title="Conectar ao Google AI Studio">
               <span class="api-status-dot" id="api-status-dot"></span>
               <span id="api-status-label">Google AI Studio</span>
@@ -954,9 +946,9 @@
         <div class="gpt-scroll-area">
           <div class="gpt-conversation-wrap">
             
-            <!-- Estado Inicial: Apenas "Vamos começar" -->
+            <!-- Estado Inicial: Apenas "Como o Meu Kota pode ajudar você hoje?" -->
             <div class="gpt-start-hero" id="gpt-welcome-center">
-              <h1 class="gpt-start-title">Vamos começar</h1>
+              <h1 class="gpt-start-title">Como o Meu Kota pode ajudar você hoje?</h1>
             </div>
 
             <!-- Contêiner de Mensagens em Rolagem -->
@@ -1011,7 +1003,7 @@
                 <span>Pensar</span>
               </button>
 
-              <button class="gpt-btn-mic" title="Entrada por voz">
+              <button class="gpt-btn-mic" id="btn-voice-input" title="Entrada por voz">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -1031,7 +1023,7 @@
           </div>
 
           <div class="gpt-legal-disclaimer">
-            O Chat IA pode cometer erros. Considere verificar informações importantes.
+            O Meu Kota pode cometer erros. Considere verificar informações importantes.
           </div>
         </div>
 
@@ -1056,7 +1048,7 @@
       <div class="modal-header-bar">
         <div class="modal-title-wrap">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--angola-yellow);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span class="modal-title-text">Texto Completo — Kamba Chat IA</span>
+          <span class="modal-title-text">Texto Completo — Meu Kota IA</span>
         </div>
         <button id="btn-close-modal-preview" class="btn-modal-close" aria-label="Fechar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1066,7 +1058,7 @@
       <div class="modal-body-scroll">
         <div class="official-letterhead">
           <div class="letterhead-brand">
-            <h2>KAMBA CHAT IA</h2>
+            <h2>MEU KOTA IA</h2>
             <p>Seu Assistente Conversacional Inteligente</p>
           </div>
           <div class="letterhead-meta">
@@ -1210,7 +1202,7 @@
           <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
         </svg>
         <h3 class="google-modal-title">Fazer login com o Google</h3>
-        <p class="google-modal-subtitle">Escolha ou digite a sua conta para acessar o Kamba Chat IA</p>
+        <p class="google-modal-subtitle">Escolha ou digite a sua conta para acessar o Meu Kota IA</p>
         <button id="btn-close-google-modal" class="btn-modal-close" aria-label="Fechar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -1247,7 +1239,7 @@
       <div class="image-preview-header">
         <span class="image-preview-prompt-text" id="modal-preview-prompt">Imagem Gerada com IA</span>
         <div class="image-preview-actions">
-          <a id="btn-modal-download-image" href="#" download="kamba-ia-image.jpg" class="btn-preview-action" title="Baixar imagem em alta resolução">
+          <a id="btn-modal-download-image" href="#" download="meu-kota-ia-image.jpg" class="btn-preview-action" title="Baixar imagem em alta resolução">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Baixar Imagem</span>
           </a>
@@ -1270,7 +1262,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 
+  <!-- Highlight.js para Sintaxe de Código em Tempo Real -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260912_v5"></script>
+  <script src="app.js?v=20260921_kota3"></script>
 </body>
 </html>
