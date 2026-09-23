@@ -1689,6 +1689,87 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     await executeAIGeneration(text, attachedFileToSend);
   }
 
+  // --- CHAMADA AO BACKEND SEGURO DO GOOGLE FIREBASE (/api/chat) ---
+  async function callSecureBackendChat(promptText, fileAttachment, historyMessages, onChunk, abortSignal) {
+    const tier = getSelectedModelTier();
+    const webSearch = isWebSearchEnabled();
+
+    let fileData = null;
+    if (fileAttachment && fileAttachment.base64) {
+      fileData = {
+        name: fileAttachment.name,
+        type: fileAttachment.type,
+        base64: fileAttachment.base64,
+        isPdf: fileAttachment.isPdf
+      };
+    }
+
+    const payload = {
+      prompt: promptText,
+      file: fileData,
+      history: (historyMessages || []).slice(-10),
+      tier,
+      webSearch
+    };
+
+    let response;
+    try {
+      response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: abortSignal
+      });
+    } catch (netErr) {
+      if (netErr.name === 'AbortError') throw netErr;
+      throw new Error("Não foi possível conectar ao endpoint /api/chat. Em ambiente de teste local, você pode adicionar a sua chave no botão 'Google AI Studio'.");
+    }
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      throw new Error(errJson.error || `Erro do Servidor Firebase (${response.status})`);
+    }
+
+    // Processar streaming SSE vindo do Firebase Functions
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // manter último pedaço incompleto
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data:')) continue;
+        const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
+        if (jsonStr === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const chunkText = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (chunkText) {
+            fullText += chunkText;
+            if (onChunk) onChunk(fullText);
+          }
+        } catch (e) {
+          // Chunk textual direto
+          if (jsonStr && !jsonStr.startsWith('{')) {
+            fullText += jsonStr;
+            if (onChunk) onChunk(fullText);
+          }
+        }
+      }
+    }
+
+    return fullText;
+  }
+
   async function executeAIGeneration(text, attachedFileToSend) {
     const chat = chats.find(c => c.id === currentChatId);
     if (!chat) return;
@@ -1756,20 +1837,21 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     }
 
     let finalAiResponseText = '';
-    const geminiKey = getGeminiApiKey();
+    const customKey = getCustomGeminiApiKey();
 
     try {
-      if (geminiKey) {
+      if (customKey) {
+        // Modo 1: Chave Pessoal BYOK (Google AI Studio)
         if (streamContainer) {
           const tier = getSelectedModelTier();
           const searchActive = isWebSearchEnabled();
           const modelName = tier === 'pro' ? 'Gemini 3.1 Pro' : 'Gemini 2.5 Flash';
           const searchMsg = searchActive ? ' (com busca ao vivo na Web)' : '';
-          streamContainer.innerHTML = `<em>Consultando Google ${modelName}${searchMsg}...</em>`;
+          streamContainer.innerHTML = `<em>Consultando Google ${modelName}${searchMsg} (Chave Pessoal)...</em>`;
         }
 
         finalAiResponseText = await callGoogleGeminiStreamingAPI(
-          geminiKey, 
+          customKey, 
           text, 
           attachedFileToSend, 
           chat.messages,
@@ -1783,27 +1865,42 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
           abortSignal
         );
       } else {
-        // Fallback simulado com streaming dinâmico e suporte a parada
-        const fallbackText = attachedFileToSend 
-          ? generateSimulatedFileResponse(attachedFileToSend, text) 
-          : generateUniversalAIResponse(text);
+        // Modo 2: Backend Corporativo Seguro do Firebase (/api/chat)
+        if (streamContainer) {
+          const tier = getSelectedModelTier();
+          const modelName = tier === 'pro' ? 'Gemini 3.1 Pro' : 'Gemini 2.5 Flash';
+          streamContainer.innerHTML = `<em>Consultando Meu Kota IA (${modelName} via Backend Seguro)...</em>`;
+        }
 
-        if (streamContainer) streamContainer.innerHTML = '';
-        let currentText = '';
-        const step = 2;
-        for (let i = 0; i < fallbackText.length; i += step) {
-          if (abortSignal.aborted) {
-            throw new DOMException('Aborted', 'AbortError');
-          }
-          currentText += fallbackText.substring(i, i + step);
+        try {
+          finalAiResponseText = await callSecureBackendChat(
+            text,
+            attachedFileToSend,
+            chat.messages,
+            (streamedText) => {
+              if (streamContainer) {
+                streamContainer.innerHTML = formatMarkdown(streamedText);
+                applyCodeHighlighting(streamContainer);
+              }
+              scrollToBottom();
+            },
+            abortSignal
+          );
+        } catch (backendErr) {
+          if (backendErr.name === 'AbortError' || abortSignal.aborted) throw backendErr;
+          
+          console.warn('[Meu Kota] Backend /api/chat indisponível:', backendErr.message);
+          finalAiResponseText = `### 🛡️ Backend Seguro Google Firebase Configurado\n\n` +
+            `O **Meu Kota IA** está configurado para operar com chave protegida no servidor oficial do Google Firebase (\`/api/chat\`).\n\n` +
+            `• **Em Produção:** As perguntas são processadas diretamente pelas Cloud Functions sem expor nenhuma chave.\n` +
+            `• **Para Testes Locais:** Como este servidor de teste local (\`localhost:8085\`) roda sem os emuladores do Firebase, você pode conectar sua chave temporariamente no botão **"Google AI Studio"** no topo direito para testar respostas ao vivo.\n\n` +
+            `*(Detalhe do endpoint: ${backendErr.message})*`;
+
           if (streamContainer) {
-            streamContainer.innerHTML = formatMarkdown(currentText);
+            streamContainer.innerHTML = formatMarkdown(finalAiResponseText);
             applyCodeHighlighting(streamContainer);
           }
-          scrollToBottom();
-          await new Promise(r => setTimeout(r, 10));
         }
-        finalAiResponseText = currentText;
       }
     } catch (err) {
       if (err.name === 'AbortError' || abortSignal.aborted) {
@@ -1816,7 +1913,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         if (err.message && (err.message.includes('429') || err.message.includes('Limite de requisições'))) {
           finalAiResponseText = `**Aviso de Cota Gratuita (Google AI Studio):**\n\n${err.message}\n\n*Nota: Sua chave está perfeitamente conectada e válida. O plano gratuito do Google renova as requisições automaticamente a cada 60 segundos.*`;
         } else {
-          finalAiResponseText = `**Aviso de Conexão (Google AI Studio):**\n\n${err.message || 'Erro de comunicação.'}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
+          finalAiResponseText = `**Aviso de Conexão:**\n\n${err.message || 'Erro de comunicação.'}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
         }
         if (streamContainer) {
           streamContainer.innerHTML = formatMarkdown(finalAiResponseText);
@@ -2311,12 +2408,16 @@ DIRETRIZES DE ATUAÇÃO:
     return callGoogleGeminiStreamingAPI(apiKey, promptText, fileAttachment, historyMessages, null, null);
   }
 
-  // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO ---
+  // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO (BYOK) ---
   const GEMINI_STORAGE_KEY = 'kamba_gemini_api_key';
-  const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SUlJRHlGM2VpT2Y4b3BPZGFTNEREXzY2Sl9GZTV6OHdDTW1iZFhQVDRfT1E=');
 
+  function getCustomGeminiApiKey() {
+    return (localStorage.getItem(GEMINI_STORAGE_KEY) || '').trim();
+  }
+
+  // Alias para retrocompatibilidade
   function getGeminiApiKey() {
-    return (localStorage.getItem(GEMINI_STORAGE_KEY) || DEFAULT_GEMINI_KEY).trim();
+    return getCustomGeminiApiKey();
   }
 
   function setGeminiApiKey(key) {
@@ -2334,7 +2435,7 @@ DIRETRIZES DE ATUAÇÃO:
   }
 
   function updateGeminiStatusUI() {
-    const key = getGeminiApiKey();
+    const key = getCustomGeminiApiKey();
     const dot = document.getElementById('api-status-dot');
     const label = document.getElementById('api-status-label');
     const badge = document.getElementById('api-status-badge');
@@ -2350,17 +2451,17 @@ DIRETRIZES DE ATUAÇÃO:
       }
 
       if (dot) dot.classList.add('active');
-      if (label) label.textContent = modelLabel;
+      if (label) label.textContent = 'Chave Pessoal';
       if (badge) {
-        badge.textContent = `Status: Conectado (${modelLabel})`;
+        badge.textContent = `Status: Chave Pessoal Conectada (${modelLabel})`;
         badge.className = 'api-status-badge connected';
       }
     } else {
-      if (dot) dot.classList.remove('active');
-      if (label) label.textContent = 'Google AI Studio';
+      if (dot) dot.classList.add('active');
+      if (label) label.textContent = 'Backend Google';
       if (badge) {
-        badge.textContent = 'Status: Não Conectado (Modo Demonstração)';
-        badge.className = 'api-status-badge';
+        badge.textContent = 'Status: Backend Seguro Google Firebase (Chave Oculta)';
+        badge.className = 'api-status-badge connected';
       }
     }
   }

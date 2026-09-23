@@ -14,3 +14,19 @@ $RECYCLE.BIN/
 # Temporary and log files
 *.log
 *.pdf
+
+# Node and Dependencies
+node_modules/
+functions/node_modules/
+
+# Secrets and Environment Variables (NUNCA comitar chaves reais)
+.env
+.env.*
+!.env.example
+functions/.env
+functions/.env.*
+!functions/.env.example
+*.local.env
+service-account*.json
+firebase-debug.log
+firebase-debug.*.log
