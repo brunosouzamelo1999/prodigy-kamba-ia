@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   
   <!-- Estilos Globais -->
-  <link rel="stylesheet" href="styles.css?v=20260921_kota3">
+  <link rel="stylesheet" href="styles.css?v=20260924_v2">
 </head>
 <body>
 
@@ -833,8 +833,22 @@
 
         <!-- Rodapé do Perfil do Cliente -->
         <div class="gpt-sidebar-footer">
+          <!-- Indicador de Cota Diária de Segurança -->
+          <div class="gpt-quota-bar-wrap" id="gpt-quota-wrap" title="Limite de segurança diário">
+            <div class="quota-text-row">
+              <span class="quota-label">Perguntas Hoje</span>
+              <span class="quota-count" id="quota-display-count">0 / 30</span>
+            </div>
+            <div class="quota-progress-track">
+              <div class="quota-progress-fill" id="quota-progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
           <div class="gpt-user-card" id="btn-user-profile" title="Perfil do usuário ativo">
-            <div class="gpt-user-avatar" id="display-user-avatar">BS</div>
+            <div class="gpt-user-avatar" id="display-user-avatar">
+              <img id="display-user-avatar-img" src="" alt="Avatar" style="display: none;">
+              <span id="display-user-initials">BS</span>
+            </div>
             <div class="gpt-user-details">
               <span class="gpt-user-name" id="display-user-name">Bruno Souza</span>
               <span class="gpt-user-email" id="display-user-email">usuario@meukota.ia</span>
@@ -1261,11 +1275,12 @@
   <!-- Google Firebase SDK Oficial (Compat) para Autenticação Segura e Verificação Real -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
   <!-- Highlight.js para Sintaxe de Código em Tempo Real -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260921_kota3"></script>
+  <script src="app.js?v=20260924_v2"></script>
 </body>
 </html>

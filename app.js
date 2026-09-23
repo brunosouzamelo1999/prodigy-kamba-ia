@@ -258,7 +258,100 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   ];
 
-  // Funções de Isolamento de Conversas por Usuário
+  // --- CONTROLE DE COTA DIÁRIA DE SEGURANÇA (RATE LIMITING) ---
+  const DAILY_QUOTA_LIMIT = 30;
+
+  function getTodayDateString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function getQuotaStorageKey() {
+    const uid = (currentUser && currentUser.uid) || (currentUser && currentUser.email) || 'guest';
+    const safeKey = uid.replace(/[^a-zA-Z0-9]/g, '_');
+    return `kamba_daily_quota_${safeKey}`;
+  }
+
+  function getDailyQuota() {
+    const key = getQuotaStorageKey();
+    const today = getTodayDateString();
+    const raw = localStorage.getItem(key);
+    let data = { date: today, count: 0 };
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.date === today && typeof parsed.count === 'number') {
+          data = parsed;
+        }
+      } catch(e) {}
+    }
+    return { date: today, count: data.count, limit: DAILY_QUOTA_LIMIT };
+  }
+
+  function setDailyQuota(count) {
+    const key = getQuotaStorageKey();
+    const today = getTodayDateString();
+    localStorage.setItem(key, JSON.stringify({ date: today, count }));
+    updateQuotaUI();
+
+    if (firestoreDbInstance && currentUser && currentUser.uid) {
+      firestoreDbInstance
+        .collection('users')
+        .doc(currentUser.uid)
+        .set({ dailyUsage: { date: today, count } }, { merge: true })
+        .catch(err => console.warn('[Firestore] Erro ao sincronizar cota:', err.message));
+    }
+  }
+
+  function incrementDailyQuota() {
+    const current = getDailyQuota();
+    setDailyQuota(current.count + 1);
+  }
+
+  function updateQuotaUI() {
+    const quota = getDailyQuota();
+    const countDisplay = document.getElementById('quota-display-count');
+    const fill = document.getElementById('quota-progress-fill');
+    if (countDisplay) {
+      countDisplay.textContent = `${quota.count} / ${quota.limit}`;
+      if (quota.count >= quota.limit) {
+        countDisplay.style.color = '#EF4444';
+      } else {
+        countDisplay.style.color = 'var(--angola-yellow)';
+      }
+    }
+    if (fill) {
+      const pct = Math.min(100, Math.round((quota.count / quota.limit) * 100));
+      fill.style.width = `${pct}%`;
+      if (pct >= 100) {
+        fill.style.background = '#EF4444';
+      } else if (pct >= 80) {
+        fill.style.background = '#F59E0B';
+      } else {
+        fill.style.background = 'linear-gradient(90deg, var(--angola-yellow), #F59E0B)';
+      }
+    }
+  }
+
+  function loadDailyQuotaFromFirestore(uid) {
+    if (!firestoreDbInstance || !uid) return;
+    const today = getTodayDateString();
+    firestoreDbInstance
+      .collection('users')
+      .doc(uid)
+      .get()
+      .then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data && data.dailyUsage && data.dailyUsage.date === today) {
+            setDailyQuota(data.dailyUsage.count);
+          }
+        }
+      })
+      .catch(err => console.warn('[Firestore] Erro ao carregar cota:', err.message));
+  }
+
+  // Funções de Isolamento e Sincronização de Conversas
   function getStorageKeyForUserChats(email) {
     const safeEmail = (email || 'default').toLowerCase().replace(/[^a-z0-9]/g, '_');
     return `kamba_user_chats_${safeEmail}`;
@@ -282,6 +375,99 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     chats = JSON.parse(JSON.stringify(defaultChats));
     saveChatsToStorage();
     renderHistory();
+  }
+
+  // Sincronização em tempo real na nuvem (Google Cloud Firestore)
+  function loadUserChatsWithFirestore(user) {
+    if (!user || !user.email) return;
+
+    // 1. Carrega imediatamente do localStorage para resposta instantânea (0ms)
+    loadUserChats(user.email);
+
+    // 2. Se o Firestore estiver ativo e o usuário tiver UID do Firebase, conecta o listener em tempo real
+    if (firestoreDbInstance && user.uid) {
+      if (firestoreChatsUnsubscribe) {
+        firestoreChatsUnsubscribe();
+        firestoreChatsUnsubscribe = null;
+      }
+
+      const chatsRef = firestoreDbInstance
+        .collection('users')
+        .doc(user.uid)
+        .collection('chats')
+        .orderBy('updatedAt', 'desc');
+
+      firestoreChatsUnsubscribe = chatsRef.onSnapshot((snapshot) => {
+        if (!snapshot.empty) {
+          const remoteChats = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            remoteChats.push({
+              id: doc.id,
+              title: data.title || 'Conversa',
+              pinned: Boolean(data.pinned),
+              updatedAt: data.updatedAt || Date.now(),
+              messages: Array.isArray(data.messages) ? data.messages : []
+            });
+          });
+
+          chats = remoteChats;
+          const storageKey = getStorageKeyForUserChats(user.email);
+          localStorage.setItem(storageKey, JSON.stringify(chats));
+          renderHistory();
+
+          if (currentChatId) {
+            const activeChat = chats.find(c => c.id === currentChatId);
+            if (activeChat && chatMessages) {
+              const currentRenderedCount = chatMessages.querySelectorAll('.gpt-msg-row').length;
+              if (activeChat.messages.length !== currentRenderedCount) {
+                loadChat(currentChatId);
+              }
+            }
+          }
+        } else if (chats.length > 0) {
+          // Migração de conversas locais para a nuvem do usuário recém-autenticado
+          chats.forEach(chat => syncSingleChatToFirestore(chat));
+        }
+      }, (err) => {
+        console.warn('[Firestore] Listener de chats:', err.message);
+      });
+
+      // Carregar cota diária do Firestore
+      loadDailyQuotaFromFirestore(user.uid);
+    }
+  }
+
+  function syncSingleChatToFirestore(chat) {
+    if (!firestoreDbInstance || !currentUser || !currentUser.uid || !chat || !chat.id) return;
+    try {
+      firestoreDbInstance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('chats')
+        .doc(chat.id)
+        .set({
+          id: chat.id,
+          title: chat.title || 'Nova Conversa',
+          pinned: Boolean(chat.pinned),
+          updatedAt: chat.updatedAt || Date.now(),
+          messages: chat.messages || []
+        }, { merge: true })
+        .catch(err => console.warn('[Firestore] Erro ao sincronizar chat:', err.message));
+    } catch(e) {}
+  }
+
+  function deleteChatFromFirestore(chatId) {
+    if (!firestoreDbInstance || !currentUser || !currentUser.uid || !chatId) return;
+    try {
+      firestoreDbInstance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('chats')
+        .doc(chatId)
+        .delete()
+        .catch(err => console.warn('[Firestore] Erro ao deletar chat:', err.message));
+    } catch(e) {}
   }
 
   // --- TOAST NOTIFICATIONS ---
@@ -388,6 +574,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   };
 
   let firebaseAuthInstance = null;
+  let firestoreDbInstance = null;
+  let firestoreChatsUnsubscribe = null;
   let isFirebaseConfigured = false;
 
   function getSavedFirebaseConfig() {
@@ -409,6 +597,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
             firebase.initializeApp(config);
           }
           firebaseAuthInstance = firebase.auth();
+          if (typeof firebase.firestore === 'function') {
+            try {
+              firestoreDbInstance = firebase.firestore();
+            } catch (fsErr) {
+              console.warn('[Firestore] Inicialização:', fsErr);
+            }
+          }
           isFirebaseConfigured = true;
 
           if (firebaseStatusLabel) firebaseStatusLabel.textContent = 'Google Firebase: Conectado';
@@ -421,12 +616,14 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
                 uid: fbUser.uid,
                 name: fbUser.displayName || fbUser.email.split('@')[0],
                 email: fbUser.email,
+                photoURL: fbUser.photoURL || null,
                 emailVerified: fbUser.emailVerified,
                 provider: fbUser.providerData && fbUser.providerData.some(p => p.providerId === 'google.com') ? 'google' : 'firebase'
               };
               currentUser = profileUser;
               localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(profileUser));
               updateUserProfileUI();
+              loadUserChatsWithFirestore(profileUser);
             }
           });
           return true;
@@ -539,13 +736,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(user));
     localStorage.setItem('kamba_chat_user', JSON.stringify(user));
     updateUserProfileUI();
-    loadUserChats(user.email);
+    loadUserChatsWithFirestore(user);
   }
 
   function updateUserProfileUI() {
     if (!currentUser) return;
     const name = currentUser.name || 'Usuário';
-    const email = currentUser.email || 'usuario@kamba.ia';
+    const email = currentUser.email || 'usuario@meukota.ia';
     
     // Iniciais elegantes (ex: "BS" ou "AD")
     const parts = name.trim().split(/\s+/);
@@ -553,9 +750,26 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
       : (parts[0].slice(0, 2)).toUpperCase();
 
-    if (displayUserAvatar) displayUserAvatar.textContent = initials;
+    const avatarImg = document.getElementById('display-user-avatar-img');
+    const initialsSpan = document.getElementById('display-user-initials');
+
+    if (currentUser.photoURL && avatarImg) {
+      avatarImg.src = currentUser.photoURL;
+      avatarImg.style.display = 'block';
+      if (initialsSpan) initialsSpan.style.display = 'none';
+    } else {
+      if (avatarImg) avatarImg.style.display = 'none';
+      if (initialsSpan) {
+        initialsSpan.textContent = initials;
+        initialsSpan.style.display = 'inline';
+      } else if (displayUserAvatar) {
+        displayUserAvatar.textContent = initials;
+      }
+    }
+
     if (displayUserName) displayUserName.textContent = name;
     if (displayUserEmail) displayUserEmail.textContent = email;
+    updateQuotaUI();
   }
 
   function setAuthAlert(msg, type = 'error') {
@@ -743,13 +957,14 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           uid: fbUser.uid,
           name: fbUser.displayName || fbUser.email.split('@')[0],
           email: fbUser.email,
+          photoURL: fbUser.photoURL || null,
           emailVerified: true,
           provider: 'google'
         };
         setActiveUser(gUser);
         showView('dashboard');
         initChatDashboard();
-        showToast(`Conectado oficialmente com o Google como ${gUser.name}!`);
+        showToast(`Conectado com o Google como ${gUser.name}!`);
         return;
       } catch (err) {
         if (err.code === 'auth/popup-closed-by-user') {
@@ -801,6 +1016,10 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   async function logoutUser() {
+    if (firestoreChatsUnsubscribe) {
+      firestoreChatsUnsubscribe();
+      firestoreChatsUnsubscribe = null;
+    }
     if (firebaseAuthInstance && firebaseAuthInstance.currentUser) {
       try {
         await firebaseAuthInstance.signOut();
@@ -1037,6 +1256,12 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     if (!currentUser || !currentUser.email) return;
     const storageKey = getStorageKeyForUserChats(currentUser.email);
     localStorage.setItem(storageKey, JSON.stringify(chats));
+
+    // Sincroniza em tempo real com o Cloud Firestore se o usuário estiver autenticado
+    if (currentChatId) {
+      const activeChat = chats.find(c => c.id === currentChatId);
+      if (activeChat) syncSingleChatToFirestore(activeChat);
+    }
   }
 
   function createNewChat() {
@@ -1100,6 +1325,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   function deleteChat(chatId) {
+    deleteChatFromFirestore(chatId);
     chats = chats.filter(c => c.id !== chatId);
     if (chats.length === 0) {
       createNewChat();
@@ -1120,6 +1346,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     if (!chat) return;
     chat.pinned = !chat.pinned;
     saveChatsToStorage();
+    syncSingleChatToFirestore(chat);
     renderHistory();
     if (chat.pinned) {
       showToast('Conversa fixada no topo!');
@@ -1660,17 +1887,26 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     const text = chatInput.value.trim();
     if (!text) return;
 
+    // Verificação de Teto Diário de Segurança
+    const quota = getDailyQuota();
+    if (quota.count >= quota.limit) {
+      showToast('Limite diário de 30 perguntas atingido. Renovação automática amanhã!');
+      appendMessageToDOM('ai', '### ⚠️ Teto Diário de Segurança Atingido\n\nVocê atingiu o teto diário de **30 perguntas gratuitas** no Meu Kota IA.\n\nSua cota renova automaticamente às **00:00** para proteger os servidores da Google. Para perguntas adicionais hoje, entre em contato com o suporte ou utilize sua chave pessoal no botão **Google AI Studio**.');
+      return;
+    }
+
     const chat = chats.find(c => c.id === currentChatId);
     if (!chat) return;
 
     const attachedFileToSend = currentAttachedFile;
 
-    // Registrar mensagem do usuário
+    // Registrar mensagem do usuário e incrementar cota diária
     chat.messages.push({ 
       role: 'user', 
       content: text,
       file: attachedFileToSend ? { name: attachedFileToSend.name, type: attachedFileToSend.type, size: attachedFileToSend.size, isPdf: attachedFileToSend.isPdf } : null
     });
+    incrementDailyQuota();
     appendMessageToDOM('user', text, false, attachedFileToSend);
     chatInput.value = '';
     chatInput.style.height = 'auto';
