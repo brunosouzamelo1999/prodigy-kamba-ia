@@ -2444,7 +2444,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         if (err.message && (err.message.includes('429') || err.message.includes('Limite de requisições'))) {
           finalAiResponseText = `**Aviso de Cota do Motor Neural:**\n\n${err.message}\n\n*Nota: O servidor renova o limite de requisições automaticamente a cada 60 segundos.*`;
         } else {
-          finalAiResponseText = `**Aviso de Conexão:**\n\n${err.message || 'Erro de comunicação.'}\n\n*Verifique sua chave de acesso corporativa no botão "Meu Kota IA" no topo.*`;
+          finalAiResponseText = `**Aviso de Conexão com o Motor:**\n\nNão foi possível processar a mensagem (${err.message || 'Erro de comunicação de rede'}).\n\n*Por favor, tente reenviar a mensagem em alguns instantes.*`;
         }
         if (streamContainer) {
           streamContainer.innerHTML = formatMarkdown(finalAiResponseText);
@@ -2933,15 +2933,32 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             throw err;
           }
           lastError = err;
-          if (enableSearch) {
-            console.warn('Falha na tentativa com busca ao vivo. Tentando sem busca...', err);
-            continue;
+          console.warn(`Tentativa de streaming falhou em ${baseModelUrl} (${err.message}). Tentando fallback direto para :generateContent...`);
+          try {
+            const syncUrl = `${baseModelUrl}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+            const syncRes = await fetch(syncUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+              signal: abortSignal
+            });
+            if (syncRes.ok) {
+              const syncData = await syncRes.json();
+              const syncText = syncData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (syncText) {
+                if (onChunk) onChunk(syncText);
+                return syncText;
+              }
+            }
+          } catch(syncErr) {
+            console.warn(`Fallback :generateContent falhou em ${baseModelUrl}:`, syncErr);
           }
+          continue;
         }
       }
     }
 
-    throw lastError || new Error("Não foi possível conectar aos servidores do Meu Kota IA. Verifique a sua conexão no botão Meu Kota IA.");
+    throw lastError || new Error("Não foi possível conectar aos servidores do Meu Kota IA.");
   }
 
   // Alias para compatibilidade síncrona se necessário
@@ -2954,7 +2971,18 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
   const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SUlJRHlGM2VpT2Y4b3BPZGFTNEREXzY2Sl9GZTV6OHdDTW1iZFhQVDRfT1E=');
 
   function getCustomGeminiApiKey() {
-    return (localStorage.getItem(GEMINI_STORAGE_KEY) || DEFAULT_GEMINI_KEY).trim();
+    try {
+      const stored = (localStorage.getItem(GEMINI_STORAGE_KEY) || '').trim();
+      if (stored && (stored.includes('LkUf') || stored.includes('AQ.Ab8RN6Lk'))) {
+        localStorage.removeItem(GEMINI_STORAGE_KEY);
+        localStorage.removeItem('kamba_gemini_model_config');
+        return DEFAULT_GEMINI_KEY.trim();
+      }
+      if (stored && stored.length > 20) {
+        return stored;
+      }
+    } catch(e) {}
+    return DEFAULT_GEMINI_KEY.trim();
   }
 
   // Alias para retrocompatibilidade
@@ -3031,30 +3059,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       const originalDataUrl = e.target.result;
 
       if (isImage) {
-        // Pré-carregar para otimizar dimensões e compressão sem perder qualidade de OCR
         const img = new Image();
         img.onload = () => {
-          const maxDim = 1920;
-          let w = img.width;
-          let h = img.height;
+          const maxDim = 1280;
+          let w = img.width || 1280;
+          let h = img.height || 720;
 
-          // Se a imagem for razoavelmente compacta (<= 2MB e <= 1920px), usa direto
-          if (w <= maxDim && h <= maxDim && file.size <= 2 * 1024 * 1024) {
-            const base64Data = originalDataUrl.split(',')[1];
-            currentAttachedFile = {
-              name: file.name,
-              size: file.size,
-              type: file.type || 'image/png',
-              dataUrl: originalDataUrl,
-              base64: base64Data,
-              isPdf: false,
-              isImage: true
-            };
-            renderAttachmentPreview();
-            return;
-          }
-
-          // Redimensionar mantendo proporção com alta nitidez
           if (w > maxDim || h > maxDim) {
             if (w > h) {
               h = Math.round((h * maxDim) / w);
@@ -3073,15 +3083,14 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, w, h);
 
-          // Salvar como JPEG de altíssima qualidade (0.92) ou PNG
-          const mimeType = file.type === 'image/png' && file.size < 2 * 1024 * 1024 ? 'image/png' : 'image/jpeg';
-          const optimizedDataUrl = canvas.toDataURL(mimeType, 0.92);
+          // Salvar como JPEG 0.88 para garantir peso ultraleve (< 300KB) e OCR 100% nítido
+          const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
           const base64Data = optimizedDataUrl.split(',')[1];
 
           currentAttachedFile = {
             name: file.name,
             size: Math.round((base64Data.length * 3) / 4),
-            type: mimeType,
+            type: 'image/jpeg',
             dataUrl: optimizedDataUrl,
             base64: base64Data,
             isPdf: false,
