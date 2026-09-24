@@ -1907,29 +1907,115 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
   }
 
   // --- MOTOR DE GERAÇÃO NATIVA DE IMAGENS POR IA ---
+  // --- MOTOR DE GERAÇÃO NATIVA DE IMAGENS POR IA ---
   function detectImageIntent(text) {
     if (!text) return false;
-    const lower = text.toLowerCase().trim();
-    return (
-      lower.startsWith('gere uma imagem') ||
-      lower.startsWith('crie uma imagem') ||
-      lower.startsWith('desenhe') ||
-      lower.startsWith('ilustre') ||
-      lower.startsWith('gere uma foto') ||
-      lower.startsWith('crie uma foto') ||
-      lower.startsWith('generate an image') ||
-      lower.startsWith('create an image') ||
-      lower.startsWith('draw a picture') ||
-      lower.includes('gerar imagem') ||
-      lower.includes('criar imagem')
-    );
+    const lower = text.toLowerCase();
+    const imageKeywords = [
+      'crie uma imagem', 'criar uma imagem', 'criar imagem', 'cria uma imagem', 'criando uma imagem', 'crie imagem',
+      'gere uma imagem', 'gerar uma imagem', 'gerar imagem', 'gera uma imagem', 'gerando uma imagem', 'gere imagem',
+      'faça uma imagem', 'fazer uma imagem', 'faz uma imagem',
+      'crie uma foto', 'criar uma foto', 'gere uma foto', 'gerar uma foto', 'fazer uma foto',
+      'crie um desenho', 'gere um desenho', 'faça um desenho', 'fazer um desenho',
+      'crie uma ilustração', 'gere uma ilustração', 'faça uma ilustração',
+      'desenhe', 'desenhar',
+      'ilustre', 'ilustrar',
+      'create an image', 'generate an image', 'draw an image', 'make an image',
+      'generate image', 'create image', 'draw a picture', 'paint a picture'
+    ];
+    return imageKeywords.some(kw => lower.includes(kw));
   }
 
   function cleanImagePrompt(userText) {
-    return userText
-      .replace(/^(?:por favor,?\s*)?(?:gere|crie|desenhe|ilustre|faça|monte|generate|create|draw)\s+(?:uma\s+)?(?:imagem|foto|ilustra[çc][ãa]o|desenho|arte|quadro|banner|picture|image)\s+(?:de|do|da|dos|das|of|about)?\s*/i, '')
-      .replace(/^(?:me dê|mostre)\s+(?:uma\s+imagem\s+de)?/i, '')
-      .trim() || userText;
+    if (!userText) return '';
+    let p = userText.trim();
+    // Remover prefixo de exemplo caso o usuário tenha copiado (ex: 'Exemplo 1 (Fotorrealismo): ')
+    p = p.replace(/^[^:]*:\s*/i, '');
+    // Remover aspas externas se houver
+    p = p.replace(/^["'“”«»]\s*/, '').replace(/\s*["'“”«»]$/, '');
+    // Remover verbos de comando de geração
+    p = p.replace(/^(?:por favor,?\s*)?(?:você pode\s*)?(?:gere|gerar|crie|criar|desenhe|desenhar|ilustre|ilustrar|faça|fazer|monte|generate|create|draw)\s+(?:uma\s+|um\s+)?(?:imagem|foto|ilustra[çc][ãa]o|desenho|arte|quadro|banner|picture|image|photo)\s+(?:de|do|da|dos|das|of|about)?\s*/i, '');
+    p = p.replace(/^(?:me dê|mostre)\s+(?:uma\s+imagem\s+de)?/i, '');
+    // Remover artigos iniciais desnecessários
+    p = p.replace(/^(?:uma|um)\s+/i, '');
+    p = p.replace(/^["'“”«»]\s*/, '').replace(/\s*["'“”«»]$/, '');
+    return p.trim() || userText.trim();
+  }
+
+  // Controlador do card de progresso com porcentagem dinâmica em tempo real
+  function createImageProgressController(container, promptText) {
+    const id = 'img-prog-' + Math.random().toString(36).substring(2, 9);
+    const card = document.createElement('div');
+    card.className = 'ai-image-progress-card';
+    card.id = id;
+    card.innerHTML = `
+      <div class="ai-image-progress-header">
+        <div class="ai-image-pulse-ring">
+          <div class="ai-image-spinner-glow"></div>
+          <svg class="ai-image-brush-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <div class="ai-image-progress-info">
+          <div class="ai-image-progress-title-row">
+            <span class="ai-image-progress-title">Gerando Imagem com Inteligência Artificial</span>
+            <span class="ai-image-progress-pct" id="pct-${id}">0%</span>
+          </div>
+          <p class="ai-image-progress-phase" id="phase-${id}">Interpretando conceito e iluminação...</p>
+        </div>
+      </div>
+      <div class="ai-image-progress-bar-track">
+        <div class="ai-image-progress-bar-fill" id="fill-${id}" style="width: 0%;"></div>
+      </div>
+      <div class="ai-image-prompt-preview">
+        <span class="ai-image-prompt-preview-label">Prompt:</span>
+        <span class="ai-image-prompt-preview-text">"${escapeHtml(promptText)}"</span>
+      </div>
+    `;
+    container.appendChild(card);
+
+    const pctEl = card.querySelector(`#pct-${id}`);
+    const fillEl = card.querySelector(`#fill-${id}`);
+    const phaseEl = card.querySelector(`#phase-${id}`);
+
+    let currentPct = 0;
+    const phases = [
+      { max: 20, text: "Interpretando prompt e estilo visual..." },
+      { max: 45, text: "Compondo formas, traços e iluminação..." },
+      { max: 70, text: "Sintetizando detalhes e texturas neurais..." },
+      { max: 92, text: "Aplicando pós-processamento de alta fidelidade..." },
+      { max: 100, text: "Finalizando e renderizando arte..." }
+    ];
+
+    const timer = setInterval(() => {
+      if (currentPct < 90) {
+        const step = Math.max(1, Math.floor((90 - currentPct) / 6));
+        currentPct = Math.min(90, currentPct + step);
+        updateUI(currentPct);
+      }
+    }, 200);
+
+    function updateUI(pct) {
+      if (pctEl) pctEl.textContent = `${pct}%`;
+      if (fillEl) fillEl.style.width = `${pct}%`;
+      const curPhase = phases.find(p => pct <= p.max) || phases[phases.length - 1];
+      if (phaseEl && curPhase) phaseEl.textContent = curPhase.text;
+    }
+
+    function finish() {
+      clearInterval(timer);
+      updateUI(100);
+      if (phaseEl) phaseEl.textContent = "Arte concluída com sucesso!";
+    }
+
+    function remove() {
+      clearInterval(timer);
+      if (card && card.parentNode) {
+        card.remove();
+      }
+    }
+
+    return { updateUI, finish, remove };
   }
 
   async function generateAIImage(promptText) {
@@ -1960,7 +2046,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
             return {
               url: `data:image/jpeg;base64,${base64Img}`,
               prompt: cleanPrompt,
-              engine: 'Google Imagen 3'
+              engine: 'Google Imagen 3 (Nano Banana)'
             };
           }
         }
@@ -1973,10 +2059,18 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     const seed = Math.floor(Math.random() * 1000000);
     const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&nologo=true&seed=${seed}`;
 
+    // Pré-carregar a imagem para que a renderização seja instantânea após 100%
+    await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = fallbackUrl;
+    });
+
     return {
       url: fallbackUrl,
       prompt: cleanPrompt,
-      engine: 'Motor Gráfico Neural Kamba IA'
+      engine: 'Motor Gráfico Neural (Nano Banana / Flux)'
     };
   }
 
@@ -2219,27 +2313,38 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
 
     // Interceptar e executar geração de imagem por IA
     if (detectImageIntent(text)) {
-      if (streamContainer) {
-        streamContainer.innerHTML = '<em>Criando imagem em alta resolução com Inteligência Artificial...</em>';
-      }
+      const cleanPrompt = cleanImagePrompt(text);
+      if (cursor) cursor.remove();
+      if (streamContainer) streamContainer.style.display = 'none';
+
+      // Criar o card de carregamento com porcentagem em tempo real e ícone animado
+      const progressCtrl = createImageProgressController(contentAiDiv, cleanPrompt);
+      scrollToBottom();
+
       try {
         const imageResult = await generateAIImage(text);
         if (abortSignal.aborted) {
           throw new DOMException('Aborted', 'AbortError');
         }
-        if (streamContainer) streamContainer.innerHTML = '';
-        if (cursor) cursor.remove();
 
-        const introText = `### Imagem Criada com Sucesso\n\n*(Processada com ${imageResult.engine})*\n\n> **Prompt interpretado:** "${escapeHtml(imageResult.prompt)}"`;
-        if (streamContainer) streamContainer.innerHTML = formatMarkdown(introText);
-        applyCodeHighlighting(streamContainer);
+        // Finalizar a barra para 100% e aguardar brevemente para feedback visual satisfatório
+        progressCtrl.finish();
+        await new Promise(r => setTimeout(r, 400));
+        progressCtrl.remove();
+
+        if (streamContainer) {
+          streamContainer.style.display = 'block';
+          const introText = `### Imagem Criada com Sucesso\n\n*(Processada com ${imageResult.engine})*\n\n> **Prompt interpretado:** "${escapeHtml(imageResult.prompt)}"`;
+          streamContainer.innerHTML = formatMarkdown(introText);
+          applyCodeHighlighting(streamContainer);
+        }
 
         renderGeneratedImageMessage(imageResult, contentAiDiv);
         scrollToBottom();
 
         chat.messages.push({
           role: 'ai',
-          content: `${introText}\n\n![${escapeHtml(imageResult.prompt)}](${imageResult.url})`,
+          content: `### Imagem Criada com Sucesso\n\n> **Prompt interpretado:** "${escapeHtml(imageResult.prompt)}"\n\n![${escapeHtml(imageResult.prompt)}](${imageResult.url})`,
           image: imageResult
         });
         saveChatsToStorage();
@@ -2248,8 +2353,9 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         setGenerationState(false);
         return;
       } catch (err) {
+        progressCtrl.remove();
+        if (streamContainer) streamContainer.style.display = 'block';
         if (err.name === 'AbortError' || abortSignal.aborted) {
-          if (cursor) cursor.remove();
           if (streamContainer) streamContainer.innerHTML = '<em>Geração de imagem cancelada.</em>';
           setGenerationState(false);
           showToast('Geração de imagem interrompida.');
@@ -2351,6 +2457,23 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       chat.messages.push({ role: 'ai', content: finalAiResponseText });
       saveChatsToStorage();
       renderHistory();
+
+      // Salvaguarda: se a resposta da IA de texto disser que gerou uma imagem, acionar a criação visual
+      const lowerResp = finalAiResponseText.toLowerCase();
+      if ((lowerResp.includes('aqui está a imagem') || lowerResp.includes('kota irá gerar uma imagem')) && !contentAiDiv.querySelector('.ai-generated-image-card')) {
+        const fallbackPrompt = cleanImagePrompt(text) || cleanImagePrompt(finalAiResponseText);
+        if (fallbackPrompt) {
+          const progressCtrl = createImageProgressController(contentAiDiv, fallbackPrompt);
+          generateAIImage(fallbackPrompt).then(imgRes => {
+            progressCtrl.finish();
+            setTimeout(() => {
+              progressCtrl.remove();
+              renderGeneratedImageMessage(imgRes, contentAiDiv);
+              scrollToBottom();
+            }, 400);
+          }).catch(() => progressCtrl.remove());
+        }
+      }
 
       if (contentAiDiv) {
         const existingActions = contentAiDiv.querySelector('.gpt-msg-actions');

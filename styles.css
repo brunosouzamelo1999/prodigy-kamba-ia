@@ -6568,5 +6568,299 @@ body {
   color: #10B981;
 }
 
+/* ============================================================ */
+/* GERAÇÃO DE IMAGENS POR IA — CARD DE PROGRESSO COM PORCENTAGEM */
+/* ============================================================ */
 
+.ai-image-progress-card {
+  background: #1C1C1C;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 20px 22px;
+  max-width: 520px;
+  margin: 12px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 163, 127, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeIn 0.25s ease;
+}
 
+.ai-image-progress-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ai-image-pulse-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 163, 127, 0.1);
+  border-radius: 50%;
+}
+
+.ai-image-spinner-glow {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(16, 163, 127, 0.2);
+  border-top-color: #10A37F;
+  border-radius: 50%;
+  animation: spinKota 0.9s linear infinite;
+}
+
+.ai-image-brush-icon {
+  width: 20px;
+  height: 20px;
+  color: #10A37F;
+  animation: pulseGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.ai-image-progress-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ai-image-progress-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ai-image-progress-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.ai-image-progress-pct {
+  font-size: 17px;
+  font-weight: 700;
+  color: #10A37F;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: -0.02em;
+}
+
+.ai-image-progress-phase {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  margin: 0;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-image-progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.ai-image-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10A37F 0%, #34D399 50%, #FFD100 100%);
+  border-radius: 9999px;
+  transition: width 0.22s ease-out;
+  box-shadow: 0 0 10px rgba(16, 163, 127, 0.5);
+}
+
+.ai-image-prompt-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #71717A;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ai-image-prompt-preview-label {
+  font-weight: 600;
+  color: #8E8EA0;
+  flex-shrink: 0;
+}
+
+.ai-image-prompt-preview-text {
+  color: #C5C5D2;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Card Final da Imagem Renderizada */
+.ai-generated-image-card {
+  background: #1C1C1C;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  max-width: 520px;
+  margin: 14px 0;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ai-image-wrap {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-image-wrap img {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.ai-image-wrap:hover img {
+  transform: scale(1.02);
+}
+
+.ai-image-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #181818;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-image-prompt-badge {
+  font-size: 11.5px;
+  color: #9CA3AF;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-image-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-ai-img-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ECECEC;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-ai-img-action:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Modal de Zoom da Imagem */
+.image-preview-modal-box {
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  max-width: 900px;
+  width: 95%;
+  max-height: 92vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+}
+
+.image-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.image-preview-prompt-text {
+  font-size: 13.5px;
+  color: #FFFFFF;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 600px;
+}
+
+.image-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-preview-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  color: #0D0D0D;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-preview-action:hover {
+  background: #E5E5E5;
+}
+
+.image-preview-content {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0D0D0D;
+  overflow: auto;
+  max-height: calc(92vh - 80px);
+}
+
+.image-preview-content img {
+  max-width: 100%;
+  max-height: calc(92vh - 120px);
+  object-fit: contain;
+  border-radius: 8px;
+}
