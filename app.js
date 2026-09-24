@@ -1424,7 +1424,6 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   if (btnDashHome) btnDashHome.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
-  if (btnUserProfile) btnUserProfile.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
 
   // Suporte para o botão Voltar do navegador / telemóvel
   window.addEventListener('popstate', () => {
@@ -3703,6 +3702,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     // Toggle Popover ao clicar no card do usuário
     if (btnUserCard && userPopover) {
       btnUserCard.addEventListener('click', (e) => {
+        e.preventDefault();
         // Se clicou no link interno "Atualizar pagamento", abre direto o modal
         if (e.target && e.target.id === 'link-card-update-pay') {
           return;
@@ -3717,6 +3717,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     // Link "Atualizar pagamento" no card do rodapé
     if (linkUpdatePay && modalReviewPayment) {
       linkUpdatePay.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (userPopover) userPopover.style.display = 'none';
         modalReviewPayment.classList.add('active');
