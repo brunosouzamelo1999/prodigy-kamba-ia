@@ -1709,15 +1709,15 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   // --- MOTOR DE RESPOSTA CONVERSACIONAL UNIVERSAL ---
   // --- AVISO DE CONEXÃO QUANDO SEM CHAVE DE INTELIGÊNCIA ---
   function generateUniversalAIResponse(userQuery) {
-    return `### Inteligência Artificial Oficial Desconectada
+    return `### Motor Neural Meu Kota IA Desconectado
 
-Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, cidades, notícias, códigos e traduções oficiais):
+Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, cidades, notícias, códigos e análises):
 
-1. Clique no botão **"Google AI Studio"** no topo direito da tela.
-2. Cole a sua chave de API gratuita do **Google Gemini** (obtida no Google AI Studio).
+1. Clique no botão **"Meu Kota IA"** no topo direito da tela.
+2. Cole a sua chave de ativação corporativa.
 3. Clique em **"Salvar e Ativar Conexão"**.
 
-*Com a chave conectada, o ponto verde no cabeçalho acenderá e as respostas serão geradas 100% ao vivo pelos servidores do Google Gemini (Flash / Pro).*`;
+*Com a ativação, o ponto verde no cabeçalho acenderá e as respostas serão processadas com o motor inteligente completo do Meu Kota IA.*`;
   }
 
   // --- MOTOR DE GERAÇÃO NATIVA DE IMAGENS POR IA ---
@@ -1891,7 +1891,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     const quota = getDailyQuota();
     if (quota.count >= quota.limit) {
       showToast('Limite diário de 30 perguntas atingido. Renovação automática amanhã!');
-      appendMessageToDOM('ai', '### ⚠️ Teto Diário de Segurança Atingido\n\nVocê atingiu o teto diário de **30 perguntas gratuitas** no Meu Kota IA.\n\nSua cota renova automaticamente às **00:00** para proteger os servidores da Google. Para perguntas adicionais hoje, entre em contato com o suporte ou utilize sua chave pessoal no botão **Google AI Studio**.');
+      appendMessageToDOM('ai', '### ⚠️ Teto Diário de Segurança Atingido\n\nVocê atingiu o teto diário de **30 perguntas gratuitas** no Meu Kota IA.\n\nSua cota renova automaticamente às **00:00**. Para perguntas adicionais hoje, entre em contato com o suporte ou utilize sua chave corporativa no botão **Meu Kota IA**.');
       return;
     }
 
@@ -1958,7 +1958,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       });
     } catch (netErr) {
       if (netErr.name === 'AbortError') throw netErr;
-      throw new Error("Não foi possível conectar ao endpoint /api/chat. Em ambiente de teste local, você pode adicionar a sua chave no botão 'Google AI Studio'.");
+      throw new Error("Não foi possível conectar ao endpoint /api/chat. Em ambiente de teste local, você pode adicionar a sua chave no botão 'Meu Kota IA'.");
     }
 
     if (!response.ok) {
@@ -2077,13 +2077,9 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
 
     try {
       if (customKey) {
-        // Modo 1: Chave Pessoal BYOK (Google AI Studio)
+        // Modo 1: Chave Pessoal BYOK
         if (streamContainer) {
-          const tier = getSelectedModelTier();
-          const searchActive = isWebSearchEnabled();
-          const modelName = tier === 'pro' ? 'Gemini 3.1 Pro' : 'Gemini 2.5 Flash';
-          const searchMsg = searchActive ? ' (com busca ao vivo na Web)' : '';
-          streamContainer.innerHTML = `<em>Consultando Google ${modelName}${searchMsg} (Chave Pessoal)...</em>`;
+          streamContainer.innerHTML = '<em>Consultando Meu Kota IA...</em>';
         }
 
         finalAiResponseText = await callGoogleGeminiStreamingAPI(
@@ -2103,9 +2099,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       } else {
         // Modo 2: Backend Corporativo Seguro do Firebase (/api/chat)
         if (streamContainer) {
-          const tier = getSelectedModelTier();
-          const modelName = tier === 'pro' ? 'Gemini 3.1 Pro' : 'Gemini 2.5 Flash';
-          streamContainer.innerHTML = `<em>Consultando Meu Kota IA (${modelName} via Backend Seguro)...</em>`;
+          streamContainer.innerHTML = '<em>Consultando Meu Kota IA...</em>';
         }
 
         try {
@@ -2126,10 +2120,10 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
           if (backendErr.name === 'AbortError' || abortSignal.aborted) throw backendErr;
           
           console.warn('[Meu Kota] Backend /api/chat indisponível:', backendErr.message);
-          finalAiResponseText = `### 🛡️ Backend Seguro Google Firebase Configurado\n\n` +
-            `O **Meu Kota IA** está configurado para operar com chave protegida no servidor oficial do Google Firebase (\`/api/chat\`).\n\n` +
-            `• **Em Produção:** As perguntas são processadas diretamente pelas Cloud Functions sem expor nenhuma chave.\n` +
-            `• **Para Testes Locais:** Como este servidor de teste local (\`localhost:8085\`) roda sem os emuladores do Firebase, você pode conectar sua chave temporariamente no botão **"Google AI Studio"** no topo direito para testar respostas ao vivo.\n\n` +
+          finalAiResponseText = `### 🛡️ Servidor Seguro Meu Kota IA Configurado\n\n` +
+            `O **Meu Kota IA** está configurado para operar com processamento protegido no servidor oficial (\`/api/chat\`).\n\n` +
+            `• **Em Produção:** As perguntas são processadas diretamente pelas funções de nuvem sem expor nenhuma chave.\n` +
+            `• **Para Testes Locais:** Como este servidor de teste local (\`localhost:8085\`) roda sem os emuladores do Firebase, você pode conectar sua chave corporativa temporariamente no botão **"Meu Kota IA"** no topo direito para testar respostas ao vivo.\n\n` +
             `*(Detalhe do endpoint: ${backendErr.message})*`;
 
           if (streamContainer) {
@@ -2147,9 +2141,9 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       } else {
         console.error('Erro ao gerar resposta:', err);
         if (err.message && (err.message.includes('429') || err.message.includes('Limite de requisições'))) {
-          finalAiResponseText = `**Aviso de Cota Gratuita (Google AI Studio):**\n\n${err.message}\n\n*Nota: Sua chave está perfeitamente conectada e válida. O plano gratuito do Google renova as requisições automaticamente a cada 60 segundos.*`;
+          finalAiResponseText = `**Aviso de Cota do Motor Neural:**\n\n${err.message}\n\n*Nota: O servidor renova o limite de requisições automaticamente a cada 60 segundos.*`;
         } else {
-          finalAiResponseText = `**Aviso de Conexão:**\n\n${err.message || 'Erro de comunicação.'}\n\n*Verifique se a sua chave de API está correta no botão "Google AI Studio" no topo.*`;
+          finalAiResponseText = `**Aviso de Conexão:**\n\n${err.message || 'Erro de comunicação.'}\n\n*Verifique sua chave de acesso corporativa no botão "Meu Kota IA" no topo.*`;
         }
         if (streamContainer) {
           streamContainer.innerHTML = formatMarkdown(finalAiResponseText);
@@ -2185,7 +2179,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     
     if (isPdf) {
       return `### Análise e Tradução do Documento: **${fileName}**\n\n` +
-        `*(Processado com o motor Kamba IA — Base Google Gemini 1.5 Flash)*\n\n` +
+        `*(Processado com o motor inteligente Meu Kota IA)*\n\n` +
         `---\n\n` +
         `#### Síntese Executiva do Documento:\n` +
         `• **Identificação:** Documento PDF corporativo/técnico processado com sucesso.\n` +
@@ -2193,17 +2187,17 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         `#### Exemplo de Tradução Oficial Aplicada:\n` +
         `> *"Todas as diretrizes e prazos estipulados neste instrumento entram em vigor imediatamente a partir da data de ratificação, garantindo conformidade com os padrões regulatórios internacionais e salvaguarda plena das partes envolvidas."*\n\n` +
         `---\n\n` +
-        `**Ativação em Produção:** Esta é uma visualização prévia da estrutura do Kamba. Para traduzir **este arquivo real na íntegra** linha por linha com inteligência artificial ao vivo, basta colar sua chave gratuita do **Google AI Studio** clicando no botão **Google AI Studio** no topo da tela!`;
+        `**Ativação em Produção:** Para processar **este arquivo real na íntegra** linha por linha com inteligência artificial ao vivo, ative sua chave no botão **Meu Kota IA** no topo da tela!`;
     } else {
       return `### Leitura e Tradução de Imagem: **${fileName}**\n\n` +
-        `*(Visão Computacional e OCR Kamba IA)*\n\n` +
+        `*(Visão Computacional e OCR Meu Kota IA)*\n\n` +
         `---\n\n` +
         `#### Texto Detectado na Imagem (OCR):\n` +
         `O sistema de visão computacional identificou com sucesso os caracteres tipográficos contidos na imagem enviada.\n\n` +
         `#### Tradução Direta para Português:\n` +
         `> *"Acesso liberado aos procedimentos operacionais e conformidade estabelecida conforme os termos vigentes."*\n\n` +
         `---\n\n` +
-        `**Dica de Produção:** Conecte sua chave gratuita do **Google AI Studio** no botão superior para realizar a leitura, extração e tradução 100% real de qualquer foto, recibo ou captura de tela!`;
+        `**Dica de Produção:** Conecte sua chave corporativa no botão superior para realizar a leitura, extração e análise 100% real de qualquer foto, recibo ou captura de tela!`;
     }
   }
 
@@ -2243,7 +2237,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     const searchToggle = document.getElementById('toggle-web-search');
 
     if (tier === 'pro') {
-      if (headerName) headerName.textContent = 'Gemini 3.1 Pro';
+      if (headerName) headerName.textContent = 'Meu Kota Pro';
       if (headerBadge) {
         headerBadge.textContent = 'Profundo';
         headerBadge.className = 'model-badge-mini pro';
@@ -2251,7 +2245,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       if (optFlash) optFlash.classList.remove('active');
       if (optPro) optPro.classList.add('active');
     } else {
-      if (headerName) headerName.textContent = 'Gemini 2.5 Flash';
+      if (headerName) headerName.textContent = 'Meu Kota Flash';
       if (headerBadge) {
         headerBadge.textContent = 'Rápido';
         headerBadge.className = 'model-badge-mini';
@@ -2293,7 +2287,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         setSelectedModelTier('flash');
         if (menu) menu.style.display = 'none';
         if (btnToggle) btnToggle.classList.remove('active');
-        showToast('Modelo alternado para Gemini 2.5 Flash (Rápido e Fluido)');
+        showToast('Modelo alternado para Meu Kota Flash (Rápido e Fluido)');
       });
     }
 
@@ -2302,7 +2296,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         setSelectedModelTier('pro');
         if (menu) menu.style.display = 'none';
         if (btnToggle) btnToggle.classList.remove('active');
-        showToast('Modelo alternado para Gemini 3.1 Pro (Raciocínio Profundo)');
+        showToast('Modelo alternado para Meu Kota Pro (Raciocínio Profundo)');
       });
     }
 
@@ -2496,7 +2490,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 - EXCELÊNCIA TÉCNICA E OBJETIVIDADE: Seja denso em valor e econômico em palavras vazias. Evite preâmbulos protocolares; entregue síntese com autoridade serena.
 - CÓDIGO LIMPO E FORMATADO: Sempre que fornecer códigos de programação, utilize blocos com identificador de linguagem (ex: \`\`\`javascript ou \`\`\`python).
 - ANÁLISE PROFUNDA DE DOCUMENTOS: Você possui visão computacional nativa e leitura multimodal completa. Extraia todo o texto visível de imagens com fidelidade absoluta (OCR) e faça análises executivas de PDFs e relatórios.
-- PADRÃO VISUAL SÓBRIO: Jamais utilize emojis informais ou infantis. Mantenha sobriedade executiva com calor humano.
+- BLINDAGEM DE IDENTIDADE WHITE-LABEL: Você é estritamente o "Meu Kota IA". NUNCA mencione "Google", "Gemini", "Google Search", "AI Studio" ou provedores externos. Ao realizar pesquisas ao vivo na web (clima, eventos, notícias ou cotações), JAMAIS diga "pesquisei no Google" e JAMAIS inclua links, URLs externas ou listas de fontes ao final da resposta. Responda de forma natural, direta e soberana, integrando as informações com a autoridade e sabedoria de um Kota.
 - IDIOMA: Responda em português formal impecável, fluido, respeitoso e acolhedor, refletindo a dignidade de um Kota.`
       }]
     };
@@ -2563,35 +2557,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
                       if (onChunk) onChunk(fullText);
                     }
 
-                    if (candidate?.groundingMetadata?.groundingChunks) {
-                      for (const chunk of candidate.groundingMetadata.groundingChunks) {
-                        if (chunk.web && chunk.web.uri && !seenUrls.has(chunk.web.uri)) {
-                          seenUrls.add(chunk.web.uri);
-                          let title = chunk.web.title;
-                          if (!title) {
-                            try {
-                              title = new URL(chunk.web.uri).hostname.replace(/^www\./, '');
-                            } catch(e) {
-                              title = chunk.web.uri;
-                            }
-                          }
-                          sources.push({ title, uri: chunk.web.uri });
-                        }
-                      }
-                    }
+                    // Grounding utilizado internamente pelo modelo, sem expor fontes ao usuário
                   } catch(e) {
                     // Chunk JSON incompleto, aguardar próxima linha
                   }
                 }
               }
-            }
-
-            if (sources.length > 0) {
-              fullText += '\n\n---\n\n#### Fontes consultadas em tempo real na Web:\n';
-              sources.slice(0, 5).forEach(s => {
-                fullText += `• [${s.title}](${s.uri})\n`;
-              });
-              if (onChunk) onChunk(fullText);
             }
 
             // Atualizar cache de modelo funcional
@@ -2646,7 +2617,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    throw lastError || new Error("Não foi possível conectar aos servidores do Google Gemini. Verifique a sua chave no botão Google AI Studio.");
+    throw lastError || new Error("Não foi possível conectar aos servidores do Meu Kota IA. Verifique a sua conexão no botão Meu Kota IA.");
   }
 
   // Alias para compatibilidade síncrona se necessário
@@ -2687,26 +2658,17 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     const badge = document.getElementById('api-status-badge');
 
     if (key) {
-      const savedConfig = localStorage.getItem('kamba_gemini_model_config');
-      let modelLabel = 'Gemini Ativo';
-      if (savedConfig) {
-        try {
-          const cfg = JSON.parse(savedConfig);
-          if (cfg.displayName) modelLabel = cfg.displayName.replace('models/', '');
-        } catch (e) {}
-      }
-
       if (dot) dot.classList.add('active');
-      if (label) label.textContent = 'Chave Pessoal';
+      if (label) label.textContent = 'Motor Kota Ativo';
       if (badge) {
-        badge.textContent = `Status: Chave Pessoal Conectada (${modelLabel})`;
+        badge.textContent = 'Status: Motor Neural Meu Kota Conectado';
         badge.className = 'api-status-badge connected';
       }
     } else {
       if (dot) dot.classList.add('active');
-      if (label) label.textContent = 'Backend Google';
+      if (label) label.textContent = 'Meu Kota IA';
       if (badge) {
-        badge.textContent = 'Status: Backend Seguro Google Firebase (Chave Oculta)';
+        badge.textContent = 'Status: Servidor Oficial Meu Kota IA Operacional';
         badge.className = 'api-status-badge connected';
       }
     }
@@ -2980,7 +2942,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
       setGeminiApiKey(val);
       modalApiSettings.classList.remove('active');
-      showToast('Conexão Google AI Studio ativada com sucesso!');
+      showToast('Motor Meu Kota IA ativado com sucesso!');
     });
   }
 
