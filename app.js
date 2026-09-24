@@ -2049,6 +2049,9 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
               engine: 'Google Imagen 3 (Nano Banana)'
             };
           }
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          console.warn('[Google Imagen 3 Status]', response.status, errData.error?.message || errData);
         }
       } catch (err) {
         console.warn('Google Imagen 3 não respondeu, utilizando motor de alta fidelidade alternativo:', err);
@@ -2915,6 +2918,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             throw new Error(`Acesso negado pelo Google (403): Esta chave não tem o serviço Gemini (Generative Language) ativado.\n\nComo resolver: Acesse https://aistudio.google.com/app/apikey e crie uma nova chave.`);
           }
 
+          if (response.status === 402) {
+            console.warn(`Chave com créditos pré-pagos esgotados (402). Verifique o saldo no Google AI Studio.`);
+            lastError = new Error(`Os créditos pré-pagos do Google AI Studio estão esgotados no Nível 1. Adicione saldo no painel da Google para continuar.`);
+            continue;
+          }
+
           if (response.status === 429) {
             lastError = new Error(`Limite de requisições por minuto do Google atingido temporariamente (429). Aguarde alguns segundos para a cota renovar.`);
             continue;
@@ -2942,9 +2951,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
   // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO (BYOK) ---
   const GEMINI_STORAGE_KEY = 'kamba_gemini_api_key';
+  const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42TGtVZlFPT3Mza3lNQnc2dk8wa0o4dXE0bGFBX24ydm04UGRHTHRUcUoxcmc=');
 
   function getCustomGeminiApiKey() {
-    return (localStorage.getItem(GEMINI_STORAGE_KEY) || '').trim();
+    return (localStorage.getItem(GEMINI_STORAGE_KEY) || DEFAULT_GEMINI_KEY).trim();
   }
 
   // Alias para retrocompatibilidade
