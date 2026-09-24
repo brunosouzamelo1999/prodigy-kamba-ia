@@ -351,6 +351,94 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       .catch(err => console.warn('[Firestore] Erro ao carregar cota:', err.message));
   }
 
+  // --- GERENCIAMENTO DE ASSINATURAS & PLANOS PRO (FASE 5) ---
+  function getSubscriptionStorageKey() {
+    const uid = (currentUser && currentUser.uid) || (currentUser && currentUser.email) || 'guest';
+    const safeKey = uid.replace(/[^a-zA-Z0-9]/g, '_');
+    return `kamba_subscription_${safeKey}`;
+  }
+
+  function getUserSubscription() {
+    const key = getSubscriptionStorageKey();
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try {
+        const sub = JSON.parse(raw);
+        if (sub && sub.active) {
+          if (sub.expiresAt && Date.now() > sub.expiresAt) {
+            sub.active = false;
+            localStorage.setItem(key, JSON.stringify(sub));
+            updateSubscriptionUI();
+            return { plan: 'free', active: false };
+          }
+          return sub;
+        }
+      } catch (e) {}
+    }
+    return { plan: 'free', active: false };
+  }
+
+  function setUserSubscription(subData) {
+    const key = getSubscriptionStorageKey();
+    localStorage.setItem(key, JSON.stringify(subData));
+    updateSubscriptionUI();
+
+    if (firestoreDbInstance && currentUser && currentUser.uid) {
+      firestoreDbInstance
+        .collection('users')
+        .doc(currentUser.uid)
+        .set({ subscription: subData }, { merge: true })
+        .catch(err => console.warn('[Firestore] Erro ao sincronizar assinatura:', err.message));
+    }
+  }
+
+  function updateSubscriptionUI() {
+    const sub = getUserSubscription();
+    const quotaWrap = document.getElementById('gpt-quota-wrap');
+    const proBadge = document.getElementById('gpt-pro-badge');
+    const proBadgeText = document.getElementById('pro-badge-text');
+    const btnUpgrade = document.getElementById('btn-open-pricing-modal');
+
+    if (sub.active) {
+      if (quotaWrap) quotaWrap.style.display = 'none';
+      if (proBadge) {
+        proBadge.style.display = 'flex';
+        if (proBadgeText) {
+          proBadgeText.textContent = sub.plan === 'daily_pass' ? 'Passe 24h Ativo (Ilimitado)' : 'Meu Kota Pro Ativo (Ilimitado)';
+        }
+      }
+      if (btnUpgrade) {
+        const spanText = btnUpgrade.querySelector('.upgrade-pro-left span');
+        if (spanText) spanText.textContent = 'Gerenciar Assinatura';
+      }
+    } else {
+      if (quotaWrap) quotaWrap.style.display = 'block';
+      if (proBadge) proBadge.style.display = 'none';
+      if (btnUpgrade) {
+        const spanText = btnUpgrade.querySelector('.upgrade-pro-left span');
+        if (spanText) spanText.textContent = 'Seja Meu Kota Pro';
+      }
+      updateQuotaUI();
+    }
+  }
+
+  function loadSubscriptionFromFirestore(uid) {
+    if (!firestoreDbInstance || !uid) return;
+    firestoreDbInstance
+      .collection('users')
+      .doc(uid)
+      .get()
+      .then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data && data.subscription) {
+            setUserSubscription(data.subscription);
+          }
+        }
+      })
+      .catch(err => console.warn('[Firestore] Erro ao carregar assinatura:', err.message));
+  }
+
   // Funções de Isolamento e Sincronização de Conversas
   function getStorageKeyForUserChats(email) {
     const safeEmail = (email || 'default').toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -1887,12 +1975,16 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     const text = chatInput.value.trim();
     if (!text) return;
 
-    // Verificação de Teto Diário de Segurança
-    const quota = getDailyQuota();
-    if (quota.count >= quota.limit) {
-      showToast('Limite diário de 30 perguntas atingido. Renovação automática amanhã!');
-      appendMessageToDOM('ai', '### ⚠️ Teto Diário de Segurança Atingido\n\nVocê atingiu o teto diário de **30 perguntas gratuitas** no Meu Kota IA.\n\nSua cota renova automaticamente às **00:00**. Para perguntas adicionais hoje, entre em contato com o suporte ou utilize sua chave corporativa no botão **Meu Kota IA**.');
-      return;
+    // Verificação de Teto Diário de Segurança com Bypass para Assinantes Pro
+    const userSub = getUserSubscription();
+    if (!userSub.active) {
+      const quota = getDailyQuota();
+      if (quota.count >= quota.limit) {
+        showToast('Limite diário de 30 perguntas atingido. Desbloqueie o Kota Pro!');
+        appendMessageToDOM('ai', '### ⚠️ Teto Diário Gratuito Atingido\n\nVocê atingiu o teto diário de **30 perguntas gratuitas** no Meu Kota IA.\n\nPara continuar conversando sem limites hoje com o motor mais rápido e inteligente, desbloqueie o **Passe 24 Horas** ou a **Assinatura Mensal Kota Pro** clicando no botão **Seja Meu Kota Pro** na barra lateral.');
+        openPricingModal();
+        return;
+      }
     }
 
     const chat = chats.find(c => c.id === currentChatId);
@@ -1900,13 +1992,15 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
 
     const attachedFileToSend = currentAttachedFile;
 
-    // Registrar mensagem do usuário e incrementar cota diária
+    // Registrar mensagem do usuário e incrementar cota diária (se não for assinante Pro)
     chat.messages.push({ 
       role: 'user', 
       content: text,
       file: attachedFileToSend ? { name: attachedFileToSend.name, type: attachedFileToSend.type, size: attachedFileToSend.size, isPdf: attachedFileToSend.isPdf } : null
     });
-    incrementDailyQuota();
+    if (!userSub.active) {
+      incrementDailyQuota();
+    }
     appendMessageToDOM('user', text, false, attachedFileToSend);
     chatInput.value = '';
     chatInput.style.height = 'auto';
@@ -3193,10 +3287,263 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     });
   }
 
+  // --- EVENTOS DO MODAL DE CHECKOUT & PAGAMENTOS (FASE 5) ---
+  let checkoutCountdownInterval = null;
+
+  function openPricingModal() {
+    const modal = document.getElementById('modal-pricing-checkout');
+    if (!modal) return;
+    
+    // Resetar visualização do modal
+    const plansGrid = modal.querySelector('.checkout-plans-grid');
+    const paymentSection = modal.querySelector('.checkout-payment-section');
+    const successView = document.getElementById('checkout-success-view');
+    const waitingBox = document.getElementById('mcx-waiting-box');
+    const mcxForm = modal.querySelector('.pay-mcx-form');
+
+    if (plansGrid) plansGrid.style.display = 'grid';
+    if (paymentSection) paymentSection.style.display = 'block';
+    if (successView) successView.style.display = 'none';
+    if (waitingBox) waitingBox.style.display = 'none';
+    if (mcxForm) mcxForm.style.display = 'block';
+
+    if (checkoutCountdownInterval) {
+      clearInterval(checkoutCountdownInterval);
+      checkoutCountdownInterval = null;
+    }
+
+    modal.classList.add('active');
+  }
+
+  function setupPricingModalEvents() {
+    const modal = document.getElementById('modal-pricing-checkout');
+    const btnOpenModal = document.getElementById('btn-open-pricing-modal');
+    const btnCloseModal = document.getElementById('btn-close-pricing-modal');
+    const btnFinishCheckout = document.getElementById('btn-finish-checkout');
+
+    if (btnOpenModal) {
+      btnOpenModal.addEventListener('click', () => {
+        openPricingModal();
+      });
+    }
+
+    if (btnCloseModal && modal) {
+      btnCloseModal.addEventListener('click', () => {
+        modal.classList.remove('active');
+        if (checkoutCountdownInterval) clearInterval(checkoutCountdownInterval);
+      });
+    }
+
+    if (btnFinishCheckout && modal) {
+      btnFinishCheckout.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+          if (checkoutCountdownInterval) clearInterval(checkoutCountdownInterval);
+        }
+      });
+    }
+
+    // Seletor de Planos (Passe 24h vs. Pro)
+    let selectedPlan = 'pro';
+    const cardDaily = document.getElementById('plan-card-daily');
+    const cardPro = document.getElementById('plan-card-pro');
+    const mcxBtnAmount = document.getElementById('mcx-btn-amount');
+    const refAmountVal = document.getElementById('ref-amount-val');
+    const stripeBtnAmount = document.getElementById('stripe-btn-amount');
+    const mcxWaitingVal = document.getElementById('mcx-waiting-val');
+
+    function updateAmountsUI() {
+      if (selectedPlan === 'daily_pass') {
+        if (mcxBtnAmount) mcxBtnAmount.textContent = '1.500 Kz';
+        if (refAmountVal) refAmountVal.textContent = '1.500,00 Kz';
+        if (stripeBtnAmount) stripeBtnAmount.textContent = 'US$ 1,50';
+        if (mcxWaitingVal) mcxWaitingVal.textContent = '1.500 Kz';
+      } else {
+        if (mcxBtnAmount) mcxBtnAmount.textContent = '9.900 Kz';
+        if (refAmountVal) refAmountVal.textContent = '9.900,00 Kz';
+        if (stripeBtnAmount) stripeBtnAmount.textContent = 'US$ 10,00';
+        if (mcxWaitingVal) mcxWaitingVal.textContent = '9.900 Kz';
+      }
+    }
+
+    if (cardDaily && cardPro) {
+      cardDaily.addEventListener('click', () => {
+        selectedPlan = 'daily_pass';
+        cardDaily.classList.add('selected');
+        cardPro.classList.remove('selected');
+        updateAmountsUI();
+      });
+
+      cardPro.addEventListener('click', () => {
+        selectedPlan = 'pro';
+        cardPro.classList.add('selected');
+        cardDaily.classList.remove('selected');
+        updateAmountsUI();
+      });
+    }
+
+    // Seletor de Abas de Pagamento
+    const tabMcx = document.getElementById('tab-pay-mcx');
+    const tabRef = document.getElementById('tab-pay-ref');
+    const tabStripe = document.getElementById('tab-pay-stripe');
+    const contentMcx = document.getElementById('content-pay-mcx');
+    const contentRef = document.getElementById('content-pay-ref');
+    const contentStripe = document.getElementById('content-pay-stripe');
+
+    function switchPayTab(activeTab, activeContent) {
+      [tabMcx, tabRef, tabStripe].forEach(t => t && t.classList.remove('active'));
+      [contentMcx, contentRef, contentStripe].forEach(c => {
+        if (c) c.style.display = 'none';
+      });
+
+      if (activeTab) activeTab.classList.add('active');
+      if (activeContent) activeContent.style.display = 'block';
+    }
+
+    if (tabMcx && contentMcx) tabMcx.addEventListener('click', () => switchPayTab(tabMcx, contentMcx));
+    if (tabRef && contentRef) tabRef.addEventListener('click', () => switchPayTab(tabRef, contentRef));
+    if (tabStripe && contentStripe) tabStripe.addEventListener('click', () => switchPayTab(tabStripe, contentStripe));
+
+    // Ação: Copiar dados da Referência
+    const copyButtons = modal.querySelectorAll('.btn-copy-ref');
+    copyButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const textToCopy = btn.getAttribute('data-copy') || '';
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const originalText = btn.textContent;
+          btn.textContent = 'Copiado!';
+          btn.style.background = 'var(--angola-yellow)';
+          btn.style.color = '#000';
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+            btn.style.color = '';
+          }, 2000);
+        });
+      });
+    });
+
+    // Função de Ativação do Plano com Sucesso
+    function activateSubscriptionSuccess(methodName) {
+      if (checkoutCountdownInterval) clearInterval(checkoutCountdownInterval);
+
+      const durationMs = selectedPlan === 'daily_pass' ? 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+      const expiresAt = Date.now() + durationMs;
+
+      const subData = {
+        plan: selectedPlan,
+        active: true,
+        expiresAt: expiresAt,
+        method: methodName,
+        startedAt: Date.now()
+      };
+
+      setUserSubscription(subData);
+
+      // Atualizar tela de sucesso no modal
+      const plansGrid = modal.querySelector('.checkout-plans-grid');
+      const paymentSection = modal.querySelector('.checkout-payment-section');
+      const successView = document.getElementById('checkout-success-view');
+      const successPlanDesc = document.getElementById('success-plan-desc');
+
+      if (plansGrid) plansGrid.style.display = 'none';
+      if (paymentSection) paymentSection.style.display = 'none';
+      if (successView) successView.style.display = 'block';
+
+      if (successPlanDesc) {
+        successPlanDesc.innerHTML = selectedPlan === 'daily_pass'
+          ? 'Seu <strong>Passe 24 Horas</strong> está ativo! Aproveite perguntas e respostas ilimitadas até amanhã.'
+          : 'Sua assinatura <strong>Meu Kota Pro Mensal</strong> está ativa com perguntas ilimitadas e raciocínio profundo!';
+      }
+
+      showToast('🎉 Pagamento confirmado! Assinatura ativada com sucesso!');
+    }
+
+    // Ação: Submeter Multicaixa Express
+    const btnSubmitMcx = document.getElementById('btn-submit-mcx');
+    const inputMcxPhone = document.getElementById('input-mcx-phone');
+    const mcxWaitingBox = document.getElementById('mcx-waiting-box');
+    const mcxForm = modal.querySelector('.pay-mcx-form');
+    const mcxWaitingPhone = document.getElementById('mcx-waiting-phone');
+    const mcxCountdownTimer = document.getElementById('mcx-countdown-timer');
+    const btnSimulateMcxSuccess = document.getElementById('btn-mcx-simulate-success');
+
+    if (btnSubmitMcx && inputMcxPhone) {
+      btnSubmitMcx.addEventListener('click', () => {
+        const phone = inputMcxPhone.value.trim().replace(/\s+/g, '');
+        if (!phone || phone.length < 9) {
+          showToast('Por favor, insira um número de telemóvel válido de Angola (9 dígitos).');
+          inputMcxPhone.focus();
+          return;
+        }
+
+        if (mcxForm) mcxForm.style.display = 'none';
+        if (mcxWaitingBox) mcxWaitingBox.style.display = 'block';
+        if (mcxWaitingPhone) mcxWaitingPhone.textContent = `+244 ${phone}`;
+
+        // Iniciar timer regressivo de 5 minutos
+        let secondsLeft = 299;
+        if (checkoutCountdownInterval) clearInterval(checkoutCountdownInterval);
+
+        checkoutCountdownInterval = setInterval(() => {
+          secondsLeft--;
+          if (secondsLeft <= 0) {
+            clearInterval(checkoutCountdownInterval);
+            if (mcxCountdownTimer) mcxCountdownTimer.textContent = '00:00';
+            showToast('Tempo de autorização esgotado. Tente novamente.');
+            if (mcxForm) mcxForm.style.display = 'block';
+            if (mcxWaitingBox) mcxWaitingBox.style.display = 'none';
+            return;
+          }
+
+          const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+          const secs = String(secondsLeft % 60).padStart(2, '0');
+          if (mcxCountdownTimer) mcxCountdownTimer.textContent = `${mins}:${secs}`;
+        }, 1000);
+      });
+    }
+
+    if (btnSimulateMcxSuccess) {
+      btnSimulateMcxSuccess.addEventListener('click', () => {
+        activateSubscriptionSuccess('Multicaixa Express');
+      });
+    }
+
+    // Ação: Confirmar Referência
+    const btnConfirmRef = document.getElementById('btn-confirm-reference-paid');
+    if (btnConfirmRef) {
+      btnConfirmRef.addEventListener('click', () => {
+        activateSubscriptionSuccess('Referência Multicaixa');
+      });
+    }
+
+    // Ação: Submeter Cartão Stripe
+    const btnSubmitStripe = document.getElementById('btn-submit-stripe');
+    const inputCardNum = document.getElementById('input-card-number');
+    if (btnSubmitStripe) {
+      btnSubmitStripe.addEventListener('click', () => {
+        if (inputCardNum && !inputCardNum.value.trim()) {
+          showToast('Por favor, informe os dados do cartão de crédito internacional.');
+          inputCardNum.focus();
+          return;
+        }
+        activateSubscriptionSuccess('Cartão Internacional (Stripe)');
+      });
+    }
+  }
+
   // Configurações e Inicializações Globais
   initFirebaseAuth();
   currentUser = getActiveUser();
   updateUserProfileUI();
+  updateSubscriptionUI();
+  setupPricingModalEvents();
   setupModelSelectorEvents();
   updateModelSelectorUI();
   updateGeminiStatusUI();

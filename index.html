@@ -833,6 +833,21 @@
 
         <!-- Rodapé do Perfil do Cliente -->
         <div class="gpt-sidebar-footer">
+          <!-- Botão Seja Pro / Upgrade -->
+          <button class="btn-upgrade-pro" id="btn-open-pricing-modal" type="button" title="Assinar Plano Pro ou Passe 24h">
+            <div class="upgrade-pro-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Seja Meu Kota Pro</span>
+            </div>
+            <span class="pro-sparkle-pill">Ilimitado</span>
+          </button>
+
+          <!-- Badge de Assinatura Ativa (Kota Pro) -->
+          <div class="gpt-pro-active-badge" id="gpt-pro-badge" style="display: none;" title="Sua assinatura Meu Kota Pro está ativa">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span id="pro-badge-text">Meu Kota Pro Ativo</span>
+          </div>
+
           <!-- Indicador de Cota Diária de Segurança -->
           <div class="gpt-quota-bar-wrap" id="gpt-quota-wrap" title="Limite de segurança diário">
             <div class="quota-text-row">
@@ -1264,6 +1279,180 @@
       </div>
       <div class="image-preview-content">
         <img id="modal-preview-img" src="" alt="Imagem Ampliada">
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Planos e Checkout Executivo (Multicaixa Express / Referência / Stripe) -->
+  <div id="modal-pricing-checkout" class="executive-modal-overlay">
+    <div class="executive-modal-box checkout-modal-box">
+      <div class="modal-header-bar">
+        <div class="modal-title-wrap">
+          <div class="modal-gold-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <span class="modal-title-text">Meu Kota Pro — Planos e Assinaturas</span>
+            <span class="modal-subtitle-text" style="display: block; font-size: 12px; color: #8E8EA0; margin-top: 2px;">Desbloqueie perguntas ilimitadas, modelo avançado e leitura total de documentos</span>
+          </div>
+        </div>
+        <button id="btn-close-pricing-modal" class="btn-modal-close" aria-label="Fechar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body-scroll checkout-body-scroll">
+        <!-- Seletor de Planos -->
+        <div class="checkout-plans-grid">
+          <!-- Plano 1: Passe Diário 24h -->
+          <div class="checkout-plan-card" id="plan-card-daily" data-plan="daily_pass">
+            <div class="plan-card-header">
+              <span class="plan-type-label">Uso Pontual</span>
+              <h4 class="plan-title">Passe 24 Horas</h4>
+              <div class="plan-price-row">
+                <span class="plan-currency">Kz</span>
+                <span class="plan-amount">1.500</span>
+                <span class="plan-period">/ 24h</span>
+              </div>
+              <span class="plan-usd-equiv">~ US$ 1,50</span>
+            </div>
+            <ul class="plan-features-list">
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Perguntas Ilimitadas por 24h</span></li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Sem teto diário de 30 perguntas</span></li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Ideal para urgências e estudos</span></li>
+            </ul>
+          </div>
+
+          <!-- Plano 2: Meu Kota Pro Mensal (Destaque) -->
+          <div class="checkout-plan-card selected" id="plan-card-pro" data-plan="pro">
+            <div class="plan-popular-badge">MAIS POPULAR</div>
+            <div class="plan-card-header">
+              <span class="plan-type-label">Assinatura Mensal</span>
+              <h4 class="plan-title">Meu Kota Pro</h4>
+              <div class="plan-price-row">
+                <span class="plan-currency">Kz</span>
+                <span class="plan-amount">9.900</span>
+                <span class="plan-period">/ mês</span>
+              </div>
+              <span class="plan-usd-equiv">~ US$ 10,00</span>
+            </div>
+            <ul class="plan-features-list">
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Perguntas 100% Ilimitadas</strong></span></li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Motor Meu Kota Pro com Raciocínio Profundo</span></li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Upload e tradução total de PDFs e Fotos</span></li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Velocidade de processamento prioritária</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Seletor de Método de Pagamento -->
+        <div class="checkout-payment-section">
+          <div class="payment-tabs-header">
+            <button class="pay-tab-btn active" id="tab-pay-mcx" type="button">
+              <span>🇦🇴 Multicaixa Express</span>
+            </button>
+            <button class="pay-tab-btn" id="tab-pay-ref" type="button">
+              <span>🏦 Referência Multicaixa / ATM</span>
+            </button>
+            <button class="pay-tab-btn" id="tab-pay-stripe" type="button">
+              <span>💳 Cartão Internacional</span>
+            </button>
+          </div>
+
+          <!-- Aba 1: Multicaixa Express -->
+          <div class="pay-tab-content active" id="content-pay-mcx">
+            <div class="pay-mcx-form">
+              <p class="pay-instruction-text">
+                Insira o seu número de telemóvel associado ao aplicativo <strong>Multicaixa Express</strong>. Uma notificação será enviada para você autorizar no telemóvel:
+              </p>
+              <div class="mcx-phone-row">
+                <span class="mcx-prefix">+244</span>
+                <input type="tel" id="input-mcx-phone" placeholder="9xx xxx xxx" maxlength="9" autocomplete="tel">
+              </div>
+              <button class="btn-checkout-submit" id="btn-submit-mcx" type="button">
+                <span>Pagar <span id="mcx-btn-amount">9.900 Kz</span> com Multicaixa Express</span>
+              </button>
+            </div>
+
+            <!-- Estado de Espera do MCX -->
+            <div class="mcx-waiting-box" id="mcx-waiting-box" style="display: none;">
+              <div class="waiting-spinner-glow"></div>
+              <h4 class="waiting-title">Aguardando Confirmação no Telemóvel</h4>
+              <p class="waiting-desc">Abra o aplicativo <strong>Multicaixa Express</strong> no telemóvel <strong id="mcx-waiting-phone">9xx xxx xxx</strong> e confirme a transação de <strong id="mcx-waiting-val">9.900 Kz</strong>.</p>
+              <div class="waiting-countdown-badge">
+                <span>Tempo restante: </span><strong id="mcx-countdown-timer">04:59</strong>
+              </div>
+              <button class="btn-mcx-confirm-sim" id="btn-mcx-simulate-success" type="button">
+                <span>Simular Aprovação Instantânea</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Aba 2: Referência Multicaixa (ATM / Internet Banking BAI, BFA, etc.) -->
+          <div class="pay-tab-content" id="content-pay-ref" style="display: none;">
+            <p class="pay-instruction-text">
+              Utilize os dados abaixo para pagar em qualquer <strong>Caixa Eletrónico (ATM)</strong> ou pelo aplicativo do seu banco (ex: BAI Direto, BFA App, Millennium Atlântico, etc.):
+            </p>
+            <div class="ref-payment-card">
+              <div class="ref-row">
+                <span class="ref-label">Entidade:</span>
+                <span class="ref-val" id="ref-entity-val">00142</span>
+                <button class="btn-copy-ref" data-copy="00142" type="button" title="Copiar Entidade">Copiar</button>
+              </div>
+              <div class="ref-row">
+                <span class="ref-label">Referência:</span>
+                <span class="ref-val" id="ref-reference-val">924 810 331</span>
+                <button class="btn-copy-ref" data-copy="924810331" type="button" title="Copiar Referência">Copiar</button>
+              </div>
+              <div class="ref-row">
+                <span class="ref-label">Montante:</span>
+                <span class="ref-val" id="ref-amount-val">9.900,00 Kz</span>
+                <button class="btn-copy-ref" data-copy="9900" type="button" title="Copiar Valor">Copiar</button>
+              </div>
+            </div>
+            <button class="btn-checkout-submit" id="btn-confirm-reference-paid" type="button">
+              <span>Já Efetuei o Pagamento / Verificar</span>
+            </button>
+          </div>
+
+          <!-- Aba 3: Cartão Internacional (Stripe) -->
+          <div class="pay-tab-content" id="content-pay-stripe" style="display: none;">
+            <p class="pay-instruction-text">
+              Pagamento seguro em moeda internacional via <strong>Stripe</strong> com qualquer cartão Visa, Mastercard ou American Express:
+            </p>
+            <div class="stripe-card-form">
+              <div class="stripe-input-group">
+                <label>Número do Cartão Internacional:</label>
+                <input type="text" id="input-card-number" placeholder="4532 •••• •••• ••••" maxlength="19">
+              </div>
+              <div class="stripe-split-row">
+                <div class="stripe-input-group">
+                  <label>Validade:</label>
+                  <input type="text" id="input-card-expiry" placeholder="MM/AA" maxlength="5">
+                </div>
+                <div class="stripe-input-group">
+                  <label>CVC:</label>
+                  <input type="password" id="input-card-cvc" placeholder="123" maxlength="4">
+                </div>
+              </div>
+              <button class="btn-checkout-submit" id="btn-submit-stripe" type="button">
+                <span>Pagar <span id="stripe-btn-amount">US$ 10,00</span> com Cartão</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tela de Sucesso da Assinatura -->
+        <div class="checkout-success-view" id="checkout-success-view" style="display: none;">
+          <div class="success-checkmark-circle">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h3 class="success-title">Plano Ativado com Sucesso!</h3>
+          <p class="success-desc" id="success-plan-desc">Você agora possui acesso ilimitado com o modelo avançado Meu Kota Pro.</p>
+          <button class="btn-print-confirm" id="btn-finish-checkout" type="button" style="width: 100%; justify-content: center; margin-top: 20px;">
+            <span>Começar a Conversar Agora</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
