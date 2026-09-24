@@ -5584,3 +5584,815 @@ body {
   margin: 0 auto;
 }
 
+/* ============================================================ */
+/* POPOVER DO USUÁRIO & MODAIS ESTILO CHATGPT (SCREENSHOTS 1, 2, 3) */
+/* ============================================================ */
+
+/* Link Atualizar Pagamento no Card do Usuário */
+.gpt-user-sub {
+  font-size: 11.5px;
+  color: #9CA3AF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.link-update-pay {
+  color: #9CA3AF;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.link-update-pay:hover {
+  color: #FB923C;
+}
+
+/* Menu Popover Flutuante acima do card */
+.gpt-user-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 8px;
+  right: 8px;
+  background: #212121;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 6px;
+  z-index: 1050;
+  animation: popoverFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Linha Superior da Conta no Popover */
+.popover-account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.popover-account-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.popover-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #10A37F;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.popover-account-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.popover-account-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ECECEC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popover-account-plan {
+  font-size: 11.5px;
+  color: #9CA3AF;
+}
+
+.popover-account-row .chevron-right {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+/* Flyout de Contas no topo direito do popover */
+.user-accounts-flyout {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 0;
+  min-width: 260px;
+  background: #212121;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  padding: 8px;
+  z-index: 1100;
+  animation: popoverFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 768px) {
+  .user-accounts-flyout {
+    left: 0;
+    top: calc(100% + 4px);
+    width: 100%;
+  }
+}
+
+.flyout-email-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #9CA3AF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flyout-account-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.flyout-account-item.active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.flyout-account-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.flyout-avatar-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #10A37F;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flyout-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ECECEC;
+  flex-grow: 1;
+}
+
+.flyout-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 6px 0;
+}
+
+.flyout-add-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  color: #ECECEC;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.flyout-add-account-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Lista de Itens do Popover */
+.popover-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+}
+
+.popover-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #ECECEC;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.popover-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.popover-menu-item.item-alert-payment {
+  color: #FB923C;
+}
+
+.popover-menu-item.item-alert-payment:hover {
+  background: rgba(249, 115, 22, 0.12);
+}
+
+.popover-menu-item.item-logout {
+  color: #EF4444;
+}
+
+.popover-menu-item.item-logout:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.popover-item-with-arrow {
+  justify-content: space-between;
+}
+
+.popover-item-with-arrow .item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.popover-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 6px;
+}
+
+/* ============================================================ */
+/* MODAIS PADRÃO CHATGPT (SCREENSHOT 2 & 3) */
+/* ============================================================ */
+
+.chatgpt-modal-box {
+  background: #212121;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  color: #ECECEC;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chatgpt-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 14px 24px;
+}
+
+.chatgpt-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.chatgpt-modal-close {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.chatgpt-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+.chatgpt-modal-body {
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  max-height: calc(88vh - 120px);
+}
+
+.chatgpt-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1B1B1B;
+}
+
+/* Banner de Alerta Laranja (Screenshot 3) */
+.payment-alert-banner {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #2C1A11;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: 12px;
+}
+
+.payment-alert-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.payment-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.payment-alert-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FB923C;
+  margin: 0;
+}
+
+.payment-alert-desc {
+  font-size: 13px;
+  color: #FED7AA;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Linha de Forma de Pagamento */
+.payment-method-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.payment-method-section-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #ECECEC;
+}
+
+.btn-chatgpt-subtle-add {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  color: #ECECEC;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-chatgpt-subtle-add:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Card Selecionável de Método de Pagamento (Screenshot 3) */
+.payment-methods-selectable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payment-method-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.payment-method-item.selected {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.method-radio-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.method-radio-wrap input[type="radio"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.method-radio-wrap input[type="radio"]:checked {
+  border-color: #FFFFFF;
+  background: radial-gradient(circle, #FFFFFF 40%, transparent 45%);
+}
+
+.method-icon-box {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.method-info-text {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.method-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ECECEC;
+}
+
+.method-extra {
+  font-size: 11.5px;
+  color: #9CA3AF;
+}
+
+.badge-status-update {
+  background: rgba(249, 115, 22, 0.16);
+  color: #FB923C;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+/* Footer do Modal de Revisão */
+.due-amount-info {
+  font-size: 13.5px;
+  color: #9CA3AF;
+}
+
+.due-amount-info strong {
+  color: #FFFFFF;
+  font-size: 14.5px;
+  margin-left: 4px;
+}
+
+.btn-chatgpt-pay-now {
+  background: #FFFFFF;
+  color: #000000;
+  border: none;
+  border-radius: 9999px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-chatgpt-pay-now:hover {
+  background: #E5E5E5;
+  transform: scale(1.02);
+}
+
+/* ============================================================ */
+/* FORMULÁRIO ADICIONAR MÉTODO DE PAGAMENTO (SCREENSHOT 2) */
+/* ============================================================ */
+
+.chatgpt-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chatgpt-field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ECECEC;
+}
+
+.chatgpt-input-card-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.card-brand-logos {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+}
+
+.card-chip {
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.chip-visa {
+  background: #1A1F71;
+  color: #FFFFFF;
+}
+
+.chip-mc {
+  background: #EB001B;
+  color: #F79E1B;
+}
+
+.chip-disc {
+  background: #FF6000;
+  color: #FFFFFF;
+}
+
+.chatgpt-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.chatgpt-input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cvc-icon-badge {
+  position: absolute;
+  right: 12px;
+  color: #9CA3AF;
+}
+
+.chatgpt-section-subtitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ECECEC;
+  margin-top: 4px;
+}
+
+.chatgpt-input,
+.chatgpt-select,
+.chatgpt-textarea {
+  background: #2F2F2F;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #ECECEC;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.chatgpt-input:focus,
+.chatgpt-select:focus,
+.chatgpt-textarea:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: #363636;
+}
+
+.chatgpt-terms-footnote {
+  font-size: 12px;
+  color: #9CA3AF;
+  line-height: 1.45;
+  margin: 2px 0 0 0;
+}
+
+.btn-chatgpt-continue-pill {
+  background: #FFFFFF;
+  color: #000000;
+  border: none;
+  border-radius: 9999px;
+  height: 48px;
+  width: 100%;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-chatgpt-continue-pill:hover {
+  background: #E5E5E5;
+}
+
+/* Estilos de Personalização e Configurações */
+.custom-instruct-desc {
+  font-size: 13px;
+  color: #9CA3AF;
+  line-height: 1.5;
+  margin: 0 0 4px 0;
+}
+
+.settings-nav-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.settings-tab-btn {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-tab-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-row-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ECECEC;
+}
+
+.settings-row-sub {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.chatgpt-select-mini {
+  background: #2F2F2F;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #ECECEC;
+  font-size: 12.5px;
+  outline: none;
+}
+
+.btn-danger-subtle {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Perfil Modal */
+.profile-header-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-big-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #10A37F;
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-header-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.profile-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
+.profile-badge-pro {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFD100;
+  background: rgba(255, 209, 0, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  width: fit-content;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.profile-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.info-label {
+  font-size: 11.5px;
+  color: #9CA3AF;
+}
+
+.info-val {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ECECEC;
+}
+
+.info-val.text-success {
+  color: #10B981;
+}
+
+
+

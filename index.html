@@ -859,18 +859,97 @@
             </div>
           </div>
 
-          <div class="gpt-user-card" id="btn-user-profile" title="Perfil do usuário ativo">
+          <!-- Popover Menu Estilo ChatGPT (Screenshot 1) -->
+          <div class="gpt-user-popover" id="gpt-user-popover" style="display: none;">
+            <!-- Card superior do Usuário com seta para alternar contas -->
+            <div class="popover-account-row" id="btn-user-popover-account" title="Alternar contas">
+              <div class="popover-avatar-circle" id="popover-user-avatar">
+                <span id="popover-user-initials">BS</span>
+              </div>
+              <div class="popover-account-info">
+                <span class="popover-account-name" id="popover-user-name">Bruno Souza</span>
+                <span class="popover-account-plan" id="popover-user-plan">Pro</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+
+              <!-- Flyout de Contas (Screenshot 1 topo direito) -->
+              <div class="user-accounts-flyout" id="user-accounts-flyout" style="display: none;">
+                <div class="flyout-email-header">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span id="flyout-user-email">brunosouzamelo10@gmail.com</span>
+                </div>
+                <div class="flyout-account-item active">
+                  <div class="flyout-avatar-circle" id="flyout-user-avatar">BS</div>
+                  <span class="flyout-name" id="flyout-user-name">Bruno Souza</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" class="flyout-check"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="flyout-divider"></div>
+                <button type="button" class="flyout-add-account-btn" id="btn-flyout-add-account">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Adicionar conta</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="popover-menu-list">
+              <!-- Item 1: Revisar forma de pagamento (Alerta Laranja) -->
+              <button type="button" class="popover-menu-item item-alert-payment" id="btn-menu-review-payment">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Revisar forma de pagamento</span>
+              </button>
+
+              <!-- Item 2: Personalização -->
+              <button type="button" class="popover-menu-item" id="btn-menu-customization">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Personalização</span>
+              </button>
+
+              <!-- Item 3: Perfil -->
+              <button type="button" class="popover-menu-item" id="btn-menu-profile">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Perfil</span>
+              </button>
+
+              <!-- Item 4: Configurações -->
+              <button type="button" class="popover-menu-item" id="btn-menu-settings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Configurações</span>
+              </button>
+
+              <div class="popover-divider"></div>
+
+              <!-- Item 5: Ajuda -->
+              <button type="button" class="popover-menu-item popover-item-with-arrow" id="btn-menu-help">
+                <div class="item-left">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span>Ajuda</span>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+
+              <!-- Item 6: Sair -->
+              <button type="button" class="popover-menu-item item-logout" id="btn-menu-logout">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sair</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card do Usuário no Rodapé da Barra Lateral (Screenshot 1) -->
+          <div class="gpt-user-card" id="btn-user-profile" title="Abrir menu de configurações da conta" tabindex="0" role="button" aria-haspopup="true">
             <div class="gpt-user-avatar" id="display-user-avatar">
               <img id="display-user-avatar-img" src="" alt="Avatar" style="display: none;">
               <span id="display-user-initials">BS</span>
             </div>
             <div class="gpt-user-details">
               <span class="gpt-user-name" id="display-user-name">Bruno Souza</span>
-              <span class="gpt-user-email" id="display-user-email">usuario@meukota.ia</span>
+              <span class="gpt-user-sub" id="display-user-sub">
+                <span id="display-user-plan-label">Pro</span> · <span class="link-update-pay" id="link-card-update-pay">Atualizar pagamento</span>
+              </span>
             </div>
-            <button class="btn-sidebar-logout" id="btn-sidebar-logout" title="Sair da Conta (Logout)" type="button">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            </button>
+            <div class="gpt-user-more">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </div>
           </div>
         </div>
       </aside>
@@ -1457,9 +1536,279 @@
     </div>
   </div>
 
-  <div id="print-container">
-    <div id="print-doc-content" class="official-doc-content"></div>
+  <!-- ============================================================ -->
+  <!-- MODAIS DE GESTÃO DE CONTA E PAGAMENTOS ESTILO CHATGPT -->
+  <!-- ============================================================ -->
+
+  <!-- Modal 1: Revise a Forma de Pagamento (Screenshot 3) -->
+  <div id="modal-review-payment" class="executive-modal-overlay">
+    <div class="chatgpt-modal-box review-payment-box">
+      <div class="chatgpt-modal-header">
+        <h3 class="chatgpt-modal-title">Revise a forma de pagamento</h3>
+        <button id="btn-close-review-payment" class="chatgpt-modal-close" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="chatgpt-modal-body">
+        <!-- Banner de Alerta Laranja (Screenshot 3) -->
+        <div class="payment-alert-banner">
+          <div class="payment-alert-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="payment-alert-content">
+            <h4 class="payment-alert-title">Falha na renovação do plano Pro</h4>
+            <p class="payment-alert-desc">Revise sua forma de pagamento e tente novamente para continuar usando o Meu Kota Pro.</p>
+          </div>
+        </div>
+
+        <!-- Linha de Cabeçalho da Forma de Pagamento -->
+        <div class="payment-method-header-row">
+          <span class="payment-method-section-title">Forma de pagamento</span>
+          <button type="button" class="btn-chatgpt-subtle-add" id="btn-open-add-payment-method">Adicionar novo</button>
+        </div>
+
+        <!-- Lista de Métodos de Pagamento Selecionáveis -->
+        <div class="payment-methods-selectable-list" id="review-methods-list">
+          <!-- Opção 1: Multicaixa Express (Angola) -->
+          <label class="payment-method-item selected" id="method-opt-mcx">
+            <div class="method-radio-wrap">
+              <input type="radio" name="selected_review_method" value="mcx" checked>
+              <span class="method-radio-indicator"></span>
+            </div>
+            <div class="method-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </div>
+            <div class="method-info-text">
+              <span class="method-name" id="review-primary-method-name">Multicaixa Express</span>
+              <span class="method-extra" id="review-primary-method-extra">9xx xxx xxx</span>
+            </div>
+            <span class="badge-status-update" id="review-status-badge">Atualização necessária</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Rodapé com Valor e Botão Pagar Agora (Screenshot 3) -->
+      <div class="chatgpt-modal-footer">
+        <div class="due-amount-info">
+          <span>Valor com vencimento hoje: </span>
+          <strong id="review-modal-due-val">9.900 Kz</strong>
+        </div>
+        <button type="button" class="btn-chatgpt-pay-now" id="btn-review-pay-now">Pagar agora</button>
+      </div>
+    </div>
   </div>
+
+  <!-- Modal 2: Adicionar Método de Pagamento (Screenshot 2) -->
+  <div id="modal-add-payment-method" class="executive-modal-overlay">
+    <div class="chatgpt-modal-box add-payment-box">
+      <div class="chatgpt-modal-header">
+        <h3 class="chatgpt-modal-title">Adicionar método de pagamento</h3>
+        <button id="btn-close-add-payment-method" class="chatgpt-modal-close" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="chatgpt-modal-body">
+        <!-- Campo Número do Cartão com Badges de Marcas -->
+        <div class="chatgpt-field-group">
+          <label class="chatgpt-field-label" for="add-card-number">Número do cartão</label>
+          <div class="chatgpt-input-card-wrap">
+            <input type="text" id="add-card-number" class="chatgpt-input" placeholder="4532 •••• •••• ••••" maxlength="19">
+            <div class="card-brand-logos">
+              <span class="card-chip chip-visa">VISA</span>
+              <span class="card-chip chip-mc">MC</span>
+              <span class="card-chip chip-disc">DISC</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Duas Colunas: Validade e Código de Segurança -->
+        <div class="chatgpt-two-cols">
+          <div class="chatgpt-field-group">
+            <label class="chatgpt-field-label" for="add-card-expiry">Data de validade</label>
+            <input type="text" id="add-card-expiry" class="chatgpt-input" placeholder="MM / AA" maxlength="7">
+          </div>
+          <div class="chatgpt-field-group">
+            <label class="chatgpt-field-label" for="add-card-cvc">Código de segurança</label>
+            <div class="chatgpt-input-icon-wrap">
+              <input type="text" id="add-card-cvc" class="chatgpt-input" placeholder="CVC" maxlength="4">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="cvc-icon-badge"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Título da Seção: Endereço de cobrança -->
+        <div class="chatgpt-section-subtitle">Endereço de cobrança</div>
+
+        <!-- Nome Completo -->
+        <div class="chatgpt-field-group">
+          <label class="chatgpt-field-label" for="add-card-name">Nome completo</label>
+          <input type="text" id="add-card-name" class="chatgpt-input" placeholder="Nome como no cartão">
+        </div>
+
+        <!-- País ou Região -->
+        <div class="chatgpt-field-group">
+          <label class="chatgpt-field-label" for="add-card-country">País ou região</label>
+          <select id="add-card-country" class="chatgpt-select">
+            <option value="Angola" selected>Angola</option>
+            <option value="Brasil">Brasil</option>
+            <option value="Portugal">Portugal</option>
+            <option value="Moçambique">Moçambique</option>
+            <option value="Cabo Verde">Cabo Verde</option>
+            <option value="Estados Unidos">Estados Unidos</option>
+            <option value="Outro país">Outro país</option>
+          </select>
+        </div>
+
+        <!-- Endereço -->
+        <div class="chatgpt-field-group">
+          <label class="chatgpt-field-label" for="add-card-address">Endereço</label>
+          <input type="text" id="add-card-address" class="chatgpt-input" placeholder="Rua, número, bairro ou província">
+        </div>
+
+        <!-- Aviso Legal White-Label Oficial Meu Kota IA -->
+        <p class="chatgpt-terms-footnote">
+          Ao continuar, você autoriza o <strong>Meu Kota IA</strong> a salvar esta forma de pagamento e usá-la em cobranças futuras.
+        </p>
+
+        <!-- Botão Continuar Pill Full Width -->
+        <button type="button" class="btn-chatgpt-continue-pill" id="btn-submit-add-card">Continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Personalização (Custom Instructions) -->
+  <div id="modal-customization" class="executive-modal-overlay">
+    <div class="chatgpt-modal-box custom-instruct-box">
+      <div class="chatgpt-modal-header">
+        <h3 class="chatgpt-modal-title">Personalização do Meu Kota IA</h3>
+        <button id="btn-close-customization" class="chatgpt-modal-close" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="chatgpt-modal-body">
+        <p class="custom-instruct-desc">Adapte as respostas do seu Kota para o seu perfil profissional, objetivos e estilo de comunicação preferido.</p>
+        
+        <div class="chatgpt-field-group">
+          <label class="chatgpt-field-label" for="custom-user-bio">O que você gostaria que o Meu Kota soubesse sobre você para fornecer respostas melhores?</label>
+          <textarea id="custom-user-bio" class="chatgpt-textarea" rows="3" placeholder="Ex: Sou engenheiro de software em Luanda, foco em arquitetura em nuvem e prefiro explicações práticas e de alto nível..."></textarea>
+        </div>
+
+        <div class="chatgpt-field-group">
+          <label class="chatgpt-field-label" for="custom-response-style">Como você gostaria que o Meu Kota respondesse?</label>
+          <textarea id="custom-response-style" class="chatgpt-textarea" rows="3" placeholder="Ex: Mantenha postura executiva sênior, compare trade-offs antes de dar a resposta final e seja direto sem floreios..."></textarea>
+        </div>
+
+        <button type="button" class="btn-chatgpt-continue-pill" id="btn-save-customization">Salvar Preferências</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Configurações do Sistema -->
+  <div id="modal-settings" class="executive-modal-overlay">
+    <div class="chatgpt-modal-box settings-modal-box">
+      <div class="chatgpt-modal-header">
+        <h3 class="chatgpt-modal-title">Configurações</h3>
+        <button id="btn-close-settings" class="chatgpt-modal-close" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="chatgpt-modal-body">
+        <div class="settings-nav-tabs">
+          <button type="button" class="settings-tab-btn active" data-tab="general">Geral</button>
+          <button type="button" class="settings-tab-btn" data-tab="account">Conta & Assinatura</button>
+          <button type="button" class="settings-tab-btn" data-tab="data">Dados & Histórico</button>
+        </div>
+
+        <!-- Aba Geral -->
+        <div class="settings-tab-pane active" id="pane-general">
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <span class="settings-row-title">Tema Visual</span>
+              <span class="settings-row-sub">Controle a aparência da interface</span>
+            </div>
+            <select class="chatgpt-select-mini" id="select-settings-theme">
+              <option value="dark" selected>Escuro (ChatGPT Charcoal)</option>
+              <option value="system">Padrão do Sistema</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <span class="settings-row-title">Síntese de Voz (Áudio)</span>
+              <span class="settings-row-sub">Permitir ouvir respostas geradas pelo Kota</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-voice-active" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Aba Conta & Assinatura -->
+        <div class="settings-tab-pane" id="pane-account" style="display: none;">
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <span class="settings-row-title">Plano Atual</span>
+              <span class="settings-row-sub" id="settings-current-plan-desc">Meu Kota Pro (Perguntas Ilimitadas)</span>
+            </div>
+            <button type="button" class="btn-chatgpt-subtle-add" id="btn-settings-manage-subscription">Gerenciar</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <span class="settings-row-title">E-mail Cadastrado</span>
+              <span class="settings-row-sub" id="settings-user-email">brunosouzamelo10@gmail.com</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aba Dados -->
+        <div class="settings-tab-pane" id="pane-data" style="display: none;">
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <span class="settings-row-title">Limpar Todas as Conversas</span>
+              <span class="settings-row-sub">Apaga permanentemente o histórico local e da nuvem</span>
+            </div>
+            <button type="button" class="btn-danger-subtle" id="btn-clear-all-chats-data">Limpar Tudo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Perfil do Usuário -->
+  <div id="modal-user-profile" class="executive-modal-overlay">
+    <div class="chatgpt-modal-box profile-modal-box">
+      <div class="chatgpt-modal-header">
+        <h3 class="chatgpt-modal-title">Perfil do Usuário</h3>
+        <button id="btn-close-user-profile" class="chatgpt-modal-close" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="chatgpt-modal-body">
+        <div class="profile-header-card">
+          <div class="profile-big-avatar" id="modal-profile-avatar">BS</div>
+          <div class="profile-header-details">
+            <h4 class="profile-name" id="modal-profile-name">Bruno Souza</h4>
+            <span class="profile-email" id="modal-profile-email">brunosouzamelo10@gmail.com</span>
+            <span class="profile-badge-pro" id="modal-profile-badge">Plano Pro Ativo</span>
+          </div>
+        </div>
+        <div class="profile-info-grid">
+          <div class="profile-info-item">
+            <span class="info-label">Provedor de Acesso</span>
+            <strong class="info-val" id="modal-profile-provider">Google OAuth</strong>
+          </div>
+          <div class="profile-info-item">
+            <span class="info-label">Status da Assinatura</span>
+            <strong class="info-val text-success" id="modal-profile-sub-status">Ativa (Ilimitada)</strong>
+          </div>
+        </div>
+        <button type="button" class="btn-chatgpt-continue-pill" id="btn-close-profile-done">Concluído</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Google Firebase SDK Oficial (Compat) para Autenticação Segura e Verificação Real -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>

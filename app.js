@@ -399,6 +399,40 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     const proBadgeText = document.getElementById('pro-badge-text');
     const btnUpgrade = document.getElementById('btn-open-pricing-modal');
 
+    const planLabel = sub.active
+      ? (sub.plan === 'daily_pass' ? 'Passe 24h' : 'Pro')
+      : 'Gratuito';
+
+    const planLabelEl = document.getElementById('display-user-plan-label');
+    if (planLabelEl) planLabelEl.textContent = planLabel;
+
+    const popoverPlan = document.getElementById('popover-user-plan');
+    if (popoverPlan) popoverPlan.textContent = planLabel;
+
+    const settingsPlanDesc = document.getElementById('settings-current-plan-desc');
+    if (settingsPlanDesc) {
+      settingsPlanDesc.textContent = sub.active
+        ? (sub.plan === 'daily_pass' ? 'Passe 24 Horas (Ilimitado)' : 'Meu Kota Pro Mensal (Ilimitado)')
+        : 'Plano Gratuito (30 perguntas/dia)';
+    }
+
+    const reviewBadge = document.getElementById('review-status-badge');
+    if (reviewBadge) {
+      reviewBadge.textContent = sub.active ? 'Ativo' : 'Atualização necessária';
+      if (sub.active) {
+        reviewBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+        reviewBadge.style.color = '#10B981';
+      } else {
+        reviewBadge.style.background = 'rgba(249, 115, 22, 0.16)';
+        reviewBadge.style.color = '#FB923C';
+      }
+    }
+
+    const reviewDueVal = document.getElementById('review-modal-due-val');
+    if (reviewDueVal) {
+      reviewDueVal.textContent = sub.plan === 'daily_pass' ? '1.500 Kz' : '9.900 Kz';
+    }
+
     if (sub.active) {
       if (quotaWrap) quotaWrap.style.display = 'none';
       if (proBadge) {
@@ -858,8 +892,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
   function updateUserProfileUI() {
     if (!currentUser) return;
-    const name = currentUser.name || 'Usuário';
-    const email = currentUser.email || 'usuario@meukota.ia';
+    const name = currentUser.name || 'Bruno Souza';
+    const email = currentUser.email || 'brunosouzamelo10@gmail.com';
     
     // Iniciais elegantes (ex: "BS" ou "AD")
     const parts = name.trim().split(/\s+/);
@@ -879,13 +913,49 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       if (initialsSpan) {
         initialsSpan.textContent = initials;
         initialsSpan.style.display = 'inline';
-      } else if (displayUserAvatar) {
-        displayUserAvatar.textContent = initials;
       }
     }
 
+    const displayUserName = document.getElementById('display-user-name');
     if (displayUserName) displayUserName.textContent = name;
-    if (displayUserEmail) displayUserEmail.textContent = email;
+
+    const sub = getUserSubscription();
+    const planLabel = sub.active
+      ? (sub.plan === 'daily_pass' ? 'Passe 24h' : 'Pro')
+      : 'Gratuito';
+
+    const planLabelEl = document.getElementById('display-user-plan-label');
+    if (planLabelEl) planLabelEl.textContent = planLabel;
+
+    // Popover Elements (Screenshot 1)
+    const popoverName = document.getElementById('popover-user-name');
+    const popoverPlan = document.getElementById('popover-user-plan');
+    const popoverInitials = document.getElementById('popover-user-initials');
+    if (popoverName) popoverName.textContent = name;
+    if (popoverPlan) popoverPlan.textContent = planLabel;
+    if (popoverInitials) popoverInitials.textContent = initials;
+
+    // Flyout de Contas
+    const flyoutEmail = document.getElementById('flyout-user-email');
+    const flyoutName = document.getElementById('flyout-user-name');
+    const flyoutAvatar = document.getElementById('flyout-user-avatar');
+    if (flyoutEmail) flyoutEmail.textContent = email;
+    if (flyoutName) flyoutName.textContent = name;
+    if (flyoutAvatar) flyoutAvatar.textContent = initials;
+
+    // Modais
+    const modalProfName = document.getElementById('modal-profile-name');
+    const modalProfEmail = document.getElementById('modal-profile-email');
+    const modalProfAvatar = document.getElementById('modal-profile-avatar');
+    const modalProfBadge = document.getElementById('modal-profile-badge');
+    const settingsEmail = document.getElementById('settings-user-email');
+
+    if (modalProfName) modalProfName.textContent = name;
+    if (modalProfEmail) modalProfEmail.textContent = email;
+    if (modalProfAvatar) modalProfAvatar.textContent = initials;
+    if (modalProfBadge) modalProfBadge.textContent = sub.active ? 'Meu Kota Pro Ativo' : 'Plano Gratuito';
+    if (settingsEmail) settingsEmail.textContent = email;
+
     updateQuotaUI();
   }
 
@@ -3581,12 +3651,331 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     }
   }
 
+  // --- GESTÃO DE CONTA E MODAIS ESTILO CHATGPT (SCREENSHOTS 1, 2 E 3) ---
+  function setupAccountAndPaymentModals() {
+    // 1. Popover do Usuário (Screenshot 1)
+    const btnUserCard = document.getElementById('btn-user-profile');
+    const userPopover = document.getElementById('gpt-user-popover');
+    const linkUpdatePay = document.getElementById('link-card-update-pay');
+    const btnUserPopoverAccount = document.getElementById('btn-user-popover-account');
+    const userAccountsFlyout = document.getElementById('user-accounts-flyout');
+    const btnFlyoutAddAccount = document.getElementById('btn-flyout-add-account');
+
+    // Modais
+    const modalReviewPayment = document.getElementById('modal-review-payment');
+    const btnCloseReviewPayment = document.getElementById('btn-close-review-payment');
+    const btnOpenAddPaymentMethod = document.getElementById('btn-open-add-payment-method');
+    const btnReviewPayNow = document.getElementById('btn-review-pay-now');
+
+    const modalAddPaymentMethod = document.getElementById('modal-add-payment-method');
+    const btnCloseAddPaymentMethod = document.getElementById('btn-close-add-payment-method');
+    const btnSubmitAddCard = document.getElementById('btn-submit-add-card');
+    const inputAddCardNum = document.getElementById('add-card-number');
+    const inputAddCardExpiry = document.getElementById('add-card-expiry');
+    const inputAddCardCvc = document.getElementById('add-card-cvc');
+    const inputAddCardName = document.getElementById('add-card-name');
+    const selectAddCardCountry = document.getElementById('add-card-country');
+    const inputAddCardAddress = document.getElementById('add-card-address');
+
+    const modalCustomization = document.getElementById('modal-customization');
+    const btnCloseCustomization = document.getElementById('btn-close-customization');
+    const btnSaveCustomization = document.getElementById('btn-save-customization');
+    const textareaCustomBio = document.getElementById('custom-user-bio');
+    const textareaCustomStyle = document.getElementById('custom-response-style');
+
+    const modalSettings = document.getElementById('modal-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    const btnClearAllChats = document.getElementById('btn-clear-all-chats-data');
+    const btnSettingsManageSub = document.getElementById('btn-settings-manage-subscription');
+
+    const modalUserProfile = document.getElementById('modal-user-profile');
+    const btnCloseUserProfile = document.getElementById('btn-close-user-profile');
+    const btnCloseProfileDone = document.getElementById('btn-close-profile-done');
+
+    // Menu do Popover
+    const btnMenuReviewPayment = document.getElementById('btn-menu-review-payment');
+    const btnMenuCustomization = document.getElementById('btn-menu-customization');
+    const btnMenuProfile = document.getElementById('btn-menu-profile');
+    const btnMenuSettings = document.getElementById('btn-menu-settings');
+    const btnMenuHelp = document.getElementById('btn-menu-help');
+    const btnMenuLogout = document.getElementById('btn-menu-logout');
+
+    // Toggle Popover ao clicar no card do usuário
+    if (btnUserCard && userPopover) {
+      btnUserCard.addEventListener('click', (e) => {
+        // Se clicou no link interno "Atualizar pagamento", abre direto o modal
+        if (e.target && e.target.id === 'link-card-update-pay') {
+          return;
+        }
+        e.stopPropagation();
+        const isVisible = userPopover.style.display === 'block';
+        userPopover.style.display = isVisible ? 'none' : 'block';
+        if (userAccountsFlyout) userAccountsFlyout.style.display = 'none';
+      });
+    }
+
+    // Link "Atualizar pagamento" no card do rodapé
+    if (linkUpdatePay && modalReviewPayment) {
+      linkUpdatePay.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (userPopover) userPopover.style.display = 'none';
+        modalReviewPayment.classList.add('active');
+      });
+    }
+
+    // Fechar popover ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (userPopover && userPopover.style.display === 'block') {
+        if (!userPopover.contains(e.target) && (!btnUserCard || !btnUserCard.contains(e.target))) {
+          userPopover.style.display = 'none';
+          if (userAccountsFlyout) userAccountsFlyout.style.display = 'none';
+        }
+      }
+    });
+
+    // Submenu Flyout de Troca de Contas (Screenshot 1)
+    if (btnUserPopoverAccount && userAccountsFlyout) {
+      btnUserPopoverAccount.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = userAccountsFlyout.style.display === 'block';
+        userAccountsFlyout.style.display = isOpen ? 'none' : 'block';
+      });
+    }
+
+    if (btnFlyoutAddAccount) {
+      btnFlyoutAddAccount.addEventListener('click', () => {
+        if (userPopover) userPopover.style.display = 'none';
+        if (userAccountsFlyout) userAccountsFlyout.style.display = 'none';
+        showView('auth');
+        showToast('Conecte uma nova conta Google ou e-mail.');
+      });
+    }
+
+    // Ações dos Itens do Popover
+    if (btnMenuReviewPayment && modalReviewPayment) {
+      btnMenuReviewPayment.addEventListener('click', () => {
+        if (userPopover) userPopover.style.display = 'none';
+        modalReviewPayment.classList.add('active');
+      });
+    }
+
+    if (btnMenuCustomization && modalCustomization) {
+      btnMenuCustomization.addEventListener('click', () => {
+        if (userPopover) userPopover.style.display = 'none';
+        if (textareaCustomBio) textareaCustomBio.value = localStorage.getItem('meu_kota_custom_bio') || '';
+        if (textareaCustomStyle) textareaCustomStyle.value = localStorage.getItem('meu_kota_custom_style') || '';
+        modalCustomization.classList.add('active');
+      });
+    }
+
+    if (btnMenuProfile && modalUserProfile) {
+      btnMenuProfile.addEventListener('click', () => {
+        if (userPopover) userPopover.style.display = 'none';
+        modalUserProfile.classList.add('active');
+      });
+    }
+
+    if (btnMenuSettings && modalSettings) {
+      btnMenuSettings.addEventListener('click', () => {
+        if (userPopover) userPopover.style.display = 'none';
+        modalSettings.classList.add('active');
+      });
+    }
+
+    if (btnMenuHelp) {
+      btnMenuHelp.addEventListener('click', () => {
+        if (userPopover) userPopover.style.display = 'none';
+        showToast('ℹ️ Meu Kota IA: Plataforma consultiva sênior multi-dispositivo.');
+      });
+    }
+
+    if (btnMenuLogout) {
+      btnMenuLogout.addEventListener('click', () => {
+        if (userPopover) userPopover.style.display = 'none';
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+          firebase.auth().signOut().catch(() => {});
+        }
+        localStorage.removeItem(ACTIVE_SESSION_KEY);
+        currentUser = null;
+        showView('landing');
+        showToast('Você encerrou a sessão.');
+      });
+    }
+
+    // --- MODAL 1: REVISE A FORMA DE PAGAMENTO (SCREENSHOT 3) ---
+    if (btnCloseReviewPayment && modalReviewPayment) {
+      btnCloseReviewPayment.addEventListener('click', () => modalReviewPayment.classList.remove('active'));
+    }
+
+    if (btnOpenAddPaymentMethod && modalAddPaymentMethod) {
+      btnOpenAddPaymentMethod.addEventListener('click', () => {
+        if (modalReviewPayment) modalReviewPayment.classList.remove('active');
+        modalAddPaymentMethod.classList.add('active');
+      });
+    }
+
+    if (btnReviewPayNow) {
+      btnReviewPayNow.addEventListener('click', () => {
+        if (modalReviewPayment) modalReviewPayment.classList.remove('active');
+        openPricingModal();
+      });
+    }
+
+    // --- MODAL 2: ADICIONAR MÉTODO DE PAGAMENTO (SCREENSHOT 2) ---
+    if (btnCloseAddPaymentMethod && modalAddPaymentMethod) {
+      btnCloseAddPaymentMethod.addEventListener('click', () => {
+        modalAddPaymentMethod.classList.remove('active');
+        if (modalReviewPayment) modalReviewPayment.classList.add('active');
+      });
+    }
+
+    // Formatação do número de cartão
+    if (inputAddCardNum) {
+      inputAddCardNum.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 16);
+        let parts = [];
+        for (let i = 0, len = v.length; i < len; i += 4) {
+          parts.push(v.substring(i, i + 4));
+        }
+        e.target.value = parts.join(' ');
+      });
+    }
+
+    // Formatação da validade
+    if (inputAddCardExpiry) {
+      inputAddCardExpiry.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 4);
+        if (v.length >= 2) {
+          e.target.value = v.slice(0, 2) + ' / ' + v.slice(2);
+        } else {
+          e.target.value = v;
+        }
+      });
+    }
+
+    if (btnSubmitAddCard) {
+      btnSubmitAddCard.addEventListener('click', () => {
+        const rawCard = (inputAddCardNum ? inputAddCardNum.value.trim() : '').replace(/\s+/g, '');
+        const cardExpiry = inputAddCardExpiry ? inputAddCardExpiry.value.trim() : '';
+        const cardCvc = inputAddCardCvc ? inputAddCardCvc.value.trim() : '';
+        const cardName = inputAddCardName ? inputAddCardName.value.trim() : '';
+
+        if (!rawCard || rawCard.length < 15) {
+          showToast('Por favor, informe um número de cartão de crédito válido.');
+          if (inputAddCardNum) inputAddCardNum.focus();
+          return;
+        }
+        if (!cardExpiry || cardExpiry.length < 5) {
+          showToast('Por favor, informe a data de validade (MM / AA).');
+          if (inputAddCardExpiry) inputAddCardExpiry.focus();
+          return;
+        }
+        if (!cardCvc || cardCvc.length < 3) {
+          showToast('Por favor, informe o código de segurança (CVC).');
+          if (inputAddCardCvc) inputAddCardCvc.focus();
+          return;
+        }
+
+        const last4 = rawCard.slice(-4);
+        const savedCardData = {
+          last4: last4,
+          name: cardName || (currentUser && currentUser.name) || 'Titular',
+          country: selectAddCardCountry ? selectAddCardCountry.value : 'Angola',
+          addedAt: Date.now()
+        };
+        localStorage.setItem('meu_kota_saved_card', JSON.stringify(savedCardData));
+
+        // Atualizar lista no modal de revisão
+        const reviewMethodName = document.getElementById('review-primary-method-name');
+        const reviewMethodExtra = document.getElementById('review-primary-method-extra');
+        const reviewStatusBadge = document.getElementById('review-status-badge');
+
+        if (reviewMethodName) reviewMethodName.textContent = `Cartão Visa (•••• ${last4})`;
+        if (reviewMethodExtra) reviewMethodExtra.textContent = `Validade: ${cardExpiry}`;
+        if (reviewStatusBadge) {
+          reviewStatusBadge.textContent = 'Pronto para cobrança';
+          reviewStatusBadge.style.background = 'rgba(16, 185, 129, 0.16)';
+          reviewStatusBadge.style.color = '#10B981';
+        }
+
+        showToast('Cartão salvo com sucesso como método de cobrança!');
+        if (modalAddPaymentMethod) modalAddPaymentMethod.classList.remove('active');
+        if (modalReviewPayment) modalReviewPayment.classList.add('active');
+      });
+    }
+
+    // --- MODAL 3: PERSONALIZAÇÃO ---
+    if (btnCloseCustomization && modalCustomization) {
+      btnCloseCustomization.addEventListener('click', () => modalCustomization.classList.remove('active'));
+    }
+
+    if (btnSaveCustomization) {
+      btnSaveCustomization.addEventListener('click', () => {
+        const bio = textareaCustomBio ? textareaCustomBio.value.trim() : '';
+        const style = textareaCustomStyle ? textareaCustomStyle.value.trim() : '';
+        localStorage.setItem('meu_kota_custom_bio', bio);
+        localStorage.setItem('meu_kota_custom_style', style);
+        showToast('Preferências de personalização salvas com sucesso!');
+        if (modalCustomization) modalCustomization.classList.remove('active');
+      });
+    }
+
+    // --- MODAL 4: CONFIGURAÇÕES ---
+    if (btnCloseSettings && modalSettings) {
+      btnCloseSettings.addEventListener('click', () => modalSettings.classList.remove('active'));
+    }
+
+    // Abas de configurações
+    const settingsTabs = document.querySelectorAll('.settings-tab-btn');
+    const settingsPanes = document.querySelectorAll('.settings-tab-pane');
+    settingsTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        settingsTabs.forEach(t => t.classList.remove('active'));
+        settingsPanes.forEach(p => {
+          if (p) p.style.display = 'none';
+        });
+        tab.classList.add('active');
+        const targetPane = document.getElementById(`pane-${tab.getAttribute('data-tab')}`);
+        if (targetPane) targetPane.style.display = 'block';
+      });
+    });
+
+    if (btnSettingsManageSub && modalReviewPayment) {
+      btnSettingsManageSub.addEventListener('click', () => {
+        if (modalSettings) modalSettings.classList.remove('active');
+        modalReviewPayment.classList.add('active');
+      });
+    }
+
+    if (btnClearAllChats) {
+      btnClearAllChats.addEventListener('click', () => {
+        if (confirm('Tem certeza de que deseja apagar todo o histórico de conversas?')) {
+          chats = [];
+          localStorage.removeItem('kamba_chats_history');
+          renderHistory();
+          startNewChat();
+          showToast('Histórico de conversas limpo.');
+          if (modalSettings) modalSettings.classList.remove('active');
+        }
+      });
+    }
+
+    // --- MODAL 5: PERFIL DO USUÁRIO ---
+    if (btnCloseUserProfile && modalUserProfile) {
+      btnCloseUserProfile.addEventListener('click', () => modalUserProfile.classList.remove('active'));
+    }
+    if (btnCloseProfileDone && modalUserProfile) {
+      btnCloseProfileDone.addEventListener('click', () => modalUserProfile.classList.remove('active'));
+    }
+  }
+
   // Configurações e Inicializações Globais
   initFirebaseAuth();
   currentUser = getActiveUser();
   updateUserProfileUI();
   updateSubscriptionUI();
   setupPricingModalEvents();
+  setupAccountAndPaymentModals();
   setupModelSelectorEvents();
   updateModelSelectorUI();
   updateGeminiStatusUI();
