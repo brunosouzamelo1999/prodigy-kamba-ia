@@ -3458,16 +3458,23 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     const mcxWaitingVal = document.getElementById('mcx-waiting-val');
 
     function updateAmountsUI() {
+      const btnDaily = cardDaily ? cardDaily.querySelector('.btn-plan-select') : null;
+      const btnPro = cardPro ? cardPro.querySelector('.btn-plan-select') : null;
+
       if (selectedPlan === 'daily_pass') {
         if (mcxBtnAmount) mcxBtnAmount.textContent = '1.500 Kz';
         if (refAmountVal) refAmountVal.textContent = '1.500,00 Kz';
         if (stripeBtnAmount) stripeBtnAmount.textContent = 'US$ 1,50';
         if (mcxWaitingVal) mcxWaitingVal.textContent = '1.500 Kz';
+        if (btnDaily) btnDaily.textContent = 'Plano Selecionado';
+        if (btnPro) btnPro.textContent = 'Selecionar Pro';
       } else {
         if (mcxBtnAmount) mcxBtnAmount.textContent = '9.900 Kz';
         if (refAmountVal) refAmountVal.textContent = '9.900,00 Kz';
         if (stripeBtnAmount) stripeBtnAmount.textContent = 'US$ 10,00';
         if (mcxWaitingVal) mcxWaitingVal.textContent = '9.900 Kz';
+        if (btnDaily) btnDaily.textContent = 'Selecionar Passe 24h';
+        if (btnPro) btnPro.textContent = 'Plano Selecionado';
       }
     }
 

@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   
   <!-- Estilos Globais -->
-  <link rel="stylesheet" href="styles.css?v=20260924_v6_chatgpt_layout">
+  <link rel="stylesheet" href="styles.css?v=20260924_v7_pricing_chatgpt">
 </head>
 <body>
 
@@ -1362,25 +1362,20 @@
     </div>
   </div>
 
-  <!-- Modal de Planos e Checkout Executivo (Multicaixa Express / Referência / Stripe) -->
+  <!-- Modal de Planos e Checkout Executivo Estilo ChatGPT (Multicaixa Express / Referência / Stripe) -->
   <div id="modal-pricing-checkout" class="executive-modal-overlay">
-    <div class="executive-modal-box checkout-modal-box">
-      <div class="modal-header-bar">
-        <div class="modal-title-wrap">
-          <div class="modal-gold-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          </div>
-          <div>
-            <span class="modal-title-text">Meu Kota Pro — Planos e Assinaturas</span>
-            <span class="modal-subtitle-text" style="display: block; font-size: 12px; color: #8E8EA0; margin-top: 2px;">Desbloqueie perguntas ilimitadas, modelo avançado e leitura total de documentos</span>
-          </div>
+    <div class="chatgpt-modal-box checkout-chatgpt-modal">
+      <div class="chatgpt-modal-header checkout-modal-header">
+        <div class="checkout-header-text">
+          <h3 class="chatgpt-modal-title">Fazer upgrade do seu plano</h3>
+          <p class="checkout-header-subtitle">Acesso ilimitado ao Meu Kota IA com raciocínio profundo e análise completa de arquivos</p>
         </div>
-        <button id="btn-close-pricing-modal" class="btn-modal-close" aria-label="Fechar">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <button id="btn-close-pricing-modal" class="chatgpt-modal-close" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
 
-      <div class="modal-body-scroll checkout-body-scroll">
+      <div class="chatgpt-modal-body checkout-modal-body">
         <!-- Seletor de Planos -->
         <div class="checkout-plans-grid">
           <!-- Plano 1: Passe Diário 24h -->
@@ -1388,17 +1383,21 @@
             <div class="plan-card-header">
               <span class="plan-type-label">Uso Pontual</span>
               <h4 class="plan-title">Passe 24 Horas</h4>
+              <p class="plan-short-desc">Acesso total temporário para urgências de estudos e tarefas.</p>
               <div class="plan-price-row">
-                <span class="plan-currency">Kz</span>
-                <span class="plan-amount">1.500</span>
+                <span class="plan-amount">1.500 Kz</span>
                 <span class="plan-period">/ 24h</span>
               </div>
               <span class="plan-usd-equiv">~ US$ 1,50</span>
             </div>
+            <div class="plan-cta-action">
+              <span class="btn-plan-select btn-plan-select-daily">Selecionar Passe 24h</span>
+            </div>
+            <div class="plan-divider"></div>
             <ul class="plan-features-list">
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Perguntas Ilimitadas por 24h</span></li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Sem teto diário de 30 perguntas</span></li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Ideal para urgências e estudos</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Perguntas 100% ilimitadas por 24h</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Sem teto diário de 30 mensagens</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Ideal para urgências e prazos de entrega</span></li>
             </ul>
           </div>
 
@@ -1408,30 +1407,42 @@
             <div class="plan-card-header">
               <span class="plan-type-label">Assinatura Mensal</span>
               <h4 class="plan-title">Meu Kota Pro</h4>
+              <p class="plan-short-desc">O poder máximo da inteligência artificial avançada sem restrições.</p>
               <div class="plan-price-row">
-                <span class="plan-currency">Kz</span>
-                <span class="plan-amount">9.900</span>
+                <span class="plan-amount">9.900 Kz</span>
                 <span class="plan-period">/ mês</span>
               </div>
               <span class="plan-usd-equiv">~ US$ 10,00</span>
             </div>
+            <div class="plan-cta-action">
+              <span class="btn-plan-select btn-plan-select-pro">Plano Selecionado</span>
+            </div>
+            <div class="plan-divider"></div>
             <ul class="plan-features-list">
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Perguntas 100% Ilimitadas</strong></span></li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Motor Meu Kota Pro com Raciocínio Profundo</span></li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Upload e tradução total de PDFs e Fotos</span></li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Velocidade de processamento prioritária</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Perguntas 100% Ilimitadas</strong></span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Motor Pro com Raciocínio Profundo</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Upload e análise de PDFs, Fotos e Documentos</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Velocidade de resposta prioritária sem filas</span></li>
             </ul>
           </div>
         </div>
 
         <!-- Seletor de Método de Pagamento -->
         <div class="checkout-payment-section">
+          <div class="payment-section-title-row">
+            <span class="payment-section-title">Forma de pagamento</span>
+            <span class="payment-secure-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.4"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Ambiente Seguro
+            </span>
+          </div>
+
           <div class="payment-tabs-header">
             <button class="pay-tab-btn active" id="tab-pay-mcx" type="button">
               <span>🇦🇴 Multicaixa Express</span>
             </button>
             <button class="pay-tab-btn" id="tab-pay-ref" type="button">
-              <span>🏦 Referência Multicaixa / ATM</span>
+              <span>🏦 Referência ATM / Banco</span>
             </button>
             <button class="pay-tab-btn" id="tab-pay-stripe" type="button">
               <span>💳 Cartão Internacional</span>
@@ -1450,20 +1461,23 @@
               </div>
               <button class="btn-checkout-submit" id="btn-submit-mcx" type="button">
                 <span>Pagar <span id="mcx-btn-amount">9.900 Kz</span> com Multicaixa Express</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
             </div>
 
             <!-- Estado de Espera do MCX -->
             <div class="mcx-waiting-box" id="mcx-waiting-box" style="display: none;">
               <div class="waiting-spinner-glow"></div>
-              <h4 class="waiting-title">Aguardando Confirmação no Telemóvel</h4>
+              <h4 class="waiting-title">Aguardando autorização no Multicaixa Express</h4>
               <p class="waiting-desc">Abra o aplicativo <strong>Multicaixa Express</strong> no telemóvel <strong id="mcx-waiting-phone">9xx xxx xxx</strong> e confirme a transação de <strong id="mcx-waiting-val">9.900 Kz</strong>.</p>
               <div class="waiting-countdown-badge">
                 <span>Tempo restante: </span><strong id="mcx-countdown-timer">04:59</strong>
               </div>
-              <button class="btn-mcx-confirm-sim" id="btn-mcx-simulate-success" type="button">
-                <span>Simular Aprovação Instantânea</span>
-              </button>
+              <div>
+                <button class="btn-mcx-confirm-sim" id="btn-mcx-simulate-success" type="button">
+                  <span>Simular Aprovação Instantânea</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1491,13 +1505,14 @@
             </div>
             <button class="btn-checkout-submit" id="btn-confirm-reference-paid" type="button">
               <span>Já Efetuei o Pagamento / Verificar</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
           </div>
 
           <!-- Aba 3: Cartão Internacional (Stripe) -->
           <div class="pay-tab-content" id="content-pay-stripe" style="display: none;">
             <p class="pay-instruction-text">
-              Pagamento seguro em moeda internacional via <strong>Stripe</strong> com qualquer cartão Visa, Mastercard ou American Express:
+              Pagamento seguro com cartão internacional Visa, Mastercard ou American Express via Stripe:
             </p>
             <div class="stripe-card-form">
               <div class="stripe-input-group">
@@ -1516,19 +1531,25 @@
               </div>
               <button class="btn-checkout-submit" id="btn-submit-stripe" type="button">
                 <span>Pagar <span id="stripe-btn-amount">US$ 10,00</span> com Cartão</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
             </div>
+          </div>
+
+          <div class="checkout-footer-assurance">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Ativação instantânea • Cancele quando quiser • Encriptação de ponta a ponta</span>
           </div>
         </div>
 
         <!-- Tela de Sucesso da Assinatura -->
         <div class="checkout-success-view" id="checkout-success-view" style="display: none;">
           <div class="success-checkmark-circle">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10A37F" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <h3 class="success-title">Plano Ativado com Sucesso!</h3>
           <p class="success-desc" id="success-plan-desc">Você agora possui acesso ilimitado com o modelo avançado Meu Kota Pro.</p>
-          <button class="btn-print-confirm" id="btn-finish-checkout" type="button" style="width: 100%; justify-content: center; margin-top: 20px;">
+          <button class="btn-checkout-submit" id="btn-finish-checkout" type="button" style="width: auto; padding: 0 32px; margin-top: 20px;">
             <span>Começar a Conversar Agora</span>
           </button>
         </div>
@@ -1819,6 +1840,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260924_v6_chatgpt_layout"></script>
+  <script src="app.js?v=20260924_v7_pricing_chatgpt"></script>
 </body>
 </html>

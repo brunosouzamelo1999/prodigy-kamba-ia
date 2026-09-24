@@ -5162,102 +5162,163 @@ body {
   letter-spacing: 0.2px;
 }
 
-/* Modal de Checkout */
-.checkout-modal-box {
-  max-width: 660px;
-  width: 92%;
+/* ============================================================ */
+/* MODAL DE PLANOS E CHECKOUT — PADRÃO CHATGPT (UPGRADE MODAL) */
+/* ============================================================ */
+
+.checkout-chatgpt-modal {
+  max-width: 820px !important;
+  width: 95% !important;
+  background: #212121 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+  color: #ECECEC !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-.checkout-body-scroll {
-  padding: 24px;
+.checkout-modal-header {
+  padding: 24px 28px 18px 28px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  background: #212121 !important;
 }
 
+.checkout-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkout-header-subtitle {
+  font-size: 13.5px;
+  color: #9CA3AF;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.checkout-modal-body {
+  padding: 24px 28px !important;
+  background: #212121 !important;
+  color: #ECECEC !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
+  max-height: calc(88vh - 100px) !important;
+  overflow-y: auto !important;
+}
+
+/* Grid de Planos Lado a Lado */
 .checkout-plans-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 18px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .checkout-plans-grid {
     grid-template-columns: 1fr;
+  }
+  .checkout-modal-header,
+  .checkout-modal-body {
+    padding: 18px 18px !important;
   }
 }
 
 .checkout-plan-card {
   position: relative;
-  background: #171717;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 20px;
+  background: #262626 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px;
+  padding: 22px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  color: #ECECEC !important;
 }
 
 .checkout-plan-card:hover {
-  border-color: rgba(255, 209, 0, 0.4);
-  background: #1c1c1c;
+  background: #2B2B2B !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  transform: translateY(-2px);
 }
 
 .checkout-plan-card.selected {
-  border-color: var(--angola-yellow);
-  background: rgba(255, 209, 0, 0.04);
-  box-shadow: 0 0 20px rgba(255, 209, 0, 0.15);
+  border-color: #10A37F !important;
+  background: #2B2B2B !important;
+  box-shadow: 0 0 0 1px #10A37F, 0 12px 30px rgba(0, 0, 0, 0.5) !important;
 }
 
 .plan-popular-badge {
   position: absolute;
   top: -11px;
-  right: 16px;
-  background: var(--angola-yellow);
-  color: #000000;
+  right: 18px;
+  background: #10A37F;
+  color: #FFFFFF;
   font-size: 10px;
-  font-weight: 800;
-  padding: 3px 9px;
-  border-radius: 10px;
-  letter-spacing: 0.6px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(16, 163, 127, 0.4);
+}
+
+.plan-card-header {
+  display: flex;
+  flex-direction: column;
 }
 
 .plan-type-label {
   display: block;
-  font-size: 11.5px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #8E8EA0;
-  margin-bottom: 4px;
+  letter-spacing: 0.06em;
+  color: #9CA3AF;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .plan-title {
-  margin: 0 0 10px 0;
-  font-size: 18px;
+  margin: 0 0 6px 0;
+  font-size: 20px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
+  letter-spacing: -0.01em;
+}
+
+.plan-short-desc {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  margin: 0 0 14px 0;
+  line-height: 1.45;
+  min-height: 36px;
 }
 
 .plan-price-row {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-}
-
-.plan-currency {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--angola-yellow);
+  gap: 6px;
 }
 
 .plan-amount {
   font-size: 28px;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
+  letter-spacing: -0.02em;
 }
 
 .plan-period {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #8E8EA0;
+  font-weight: 500;
 }
 
 .plan-usd-equiv {
@@ -5268,38 +5329,104 @@ body {
   margin-bottom: 16px;
 }
 
+/* Botão Seletor Pill Estilo ChatGPT dentro dos Cards */
+.plan-cta-action {
+  margin-bottom: 16px;
+}
+
+.btn-plan-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+/* Estado NÃO Selecionado */
+.checkout-plan-card:not(.selected) .btn-plan-select {
+  background: transparent;
+  color: #ECECEC;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.checkout-plan-card:not(.selected):hover .btn-plan-select {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Estado SELECIONADO */
+.checkout-plan-card.selected .btn-plan-select {
+  background: #FFFFFF;
+  color: #0D0D0D;
+  border: 1px solid #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.plan-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+}
+
 .plan-features-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 14px;
-  flex: 1;
+  gap: 10px;
 }
 
 .plan-features-list li {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 12.5px;
+  gap: 9px;
+  font-size: 13px;
   color: #C5C5D2;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .plan-features-list li svg {
   flex-shrink: 0;
   margin-top: 2px;
+  stroke: #10A37F;
 }
 
 /* Seção de Métodos de Pagamento */
 .checkout-payment-section {
-  background: #141414;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 18px;
+  background: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.payment-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.payment-section-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.payment-secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #10A37F;
+  font-weight: 500;
 }
 
 .payment-tabs-header {
@@ -5312,32 +5439,37 @@ body {
 }
 
 .pay-tab-btn {
-  background: rgba(255, 255, 255, 0.05);
+  background: #242424;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #8E8EA0;
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .pay-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: #2B2B2B;
   color: #FFFFFF;
 }
 
 .pay-tab-btn.active {
-  background: rgba(255, 209, 0, 0.12);
-  border-color: var(--angola-yellow);
-  color: var(--angola-yellow);
+  background: #2E2E2E;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .pay-instruction-text {
   font-size: 13px;
-  color: #C5C5D2;
+  color: #9CA3AF;
   margin-bottom: 14px;
   line-height: 1.5;
 }
@@ -5345,25 +5477,28 @@ body {
 .mcx-phone-row {
   display: flex;
   align-items: center;
-  background: #212121;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  padding: 4px 12px;
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 0 14px;
+  height: 46px;
   margin-bottom: 16px;
-  transition: border-color 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .mcx-phone-row:focus-within {
-  border-color: var(--angola-yellow);
-  box-shadow: 0 0 10px rgba(255, 209, 0, 0.2);
+  border-color: #10A37F;
+  box-shadow: 0 0 0 1px #10A37F;
+  background: #282828;
 }
 
 .mcx-prefix {
   font-size: 14px;
-  font-weight: 700;
-  color: var(--angola-yellow);
-  padding-right: 10px;
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  font-weight: 600;
+  color: #9CA3AF;
+  padding-right: 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  user-select: none;
 }
 
 .mcx-phone-row input {
@@ -5372,38 +5507,51 @@ body {
   border: none;
   color: #FFFFFF;
   font-size: 15px;
-  font-weight: 600;
-  padding: 8px 10px;
+  font-weight: 500;
+  padding: 0 12px;
   outline: none;
   font-family: inherit;
-  letter-spacing: 1px;
 }
 
+.mcx-phone-row input::placeholder {
+  color: #6B7280;
+}
+
+/* Botão de Finalizar Checkout no Padrão ChatGPT (Pill branco minimalista com texto preto) */
 .btn-checkout-submit {
   width: 100%;
-  background: linear-gradient(135deg, var(--angola-yellow) 0%, #E6BC00 100%);
-  color: #000000;
-  border: none;
-  border-radius: 8px;
-  padding: 13px 18px;
+  background: #FFFFFF !important;
+  color: #0D0D0D !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  height: 44px;
+  padding: 0 20px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: inherit;
-  box-shadow: 0 4px 14px rgba(255, 209, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .btn-checkout-submit:hover {
+  background: #E5E5E5 !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(255, 209, 0, 0.4);
 }
 
-/* Card de Referência */
+.btn-checkout-submit:active {
+  transform: translateY(0);
+}
+
+/* Card de Referência ATM */
 .ref-payment-card {
-  background: #1c1c1c;
-  border: 1px dashed rgba(255, 209, 0, 0.35);
-  border-radius: 8px;
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   padding: 16px;
   margin-bottom: 16px;
   display: flex;
@@ -5415,7 +5563,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .ref-label {
@@ -5424,45 +5572,47 @@ body {
 }
 
 .ref-val {
-  font-weight: 700;
+  font-weight: 600;
   color: #FFFFFF;
   letter-spacing: 0.5px;
-  font-family: monospace;
-  font-size: 15px;
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
 }
 
 .btn-copy-ref {
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #C5C5D2;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ECECEC;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-copy-ref:hover {
-  background: var(--angola-yellow);
-  color: #000000;
-  border-color: var(--angola-yellow);
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
 }
 
 /* Espera MCX */
 .mcx-waiting-box {
   text-align: center;
   padding: 24px 16px;
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }
 
 .waiting-spinner-glow {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   margin: 0 auto 16px;
-  border: 3px solid rgba(255, 209, 0, 0.15);
-  border-top-color: var(--angola-yellow);
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #10A37F;
   border-radius: 50%;
-  animation: spinKota 0.9s linear infinite;
+  animation: spinKota 0.8s linear infinite;
 }
 
 @keyframes spinKota {
@@ -5470,21 +5620,25 @@ body {
 }
 
 .waiting-title {
-  font-size: 17px;
+  font-size: 16px;
+  font-weight: 600;
   color: #FFFFFF;
   margin: 0 0 8px 0;
 }
 
 .waiting-desc {
   font-size: 13px;
-  color: #8E8EA0;
+  color: #9CA3AF;
   line-height: 1.5;
   margin-bottom: 16px;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .waiting-countdown-badge {
   display: inline-block;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 13px;
@@ -5493,24 +5647,26 @@ body {
 }
 
 .waiting-countdown-badge strong {
-  color: var(--angola-yellow);
+  color: #10A37F;
+  font-weight: 700;
 }
 
 .btn-mcx-confirm-sim {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #10B981;
-  padding: 10px 16px;
-  border-radius: 8px;
+  background: #10A37F;
+  color: #FFFFFF;
+  padding: 10px 22px;
+  border-radius: 9999px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(16, 163, 127, 0.3);
 }
 
 .btn-mcx-confirm-sim:hover {
-  background: #10B981;
-  color: #FFFFFF;
+  background: #0E906F;
+  transform: translateY(-1px);
 }
 
 /* Formulário Stripe */
@@ -5528,23 +5684,25 @@ body {
 
 .stripe-input-group label {
   font-size: 12px;
-  color: #8E8EA0;
-  font-weight: 600;
+  color: #9CA3AF;
+  font-weight: 500;
 }
 
 .stripe-input-group input {
-  background: #212121;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   padding: 10px 12px;
   color: #FFFFFF;
   font-size: 14px;
   outline: none;
   font-family: inherit;
+  transition: border-color 0.15s;
 }
 
 .stripe-input-group input:focus {
-  border-color: var(--angola-yellow);
+  border-color: #10A37F;
+  box-shadow: 0 0 0 1px #10A37F;
 }
 
 .stripe-split-row {
@@ -5553,26 +5711,40 @@ body {
   gap: 12px;
 }
 
+/* Rodapé de Segurança e Garantia */
+.checkout-footer-assurance {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #71717A;
+}
+
 /* Tela de Sucesso */
 .checkout-success-view {
   text-align: center;
-  padding: 30px 16px;
+  padding: 36px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .success-checkmark-circle {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   margin: 0 auto 16px;
   border-radius: 50%;
-  background: rgba(16, 185, 129, 0.15);
-  border: 2px solid #10B981;
+  background: rgba(16, 163, 127, 0.15);
+  border: 1px solid rgba(16, 163, 127, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .success-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #FFFFFF;
   margin: 0 0 8px 0;
@@ -5580,9 +5752,9 @@ body {
 
 .success-desc {
   font-size: 14px;
-  color: #8E8EA0;
+  color: #9CA3AF;
   line-height: 1.5;
-  max-width: 400px;
+  max-width: 420px;
   margin: 0 auto;
 }
 

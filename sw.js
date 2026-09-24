@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v6';
+const CACHE_NAME = 'meu-kota-cache-v7';
 
 const PRECACHE_ASSETS = [
   './',
