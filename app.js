@@ -3344,7 +3344,8 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
           .then((reg) => {
-            console.log('[PWA] Service Worker registrado com sucesso:', reg.scope);
+            reg.update();
+            console.log('[PWA] Service Worker registrado e atualizado:', reg.scope);
           })
           .catch((err) => {
             console.warn('[PWA] Falha no registro do Service Worker:', err);

@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v2';
+const CACHE_NAME = 'meu-kota-cache-v6';
 
 const PRECACHE_ASSETS = [
   './',
@@ -69,10 +69,12 @@ self.addEventListener('fetch', (event) => {
     return; // Passa direto para a rede sem cachear
   }
 
-  // ESTRATÉGIA NETWORK-FIRST PARA NAVEGAÇÃO E HTML:
-  // Garante que qualquer atualização no index.html apareça de imediato para o usuário!
+  // ESTRATÉGIA NETWORK-FIRST PARA CÓDIGO (HTML, JS, CSS):
+  // Garante que qualquer atualização no app.js, index.html ou styles.css apareça de imediato!
   const isHtml = req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html');
-  if (isHtml) {
+  const isCodeAsset = isHtml || url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.search.includes('v=');
+
+  if (isCodeAsset) {
     event.respondWith(
       fetch(req).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
@@ -83,14 +85,13 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       }).catch(() => {
-        // Se estiver offline, serve a versão em cache
-        return caches.match('./index.html') || caches.match('./');
+        return caches.match(req).then((cached) => cached || (isHtml ? caches.match('./index.html') : null));
       })
     );
     return;
   }
 
-  // Estratégia Stale-While-Revalidate para outros assets estáticos (CSS, JS, imagens)
+  // Estratégia Stale-While-Revalidate para outros assets (imagens, fontes)
   event.respondWith(
     caches.match(req).then((cachedResponse) => {
       const fetchPromise = fetch(req).then((networkResponse) => {
