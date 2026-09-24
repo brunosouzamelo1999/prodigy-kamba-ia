@@ -15,6 +15,10 @@
       {
         "source": "/api/chat",
         "function": "chat"
+      },
+      {
+        "source": "/api/payment-webhook",
+        "function": "paymentWebhook"
       }
     ]
   },

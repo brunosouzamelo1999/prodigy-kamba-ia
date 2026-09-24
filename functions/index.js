@@ -170,3 +170,125 @@ exports.chat = onRequest(
     }
   }
 );
+
+/**
+ * ============================================================
+ * WEBHOOK DE PAGAMENTOS AUTOMÁTICOS (FASE 5)
+ * Integração Automática com Multicaixa Express, ProxyPay & Stripe
+ * Atualiza o Firestore em tempo real sem intervenção humana
+ * ============================================================
+ */
+exports.paymentWebhook = onRequest(
+  {
+    cors: true,
+    region: "us-central1",
+    maxInstances: 10,
+    timeoutSeconds: 60,
+    memory: "256MiB",
+  },
+  async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Signature");
+
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
+    if (req.method === "GET") {
+      res.status(200).json({
+        status: "active",
+        service: "Meu Kota IA Automated Payment Gateway",
+        gateways: ["Multicaixa Express (MCX)", "ProxyPay (ATM/Referência)", "Stripe (Cartão Internacional)"],
+      });
+      return;
+    }
+
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Método não permitido. Utilize POST." });
+      return;
+    }
+
+    try {
+      const body = req.body || {};
+      let userId = null;
+      let plan = "pro";
+      let method = "Automático";
+      let amount = 0;
+
+      // 1. Notificação ProxyPay (Multicaixa Express / Referência de Angola)
+      if (body.type === "payment" || body.entity_id || body.reference_id) {
+        amount = Number(body.amount || 0);
+        const custom = body.custom_fields || {};
+        userId = custom.user_id || custom.userId || body.user_id;
+        plan = amount >= 5000 ? "pro" : "daily_pass";
+        method = body.type === "mcx" ? "Multicaixa Express Automático" : "Referência Bancária (ProxyPay)";
+      }
+      // 2. Notificação Stripe (Cartão de Crédito Internacional)
+      else if (body.type && (body.type.startsWith("checkout.") || body.type.startsWith("invoice."))) {
+        const session = body.data?.object || {};
+        userId = session.client_reference_id || session.metadata?.userId || session.metadata?.user_id;
+        amount = Number(session.amount_total || session.amount_paid || 0) / 100;
+        plan = session.metadata?.plan || (amount >= 5 ? "pro" : "daily_pass");
+        method = "Cartão Internacional (Stripe Recorrente)";
+      }
+      // 3. Notificação Direta da Aplicação / Gateway Proxy
+      else if (body.userId || body.uid) {
+        userId = body.userId || body.uid;
+        plan = body.plan === "daily_pass" ? "daily_pass" : "pro";
+        method = body.method || "Pagamento Automático";
+        amount = body.amount || (plan === "pro" ? 9900 : 1500);
+      }
+
+      if (!userId) {
+        res.status(400).json({ error: "Identificador de usuário (userId) não encontrado no payload." });
+        return;
+      }
+
+      // Calcular tempo de validade do plano
+      const durationMs = plan === "daily_pass" ? 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+      const expiresAt = Date.now() + durationMs;
+
+      const subscriptionData = {
+        plan,
+        active: true,
+        expiresAt,
+        method,
+        startedAt: Date.now(),
+        updatedAt: Date.now(),
+        autoRenew: plan === "pro",
+        amountPaid: amount,
+      };
+
+      // Atualizar o usuário diretamente no Cloud Firestore
+      await admin.firestore().collection("users").doc(userId).set(
+        { subscription: subscriptionData },
+        { merge: true }
+      );
+
+      // Registrar o histórico da transação
+      await admin.firestore().collection("payments").add({
+        userId,
+        plan,
+        amount,
+        method,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        payload: body,
+      });
+
+      console.log(`[Payment Auto-Activated] Usuário ${userId} ativado com sucesso no plano ${plan} via ${method}.`);
+
+      res.status(200).json({
+        success: true,
+        message: "Assinatura ativada automaticamente com sucesso.",
+        userId,
+        subscription: subscriptionData,
+      });
+    } catch (err) {
+      console.error("[Payment Webhook Error]", err);
+      res.status(500).json({ error: err.message || "Erro interno ao processar webhook de pagamento." });
+    }
+  }
+);
+

@@ -422,21 +422,47 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
-  function loadSubscriptionFromFirestore(uid) {
+  let unsubscribeUserSubscription = null;
+
+  function listenSubscriptionFromFirestore(uid) {
     if (!firestoreDbInstance || !uid) return;
-    firestoreDbInstance
-      .collection('users')
-      .doc(uid)
-      .get()
-      .then(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          if (data && data.subscription) {
-            setUserSubscription(data.subscription);
+    if (unsubscribeUserSubscription) {
+      unsubscribeUserSubscription();
+      unsubscribeUserSubscription = null;
+    }
+    try {
+      unsubscribeUserSubscription = firestoreDbInstance
+        .collection('users')
+        .doc(uid)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const data = doc.data();
+            if (data && data.subscription) {
+              const current = getUserSubscription();
+              // Se foi ativado automaticamente pelo webhook de pagamento na nuvem
+              if (!current.active && data.subscription.active) {
+                showToast('🎉 Pagamento aprovado automaticamente! Seu plano Pro está ativo.');
+                const modal = document.getElementById('modal-pricing-checkout');
+                if (modal && modal.classList.contains('active')) {
+                  const plansGrid = modal.querySelector('.checkout-plans-grid');
+                  const paymentSection = modal.querySelector('.checkout-payment-section');
+                  const successView = document.getElementById('checkout-success-view');
+                  if (plansGrid) plansGrid.style.display = 'none';
+                  if (paymentSection) paymentSection.style.display = 'none';
+                  if (successView) successView.style.display = 'block';
+                }
+              }
+              setUserSubscription(data.subscription);
+            }
           }
-        }
-      })
-      .catch(err => console.warn('[Firestore] Erro ao carregar assinatura:', err.message));
+        }, (err) => console.warn('[Firestore] Listener de Assinatura:', err.message));
+    } catch (e) {
+      console.warn('[Firestore] Erro ao registrar listener de assinatura:', e);
+    }
+  }
+
+  function loadSubscriptionFromFirestore(uid) {
+    listenSubscriptionFromFirestore(uid);
   }
 
   // Funções de Isolamento e Sincronização de Conversas
@@ -523,6 +549,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
       // Carregar cota diária do Firestore
       loadDailyQuotaFromFirestore(user.uid);
+
+      // Ouvir atualizações de assinatura em tempo real (pagamento automático)
+      listenSubscriptionFromFirestore(user.uid);
     }
   }
 
@@ -3445,6 +3474,20 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       };
 
       setUserSubscription(subData);
+
+      // Sincronizar via Webhook automático de pagamentos do backend
+      if (currentUser && currentUser.uid) {
+        fetch('/api/payment-webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUser.uid,
+            plan: selectedPlan,
+            method: methodName,
+            amount: selectedPlan === 'daily_pass' ? 1500 : 9900
+          })
+        }).catch(err => console.log('[Webhook Sync]', err.message));
+      }
 
       // Atualizar tela de sucesso no modal
       const plansGrid = modal.querySelector('.checkout-plans-grid');
