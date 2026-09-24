@@ -2941,11 +2941,6 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    if (apiKey !== BACKUP_GEMINI_KEY) {
-      console.warn('Chave principal retornou 402 (créditos esgotados). Acionando motor de contingência para leitura multimodal...');
-      return callGoogleGeminiStreamingAPI(BACKUP_GEMINI_KEY, promptText, fileAttachment, historyMessages, onChunk, abortSignal);
-    }
-
     throw lastError || new Error("Não foi possível conectar aos servidores do Meu Kota IA. Verifique a sua conexão no botão Meu Kota IA.");
   }
 
@@ -2956,8 +2951,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
   // --- GERENCIAMENTO DE CHAVE DO GOOGLE AI STUDIO (BYOK) ---
   const GEMINI_STORAGE_KEY = 'kamba_gemini_api_key';
-  const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42TGtVZlFPT3Mza3lNQnc2dk8wa0o4dXE0bGFBX24ydm04UGRHTHRUcUoxcmc=');
-  const BACKUP_GEMINI_KEY = atob('QVEuQWI4Uk42SUlJRHlGM2VpT2Y4b3BPZGFTNEREXzY2Sl9GZTV6OHdDTW1iZFhQVDRfT1E=');
+  const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SUlJRHlGM2VpT2Y4b3BPZGFTNEREXzY2Sl9GZTV6OHdDTW1iZFhQVDRfT1E=');
 
   function getCustomGeminiApiKey() {
     return (localStorage.getItem(GEMINI_STORAGE_KEY) || DEFAULT_GEMINI_KEY).trim();
