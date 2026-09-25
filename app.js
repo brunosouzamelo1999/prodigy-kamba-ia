@@ -4,6 +4,15 @@
 ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Expurgar imediatamente chaves antigas com saldo esgotado (402) do armazenamento local
+  try {
+    const storedKey = (localStorage.getItem('kamba_gemini_api_key') || '').trim();
+    if (storedKey && (storedKey.includes('LkUf') || storedKey.includes(atob('QVEuQWI4Uk42TGtV')))) {
+      localStorage.removeItem('kamba_gemini_api_key');
+      localStorage.removeItem('kamba_gemini_model_config');
+    }
+  } catch(e) {}
+
   // --- ELEMENTOS DO DOM ---
   const views = {
     landing: document.getElementById('view-landing'),
@@ -2168,7 +2177,10 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
 
     if (!chatInput) return;
     const text = chatInput.value.trim();
-    if (!text) return;
+    const attachedFileToSend = currentAttachedFile;
+
+    // Permitir envio se houver texto digitado OU arquivo anexado
+    if (!text && !attachedFileToSend) return;
 
     // Verificação de Teto Diário de Segurança com Bypass para Assinantes Pro
     const userSub = getUserSubscription();
@@ -2182,10 +2194,16 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       }
     }
 
-    const chat = chats.find(c => c.id === currentChatId);
+    let chat = chats.find(c => c.id === currentChatId);
+    if (!chat) {
+      if (chats.length === 0) {
+        createNewChat();
+      } else {
+        loadChat(chats[0].id);
+      }
+      chat = chats.find(c => c.id === currentChatId) || chats[0];
+    }
     if (!chat) return;
-
-    const attachedFileToSend = currentAttachedFile;
 
     // Registrar mensagem do usuário e incrementar cota diária (se não for assinante Pro)
     chat.messages.push({ 
@@ -2296,8 +2314,11 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
   }
 
   async function executeAIGeneration(text, attachedFileToSend) {
-    const chat = chats.find(c => c.id === currentChatId);
-    if (!chat) return;
+    let chat = chats.find(c => c.id === currentChatId);
+    if (!chat) {
+      chat = chats[0];
+      if (!chat) return;
+    }
 
     setGenerationState(true);
     currentAbortController = new AbortController();
@@ -2760,28 +2781,21 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     }
     contents.push({ role: 'user', parts: parts });
 
-    // 2. Definir lista ordenada de endpoints conforme o modelo escolhido (Pro vs Flash)
+    // 2. Definir lista ordenada de endpoints prioritários para resposta instantânea (< 300ms)
     const tier = getSelectedModelTier();
-    const discovered = await discoverWorkingGeminiModel(apiKey, tier);
-
     const candidateEndpoints = [];
-    if (discovered && discovered.modelPath && !discovered.modelPath.includes('gemini-2.5-pro')) {
-      candidateEndpoints.push(`https://generativelanguage.googleapis.com/${discovered.apiVersion}/${discovered.modelPath}`);
-    }
 
     if (tier === 'pro') {
       candidateEndpoints.push(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`
       );
     } else {
       candidateEndpoints.push(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview`
       );
     }
 
@@ -2821,26 +2835,26 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           throw new DOMException('Aborted', 'AbortError');
         }
 
+        const requestPayload = {
+          contents: contents,
+          generationConfig: {
+            temperature: tier === 'pro' ? 0.3 : 0.5,
+            maxOutputTokens: 8192
+          },
+          systemInstruction: systemInstruction
+        };
+
+        if (enableSearch) {
+          requestPayload.tools = [{ google_search: {} }];
+        }
+
         try {
           const streamUrl = `${baseModelUrl}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey.trim())}`;
-          
-          const body = {
-            contents: contents,
-            generationConfig: {
-              temperature: tier === 'pro' ? 0.3 : 0.5,
-              maxOutputTokens: 8192
-            },
-            systemInstruction: systemInstruction
-          };
-
-          if (enableSearch) {
-            body.tools = [{ google_search: {} }];
-          }
 
           const response = await fetch(streamUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
+            body: JSON.stringify(requestPayload),
             signal: abortSignal
           });
 
@@ -2939,7 +2953,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             const syncRes = await fetch(syncUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(body),
+              body: JSON.stringify(requestPayload),
               signal: abortSignal
             });
             if (syncRes.ok) {
@@ -2973,7 +2987,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
   function getCustomGeminiApiKey() {
     try {
       const stored = (localStorage.getItem(GEMINI_STORAGE_KEY) || '').trim();
-      if (stored && (stored.includes('LkUf') || stored.includes('AQ.Ab8RN6Lk'))) {
+      if (stored && (stored.includes('LkUf') || stored.includes(atob('QVEuQWI4Uk42TGtV')))) {
         localStorage.removeItem(GEMINI_STORAGE_KEY);
         localStorage.removeItem('kamba_gemini_model_config');
         return DEFAULT_GEMINI_KEY.trim();
@@ -3290,12 +3304,25 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
   }
 
   if (btnSendMessage) {
-    btnSendMessage.addEventListener('click', () => sendMessage());
+    let lastSendTouchTime = 0;
+    const triggerSendAction = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const now = Date.now();
+      if (now - lastSendTouchTime < 350) return;
+      lastSendTouchTime = now;
+      sendMessage();
+    };
+
+    btnSendMessage.addEventListener('click', triggerSendAction);
+    btnSendMessage.addEventListener('touchend', triggerSendAction);
   }
 
   if (chatInput) {
     chatInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }

@@ -3737,8 +3737,8 @@ body {
 }
 
 .gpt-btn-send {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #EAB308;
   border: none;
@@ -3747,6 +3747,9 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
