@@ -1,7 +1,7 @@
 {
-  "name": "kamba-chat-ia",
+  "name": "meu-kota-ia",
   "version": "1.0.0",
-  "description": "Kamba Chat IA - Aplicação Web Conversacional Inteligente (estilo ChatGPT) com Landing Page Multi-dispositivo",
+  "description": "Meu Kota IA - Aplicação Web Conversacional Inteligente (estilo ChatGPT) com Landing Page Multi-dispositivo",
   "main": "app.js",
   "scripts": {
     "dev": "python -m http.server 8085",

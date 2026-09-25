@@ -1,9 +1,9 @@
-# Kamba Chat IA — Diretrizes do Workspace
+# Meu Kota IA — Diretrizes do Workspace
 
-Bem-vindo ao workspace do **Kamba Chat IA**!
+Bem-vindo ao workspace do **Meu Kota IA**!
 
 ## 📌 Visão Geral do Projeto
-O **Kamba Chat IA** é uma aplicação web de inteligência artificial conversacional livre, com interface autêntica e minimalista inspirada no ChatGPT, acompanhada de uma landing page focada em usabilidade multi-dispositivo (smartphone, tablet e computador) e identidade visual moderna com estética inspirada em Angola (Palanca Negra / detalhes em amarelo dourado e vermelho carmim).
+O **Meu Kota IA** é uma aplicação web de inteligência artificial conversacional livre, com interface autêntica e minimalista inspirada no ChatGPT, acompanhada de uma landing page focada em usabilidade multi-dispositivo (smartphone, tablet e computador) e identidade visual moderna com estética inspirada em Angola (Palanca Negra / detalhes em amarelo dourado e vermelho carmim).
 
 ## 🛠️ Stack Tecnológica
 - **Estrutura:** HTML5 Semântico (`index.html`)

@@ -1,6 +1,6 @@
-# ✨ Kamba Chat IA — Assistente de Inteligência Artificial Conversacional
+# ✨ Meu Kota IA — Assistente de Inteligência Artificial Conversacional
 
-**Kamba Chat IA** é uma aplicação web interativa de inteligência artificial de uso geral (no estilo ChatGPT / Claude / Gemini), desenhada para ser rápida, acessível e fluida em **qualquer dispositivo**: na palma da mão (smartphone), no tablet e no computador.
+**Meu Kota IA** é uma aplicação web interativa de inteligência artificial de uso geral (no estilo ChatGPT / Claude / Gemini), desenhada para ser rápida, acessível e fluida em **qualquer dispositivo**: na palma da mão (smartphone), no tablet e no computador.
 
 ---
 

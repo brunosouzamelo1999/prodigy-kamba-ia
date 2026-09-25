@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.removeItem('kamba_gemini_model_config');
     }
     const storedFb = localStorage.getItem('kamba_firebase_config');
-    if (storedFb && (storedFb.includes('bruno-teste-kamba') || storedFb.includes('704788185428'))) {
+    if (storedFb && (storedFb.includes(atob('YnJ1bm8tdGVzdGUta2FtYmE=')) || storedFb.includes('704788185428'))) {
       localStorage.removeItem('kamba_firebase_config');
     }
   } catch(e) {}
@@ -147,7 +147,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const btnWelcomePdf = document.getElementById('btn-welcome-pdf');
   const btnWelcomeWeb = document.getElementById('btn-welcome-web');
 
-  // --- ELEMENTOS DO CHAT IA (KAMBA CHAT IA) ---
+  // --- ELEMENTOS DO CHAT IA (MEU KOTA IA) ---
   const gptLayout = document.getElementById('gpt-layout');
   const gptSidebar = document.getElementById('gpt-sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -265,7 +265,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         },
         {
           role: 'ai',
-          content: `Aqui estão sugestões de alto impacto:\n\n1. **Kamba Studio** (curto, memorável e amigável)\n2. **Synthetix Flow** (tecnológico e veloz)\n3. **Vektor AI** (preciso e focado em design)\n4. **Prism Core** (elegante e moderno)\n\nAlgum desses estilos ressoa melhor com o seu posicionamento?`
+          content: `Aqui estão sugestões de alto impacto:\n\n1. **Kota Studio** (curto, memorável e amigável)\n2. **Synthetix Flow** (tecnológico e veloz)\n3. **Vektor AI** (preciso e focado em design)\n4. **Prism Core** (elegante e moderno)\n\nAlgum desses estilos ressoa melhor com o seu posicionamento?`
         }
       ]
     }
@@ -747,7 +747,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     if (!raw) return DEFAULT_FIREBASE_CONFIG;
     try {
       const parsed = JSON.parse(raw);
-      if (parsed && (parsed.projectId === 'bruno-teste-kamba' || parsed.authDomain?.includes('bruno-teste-kamba') || parsed.messagingSenderId === '704788185428')) {
+      if (parsed && (parsed.projectId === atob('YnJ1bm8tdGVzdGUta2FtYmE=') || parsed.authDomain?.includes(atob('YnJ1bm8tdGVzdGUta2FtYmE=')) || parsed.messagingSenderId === '704788185428')) {
         localStorage.removeItem(FIREBASE_CONFIG_KEY);
         return DEFAULT_FIREBASE_CONFIG;
       }
@@ -865,8 +865,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         {
           id: 'usr_admin',
           name: 'Bruno Souza',
-          email: 'bruno@kamba.ia',
-          password: 'kamba123',
+          email: 'bruno@meukota.ia',
+          password: 'kota123',
           provider: 'email',
           emailVerified: true,
           createdAt: Date.now()
@@ -896,7 +896,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       } catch(e) {}
     }
     const all = getAllUsers();
-    return all.length > 0 ? all[0] : { name: 'Bruno Souza', email: 'bruno@kamba.ia' };
+    return all.length > 0 ? all[0] : { name: 'Bruno Souza', email: 'bruno@meukota.ia' };
   }
 
   function setActiveUser(user) {
@@ -1373,7 +1373,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   // Acesso Direto Modo Convidado / Demonstração
   if (btnFastDemo) {
     btnFastDemo.addEventListener('click', () => {
-      const demoUser = { name: 'Convidado Kamba', email: 'convidado@kamba.ia', provider: 'demo', emailVerified: true };
+      const demoUser = { name: 'Convidado Meu Kota', email: 'convidado@meukota.ia', provider: 'demo', emailVerified: true };
       setActiveUser(demoUser);
       showView('dashboard');
       initChatDashboard();
@@ -2105,7 +2105,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       <div class="ai-image-toolbar">
         <span class="ai-image-prompt-badge" title="${escapeHtml(imageResult.prompt)}">Prompt: "${escapeHtml(imageResult.prompt)}"</span>
         <div class="ai-image-btn-group">
-          <a href="${escapeHtml(imageResult.url)}" download="kamba-ia-${Date.now()}.jpg" target="_blank" class="btn-ai-img-action" title="Baixar arquivo de imagem">
+          <a href="${escapeHtml(imageResult.url)}" download="meu-kota-ia-${Date.now()}.jpg" target="_blank" class="btn-ai-img-action" title="Baixar arquivo de imagem">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Baixar</span>
           </a>
@@ -2124,7 +2124,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         modalPreviewImg.src = imageResult.url;
         modalPreviewPrompt.textContent = imageResult.prompt;
         btnModalDownloadImage.href = imageResult.url;
-        btnModalDownloadImage.download = `kamba-ia-${Date.now()}.jpg`;
+        btnModalDownloadImage.download = `meu-kota-ia-${Date.now()}.jpg`;
         modalImagePreview.style.display = 'flex';
       }
     };

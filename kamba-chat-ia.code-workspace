@@ -1,12 +1,12 @@
 {
   "folders": [
     {
-      "name": "Kamba Chat IA",
+      "name": "Meu Kota IA",
       "path": "."
     }
   ],
   "settings": {
-    "window.title": "Kamba Chat IA - ${rootName}",
+    "window.title": "Meu Kota IA - ${rootName}",
     "editor.tabSize": 2,
     "editor.wordWrap": "on",
     "files.exclude": {
