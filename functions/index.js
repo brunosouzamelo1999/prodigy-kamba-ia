@@ -80,7 +80,7 @@ exports.chat = onRequest(
       }
 
       // Seleção de modelo inteligente
-      const model = tier === "pro" ? "models/gemini-3.1-pro-preview" : "models/gemini-2.5-flash";
+      const model = tier === "pro" ? "models/gemini-3.1-pro-preview" : "models/gemini-3.5-flash-lite";
 
       // Formatar histórico compatível com a API v1beta do Gemini
       const contents = [];

@@ -2698,8 +2698,8 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
           if (validModels.length > 0) {
             // gemini-2.5-pro foi descontinuado pelo Google para novos usuários, substituído por gemini-3.1-pro-preview e gemini-pro-latest
             const preferredNames = tier === 'pro'
-              ? ['gemini-3.1-pro-preview', 'gemini-pro-latest', 'gemini-2.5-flash', 'gemini-3-flash-preview']
-              : ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview'];
+              ? ['gemini-3.1-pro-preview', 'gemini-pro-latest', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-3-flash-preview']
+              : ['gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-flash-latest'];
 
             for (const pref of preferredNames) {
               const found = validModels.find(m => m.name === `models/${pref}` || m.name.endsWith('/' + pref));
@@ -2725,8 +2725,8 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     cachedWorkingModel = {
       tier,
       apiVersion: 'v1beta',
-      modelPath: tier === 'pro' ? 'models/gemini-3.1-pro-preview' : 'models/gemini-2.5-flash',
-      displayName: tier === 'pro' ? 'Gemini 3.1 Pro' : 'Gemini 2.5 Flash'
+      modelPath: tier === 'pro' ? 'models/gemini-3.1-pro-preview' : 'models/gemini-3.5-flash-lite',
+      displayName: tier === 'pro' ? 'Gemini 3.1 Pro' : 'Meu Kota Flash'
     };
     return cachedWorkingModel;
   }
@@ -2797,7 +2797,11 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         lastRole = msg.role;
       }
     }
-    contents.push({ role: 'user', parts: parts });
+    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+      contents[contents.length - 1].parts.push(...parts);
+    } else {
+      contents.push({ role: 'user', parts: parts });
+    }
 
     // 2. Definir lista ordenada de endpoints prioritários para resposta instantânea (< 300ms)
     const tier = getSelectedModelTier();
@@ -2807,13 +2811,15 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       candidateEndpoints.push(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`
       );
     } else {
       candidateEndpoints.push(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest`
       );
     }
 
@@ -2943,6 +2949,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
           if (response.status === 404) {
             console.warn(`Modelo ${baseModelUrl} não suportado para esta chave (404). Tentando próximo modelo...`);
+            continue;
+          }
+
+          if (response.status === 503 || response.status === 502 || response.status === 504 || response.status === 500) {
+            console.warn(`Modelo ${baseModelUrl} sobrecarregado ou temporariamente indisponível (${response.status}: ${errMsg}). Alternando imediatamente para o próximo modelo neural...`);
+            lastError = new Error(`Alta demanda momentânea no motor neural (${response.status}). Tentando modelo alternativo...`);
             continue;
           }
 
