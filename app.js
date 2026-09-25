@@ -2846,6 +2846,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 - EXCELÊNCIA TÉCNICA E OBJETIVIDADE: Seja denso em valor e econômico em palavras vazias. Evite preâmbulos protocolares; entregue síntese com autoridade serena.
 - CÓDIGO LIMPO E FORMATADO: Sempre que fornecer códigos de programação, utilize blocos com identificador de linguagem (ex: \`\`\`javascript ou \`\`\`python).
 - ANÁLISE PROFUNDA DE DOCUMENTOS: Você possui visão computacional nativa e leitura multimodal completa. Extraia todo o texto visível de imagens com fidelidade absoluta (OCR) e faça análises executivas de PDFs e relatórios.
+- NOTAÇÃO MATEMÁTICA E CIENTÍFICA CLARA E HUMANA: NUNCA use código LaTeX bruto nem símbolos de cifrão no meio do texto (como $3 \times 3$, $\det(R)$, $T_1 \cdot T_2 \neq T_2 \cdot T_1$, \\quad, \\times, \\cdot). Escreva SEMPRE em linguagem humana natural, limpa e legível para qualquer pessoa comum (ex: escreva "3x3" ou "3 × 3", "T1 · T2 ≠ T2 · T1", "det(R) = +1", "R^T · R = I", "[0 0 0 1]"). Todas as equações, matrizes e expressões devem ser compreensíveis de imediato sem códigos de programação matemática.
 - BLINDAGEM DE IDENTIDADE WHITE-LABEL: Você é estritamente o "Meu Kota IA". NUNCA mencione "Google", "Gemini", "Google Search", "AI Studio" ou provedores externos. Ao realizar pesquisas ao vivo na web (clima, eventos, notícias ou cotações), JAMAIS diga "pesquisei no Google" e JAMAIS inclua links, URLs externas ou listas de fontes ao final da resposta. Responda de forma natural, direta e soberana, integrando as informações com a autoridade e sabedoria de um Kota.
 - IDIOMA: Responda em português formal impecável, fluido, respeitoso e acolhedor, refletindo a dignidade de um Kota.`
       }]
@@ -3430,6 +3431,52 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     });
   }
 
+  // --- LIMPEZA E HUMANIZAÇÃO DE NOTAÇÃO MATEMÁTICA ---
+  function cleanHumanMath(formula) {
+    if (!formula) return '';
+    return formula
+      .replace(/\\times/g, '×')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\leq|\\le/g, '≤')
+      .replace(/\\geq|\\ge/g, '≥')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\pm/g, '±')
+      .replace(/\\quad/g, '  ')
+      .replace(/\\qquad/g, '    ')
+      .replace(/\\det/g, 'det')
+      .replace(/\\sin/g, 'sen')
+      .replace(/\\cos/g, 'cos')
+      .replace(/\\tan/g, 'tan')
+      .replace(/\\theta/g, 'θ')
+      .replace(/\\alpha/g, 'α')
+      .replace(/\\beta/g, 'β')
+      .replace(/\\gamma/g, 'γ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\infty/g, '∞')
+      .replace(/\\rightarrow|\\to/g, '→')
+      .replace(/\\text\{([^}]+)\}/g, '$1')
+      .replace(/\\mathbf\{([^}]+)\}/g, '$1')
+      .replace(/\\mathit\{([^}]+)\}/g, '$1')
+      .replace(/\\mathrm\{([^}]+)\}/g, '$1')
+      .replace(/_\{([^}]+)\}/g, '$1')
+      .replace(/_([0-9a-zA-Z])/g, (m, sub) => {
+        const subs = { '0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','a':'ₐ','e':'ₑ','i':'ᵢ','o':'ₒ','u':'ᵤ','x':'ₓ' };
+        return subs[sub] || '_' + sub;
+      })
+      .replace(/\^\{([^}]+)\}/g, '$1')
+      .replace(/\^T/g, 'ᵀ')
+      .replace(/\^2/g, '²')
+      .replace(/\^3/g, '³')
+      .replace(/\^([0-9])/g, (m, sup) => {
+        const sups = { '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹' };
+        return sups[sup] || '^' + sup;
+      })
+      .replace(/\\([a-zA-Z]+)/g, '$1')
+      .replace(/\\/g, '')
+      .trim();
+  }
+
   // --- FORMATAÇÃO MARKDOWN LEVE, SEGURA E COM DESTAQUE DE CÓDIGO ---
   function formatMarkdown(text) {
     if (!text) return '';
@@ -3455,6 +3502,28 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
     // Código inline `codigo`
     formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // 3. Fórmulas matemáticas em bloco $$ ... $$
+    formatted = formatted.replace(/\$\$([\s\S]+?)\$\$/g, (match, formula) => {
+      const clean = cleanHumanMath(formula);
+      return `<div class="human-math-block">${clean}</div>`;
+    });
+
+    // 4. Fórmulas matemáticas inline $ ... $
+    formatted = formatted.replace(/\$([^$]+)\$/g, (match, formula) => {
+      const clean = cleanHumanMath(formula);
+      return `<span class="human-math">${clean}</span>`;
+    });
+
+    // 5. Limpeza de comandos LaTeX soltos fora de cifrões
+    formatted = formatted
+      .replace(/\\times\b/g, '×')
+      .replace(/\\cdot\b/g, '·')
+      .replace(/\\neq\b/g, '≠')
+      .replace(/\\leq\b/g, '≤')
+      .replace(/\\geq\b/g, '≥')
+      .replace(/\\quad\b/g, '  ')
+      .replace(/\\det\b/g, 'det');
 
     // Headers Markdown
     formatted = formatted.replace(/^#### (.*$)/gm, '<h5 style="color:#ECECEC;margin:10px 0 4px 0;font-size:14px;font-weight:700;">$1</h5>');
