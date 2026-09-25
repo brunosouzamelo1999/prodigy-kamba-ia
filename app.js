@@ -4,12 +4,16 @@
 ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Expurgar imediatamente chaves antigas com saldo esgotado (402) do armazenamento local
+  // Expurgar imediatamente chaves antigas com saldo esgotado (402) e configs do projeto antigo
   try {
     const storedKey = (localStorage.getItem('kamba_gemini_api_key') || '').trim();
     if (storedKey && (storedKey.includes('LkUf') || storedKey.includes(atob('QVEuQWI4Uk42TGtV')))) {
       localStorage.removeItem('kamba_gemini_api_key');
       localStorage.removeItem('kamba_gemini_model_config');
+    }
+    const storedFb = localStorage.getItem('kamba_firebase_config');
+    if (storedFb && (storedFb.includes('bruno-teste-kamba') || storedFb.includes('704788185428'))) {
+      localStorage.removeItem('kamba_firebase_config');
     }
   } catch(e) {}
 
@@ -724,13 +728,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   // --- SISTEMA OFICIAL DE AUTENTICAÇÃO GOOGLE FIREBASE & MULTIUSUÁRIO ---
   const FIREBASE_CONFIG_KEY = 'kamba_firebase_config';
   const DEFAULT_FIREBASE_CONFIG = {
-    apiKey: "AIzaSyCWbN4zMvsUGMMNVHPNA9p0sKAHI_AjKhA",
-    authDomain: "bruno-teste-kamba.firebaseapp.com",
-    projectId: "bruno-teste-kamba",
-    storageBucket: "bruno-teste-kamba.firebasestorage.app",
-    messagingSenderId: "704788185428",
-    appId: "1:704788185428:web:5c98c3c3e12f39027a08c1",
-    measurementId: "G-SFTZHF77J2"
+    apiKey: "AIzaSyDNc7NNhoP1RArcJ2rVL_Sbv94Ie8UMts4",
+    authDomain: "meu-kota-ia.firebaseapp.com",
+    projectId: "meu-kota-ia",
+    storageBucket: "meu-kota-ia.firebasestorage.app",
+    messagingSenderId: "72559907421",
+    appId: "1:72559907421:web:b9b7284d3125351ecab3b4",
+    measurementId: "G-ZJWMELJYV1"
   };
 
   let firebaseAuthInstance = null;
@@ -743,7 +747,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     if (!raw) return DEFAULT_FIREBASE_CONFIG;
     try {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.apiKey) return parsed;
+      if (parsed && (parsed.projectId === 'bruno-teste-kamba' || parsed.authDomain?.includes('bruno-teste-kamba') || parsed.messagingSenderId === '704788185428')) {
+        localStorage.removeItem(FIREBASE_CONFIG_KEY);
+        return DEFAULT_FIREBASE_CONFIG;
+      }
+      if (parsed && parsed.apiKey && parsed.projectId === 'meu-kota-ia') return parsed;
     } catch(e) {}
     return DEFAULT_FIREBASE_CONFIG;
   }
