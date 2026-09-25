@@ -560,6 +560,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
       firestoreChatsUnsubscribe = chatsRef.onSnapshot((snapshot) => {
         if (!snapshot.empty) {
+          // Se estiver gerando resposta no momento ou houver escrita local pendente, não interromper o chat ativo
+          if (isGenerating || (snapshot.metadata && snapshot.metadata.hasPendingWrites)) {
+            return;
+          }
+
           const remoteChats = [];
           snapshot.forEach((doc) => {
             const data = doc.data();
@@ -577,7 +582,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           localStorage.setItem(storageKey, JSON.stringify(chats));
           renderHistory();
 
-          if (currentChatId) {
+          if (currentChatId && !isGenerating) {
             const activeChat = chats.find(c => c.id === currentChatId);
             if (activeChat && chatMessages) {
               const currentRenderedCount = chatMessages.querySelectorAll('.gpt-msg-row').length;
@@ -586,7 +591,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
               }
             }
           }
-        } else if (chats.length > 0) {
+        } else if (chats.length > 0 && !isGenerating) {
           // Migração de conversas locais para a nuvem do usuário recém-autenticado
           chats.forEach(chat => syncSingleChatToFirestore(chat));
         }
@@ -1502,8 +1507,12 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   if (btnNewChat) btnNewChat.addEventListener('click', createNewChat);
 
   function loadChat(chatId) {
+    if (isGenerating && currentChatId === chatId) {
+      return;
+    }
+
     stopSpeaking();
-    if (currentAbortController && isGenerating) {
+    if (currentAbortController && isGenerating && currentChatId !== chatId) {
       currentAbortController.abort();
     }
 
@@ -2736,10 +2745,11 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     } catch(e) {}
 
     if (fileAttachment && fileAttachment.base64) {
+      const mime = fileAttachment.isPdf ? 'application/pdf' : (fileAttachment.type || 'image/jpeg');
       parts.push({
         inlineData: {
-          mimeType: fileAttachment.type || 'image/jpeg',
-          data: fileAttachment.base64
+          mimeType: mime,
+          data: fileAttachment.base64.trim()
         }
       });
     }
