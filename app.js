@@ -185,6 +185,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   let currentAbortController = null;
   let activeSpeakingButton = null;
   let speakingKeepAliveTimer = null;
+  let ttsWatchdogTimer = null;
+  let activeUtterance = null;
   let cachedVoices = [];
   let isVoiceRecording = false;
   let chats = [];
@@ -1653,12 +1655,19 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   function stopSpeaking() {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+    if (ttsWatchdogTimer) {
+      clearTimeout(ttsWatchdogTimer);
+      ttsWatchdogTimer = null;
     }
     if (speakingKeepAliveTimer) {
       clearInterval(speakingKeepAliveTimer);
       speakingKeepAliveTimer = null;
+    }
+    activeUtterance = null;
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
     }
     if (activeSpeakingButton) {
       activeSpeakingButton.classList.remove('is-speaking');
@@ -1666,6 +1675,60 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       if (span) span.textContent = 'Ouvir';
       activeSpeakingButton = null;
     }
+  }
+
+  // Segmentação inteligente de texto para leitura contínua e sem interrupções em dispositivos móveis
+  function prepareTextForSpeech(rawText) {
+    if (!rawText) return [];
+
+    let clean = rawText
+      .replace(/```[\s\S]*?```/g, ' Trecho de código omitido. ')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\$([^$]+)\$/g, '$1')
+      .replace(/\\times/g, ' vezes ')
+      .replace(/\\cdot/g, ' multiplicado por ')
+      .replace(/\\neq/g, ' diferente de ')
+      .replace(/\\leq|\\le/g, ' menor ou igual ')
+      .replace(/\\geq|\\ge/g, ' maior ou igual ')
+      .replace(/\\approx/g, ' aproximadamente ')
+      .replace(/\\det/g, ' determinante ')
+      .replace(/[*_~>#-]/g, ' ')
+      .replace(/\r\n|\r/g, '\n')
+      .replace(/\t/g, ' ');
+
+    // Separar em blocos por quebras de linha e pontuação forte (. ! ? : \n)
+    const rawChunks = clean.split(/([.!?:\n]+)/);
+    const sentences = [];
+
+    for (let i = 0; i < rawChunks.length; i += 2) {
+      const textPiece = (rawChunks[i] || '').trim();
+      const punct = (rawChunks[i + 1] || '').trim();
+      if (!textPiece) continue;
+
+      const combined = (textPiece + (punct ? ' ' : '')).trim();
+
+      // Frases curtas e médias (< 160 caracteres) são ideais para o TTS móvel
+      if (combined.length <= 160) {
+        sentences.push(combined);
+      } else {
+        // Frases longas sem pontuação: dividir por vírgula ou espaço para evitar timeout do motor TTS
+        const subWords = combined.split(/\s+/);
+        let subBuffer = '';
+        for (const w of subWords) {
+          if ((subBuffer + ' ' + w).length > 130) {
+            if (subBuffer) sentences.push(subBuffer);
+            subBuffer = w;
+          } else {
+            subBuffer = subBuffer ? subBuffer + ' ' + w : w;
+          }
+        }
+        if (subBuffer) sentences.push(subBuffer);
+      }
+    }
+
+    return sentences.filter(s => s && s.replace(/[\s.,;:!?-]/g, '').length > 0);
   }
 
   function speakMessage(text, buttonEl) {
@@ -1681,90 +1744,94 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
     stopSpeaking();
 
-    // Limpar markdown, blocos de código e fórmulas para fala fluida e humana
-    const cleanText = text
-      .replace(/```[\s\S]*?```/g, ' Trecho de código. ')
-      .replace(/`([^`]+)`/g, '$1')
-      .replace(/[*#_>~-]/g, ' ')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/\$([^$]+)\$/g, '$1')
-      .replace(/\\times/g, ' vezes ')
-      .replace(/\\cdot/g, ' ponto ')
-      .replace(/\\neq/g, ' diferente de ')
-      .replace(/\\leq|\\le/g, ' menor ou igual ')
-      .replace(/\\geq|\\ge/g, ' maior ou igual ')
-      .replace(/\\approx/g, ' aproximadamente ')
-      .replace(/\\det/g, ' determinante ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    if (!cleanText) {
-      showToast('Nenhum texto disponível para reprodução.');
+    const sentences = prepareTextForSpeech(text);
+    if (sentences.length === 0) {
+      showToast('Nenhum texto legível disponível.');
       return;
     }
-
-    try {
-      window.speechSynthesis.resume();
-    } catch(e) {}
-
-    const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
-    const ptVoice = voices.find(v => v.lang && (v.lang.startsWith('pt') || v.lang.toLowerCase().includes('portuguese'))) || null;
-
-    // Dividir textos longos em sentenças para evitar que o Chromium silencie após 15 segundos
-    const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
-    let sentenceIndex = 0;
 
     activeSpeakingButton = buttonEl;
     buttonEl.classList.add('is-speaking');
     const span = buttonEl.querySelector('span');
     if (span) span.textContent = 'Parar';
 
-    // Timer keepalive para contornar bug do Chromium em áudios longos
-    speakingKeepAliveTimer = setInterval(() => {
-      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      }
-    }, 10000);
+    // Voz em português (prioriza vozes instaladas)
+    const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
+    const ptVoice = voices.find(v => v.lang && (v.lang === 'pt-PT' || v.lang === 'pt-BR' || v.lang.startsWith('pt') || v.lang.toLowerCase().includes('portuguese'))) || null;
 
-    function speakNextSentence() {
+    let sentenceIndex = 0;
+
+    function playNext() {
       if (sentenceIndex >= sentences.length || activeSpeakingButton !== buttonEl) {
         stopSpeaking();
         return;
       }
 
-      const sentence = sentences[sentenceIndex].trim();
+      const sentenceText = sentences[sentenceIndex];
       sentenceIndex++;
 
-      if (!sentence) {
-        speakNextSentence();
-        return;
-      }
+      // Criação da Utterance mantida em escopo global (evita que o Garbage Collector do Android a delete)
+      const utterance = new SpeechSynthesisUtterance(sentenceText);
+      activeUtterance = utterance;
 
-      const utterance = new SpeechSynthesisUtterance(sentence);
       if (ptVoice) {
         utterance.voice = ptVoice;
         utterance.lang = ptVoice.lang;
       } else {
-        utterance.lang = navigator.language || 'pt-PT';
+        utterance.lang = 'pt-PT';
       }
-      utterance.rate = 1.05;
 
-      utterance.onend = () => {
-        speakNextSentence();
-      };
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      let hasFinished = false;
+
+      function onEnded() {
+        if (hasFinished) return;
+        hasFinished = true;
+        if (ttsWatchdogTimer) {
+          clearTimeout(ttsWatchdogTimer);
+          ttsWatchdogTimer = null;
+        }
+        // Intervalo acústico suave de 60ms entre sentenças
+        setTimeout(() => {
+          if (activeSpeakingButton === buttonEl) {
+            playNext();
+          }
+        }, 60);
+      }
+
+      utterance.onend = onEnded;
 
       utterance.onerror = (e) => {
-        if (e.error !== 'canceled') {
-          console.warn('[TTS] Erro de síntese:', e.error);
+        if (e.error === 'interrupted' || e.error === 'canceled') {
+          if (activeSpeakingButton !== buttonEl) return;
         }
-        stopSpeaking();
+        console.warn('[TTS Mobile] Notificação de áudio:', e.error);
+        onEnded();
       };
 
-      window.speechSynthesis.speak(utterance);
+      // Watchdog de segurança para Android/iOS: caso o driver de voz termine sem disparar onend
+      const wordCount = sentenceText.split(/\s+/).length;
+      const estimatedMs = Math.max(3500, (wordCount * 500) + 2500);
+      ttsWatchdogTimer = setTimeout(() => {
+        if (activeSpeakingButton === buttonEl && !hasFinished) {
+          if (!window.speechSynthesis.speaking) {
+            onEnded();
+          }
+        }
+      }, estimatedMs);
+
+      try {
+        window.speechSynthesis.resume();
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.error('[TTS] Falha ao reproduzir:', err);
+        stopSpeaking();
+      }
     }
 
-    speakNextSentence();
+    playNext();
   }
 
   // --- RECONHECIMENTO DE VOZ (SPEECH-TO-TEXT / MICROFONE) ---
