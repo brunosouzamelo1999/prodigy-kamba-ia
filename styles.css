@@ -3455,15 +3455,34 @@ body {
   justify-content: flex-end;
 }
 
+.gpt-user-message-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 80%;
+}
+
 .gpt-msg-bubble-user {
   background: #2F2F2F;
   color: #ECECEC;
   padding: 10px 16px;
   border-radius: 18px;
-  max-width: 78%;
+  max-width: 100%;
   font-size: 15px;
   line-height: 1.55;
   word-break: break-word;
+}
+
+.gpt-msg-actions.user-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  opacity: 0.65;
+  transition: opacity 0.2s ease;
+}
+
+.gpt-msg-actions.user-actions:hover {
+  opacity: 1;
 }
 
 .gpt-msg-row.ai {

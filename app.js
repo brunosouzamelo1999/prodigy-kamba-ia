@@ -184,6 +184,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   let isGenerating = false;
   let currentAbortController = null;
   let activeSpeakingButton = null;
+  let speakingKeepAliveTimer = null;
+  let cachedVoices = [];
   let isVoiceRecording = false;
   let chats = [];
 
@@ -1631,10 +1633,25 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     });
   }
 
-  // --- SÍNTESE DE VOZ (TEXT-TO-SPEECH) ---
+  // --- SÍNTESE DE VOZ (TEXT-TO-SPEECH UNIVERSAL PARA QUALQUER MENSAGEM) ---
+  function loadSpeechVoices() {
+    if ('speechSynthesis' in window) {
+      cachedVoices = window.speechSynthesis.getVoices();
+    }
+  }
+
+  if ('speechSynthesis' in window) {
+    loadSpeechVoices();
+    window.speechSynthesis.onvoiceschanged = loadSpeechVoices;
+  }
+
   function stopSpeaking() {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
+    }
+    if (speakingKeepAliveTimer) {
+      clearInterval(speakingKeepAliveTimer);
+      speakingKeepAliveTimer = null;
     }
     if (activeSpeakingButton) {
       activeSpeakingButton.classList.remove('is-speaking');
@@ -1657,40 +1674,90 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
     stopSpeaking();
 
-    // Limpar markdown para fala natural
+    // Limpar markdown, blocos de código e fórmulas para fala fluida e humana
     const cleanText = text
-      .replace(/```[\s\S]*?```/g, 'Bloco de código.')
+      .replace(/```[\s\S]*?```/g, ' Trecho de código. ')
       .replace(/`([^`]+)`/g, '$1')
       .replace(/[*#_>~-]/g, ' ')
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/\n+/g, ' ')
+      .replace(/\$([^$]+)\$/g, '$1')
+      .replace(/\\times/g, ' vezes ')
+      .replace(/\\cdot/g, ' ponto ')
+      .replace(/\\neq/g, ' diferente de ')
+      .replace(/\\leq|\\le/g, ' menor ou igual ')
+      .replace(/\\geq|\\ge/g, ' maior ou igual ')
+      .replace(/\\approx/g, ' aproximadamente ')
+      .replace(/\\det/g, ' determinante ')
+      .replace(/\s+/g, ' ')
       .trim();
 
-    if (!cleanText) return;
+    if (!cleanText) {
+      showToast('Nenhum texto disponível para reprodução.');
+      return;
+    }
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'pt-PT';
+    try {
+      window.speechSynthesis.resume();
+    } catch(e) {}
 
-    const voices = window.speechSynthesis.getVoices();
-    const ptVoice = voices.find(v => v.lang.startsWith('pt')) || null;
-    if (ptVoice) utterance.voice = ptVoice;
+    const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
+    const ptVoice = voices.find(v => v.lang && (v.lang.startsWith('pt') || v.lang.toLowerCase().includes('portuguese'))) || null;
 
-    utterance.onstart = () => {
-      activeSpeakingButton = buttonEl;
-      buttonEl.classList.add('is-speaking');
-      const span = buttonEl.querySelector('span');
-      if (span) span.textContent = 'Parar';
-    };
+    // Dividir textos longos em sentenças para evitar que o Chromium silencie após 15 segundos
+    const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
+    let sentenceIndex = 0;
 
-    utterance.onend = () => {
-      stopSpeaking();
-    };
+    activeSpeakingButton = buttonEl;
+    buttonEl.classList.add('is-speaking');
+    const span = buttonEl.querySelector('span');
+    if (span) span.textContent = 'Parar';
 
-    utterance.onerror = () => {
-      stopSpeaking();
-    };
+    // Timer keepalive para contornar bug do Chromium em áudios longos
+    speakingKeepAliveTimer = setInterval(() => {
+      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 10000);
 
-    window.speechSynthesis.speak(utterance);
+    function speakNextSentence() {
+      if (sentenceIndex >= sentences.length || activeSpeakingButton !== buttonEl) {
+        stopSpeaking();
+        return;
+      }
+
+      const sentence = sentences[sentenceIndex].trim();
+      sentenceIndex++;
+
+      if (!sentence) {
+        speakNextSentence();
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(sentence);
+      if (ptVoice) {
+        utterance.voice = ptVoice;
+        utterance.lang = ptVoice.lang;
+      } else {
+        utterance.lang = navigator.language || 'pt-PT';
+      }
+      utterance.rate = 1.05;
+
+      utterance.onend = () => {
+        speakNextSentence();
+      };
+
+      utterance.onerror = (e) => {
+        if (e.error !== 'canceled') {
+          console.warn('[TTS] Erro de síntese:', e.error);
+        }
+        stopSpeaking();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    speakNextSentence();
   }
 
   // --- RECONHECIMENTO DE VOZ (SPEECH-TO-TEXT / MICROFONE) ---
@@ -1778,35 +1845,53 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     });
   }
 
-  // --- REGENERAR ÚLTIMA RESPOSTA DA IA ---
-  async function regenerateLastResponse(aiRowElement) {
+  // --- REGENERAR RESPOSTA DA IA (A PARTIR DE QUALQUER MENSAGEM DO HISTÓRICO) ---
+  async function regenerateResponseForMessage(aiRowElement) {
     if (isGenerating) return;
     const chat = chats.find(c => c.id === currentChatId);
     if (!chat || chat.messages.length === 0) return;
 
-    let lastUserIndex = -1;
-    for (let i = chat.messages.length - 1; i >= 0; i--) {
-      if (chat.messages[i].role === 'user') {
-        lastUserIndex = i;
-        break;
+    // Localizar a posição exata da linha no DOM para saber qual turno da conversa regenerar
+    const allRows = Array.from(chatMessages.querySelectorAll('.gpt-msg-row'));
+    const rowIndex = allRows.indexOf(aiRowElement);
+
+    let userMsgIndex = -1;
+
+    // 1. Procurar em chat.messages a pergunta do usuário que originou esta resposta
+    if (rowIndex >= 0) {
+      for (let i = Math.min(rowIndex - 1, chat.messages.length - 1); i >= 0; i--) {
+        if (chat.messages[i] && chat.messages[i].role === 'user') {
+          userMsgIndex = i;
+          break;
+        }
       }
     }
 
-    if (lastUserIndex === -1) {
+    // 2. Fallback: se não mapear pelo DOM, usar a última pergunta do usuário
+    if (userMsgIndex === -1) {
+      for (let i = chat.messages.length - 1; i >= 0; i--) {
+        if (chat.messages[i] && chat.messages[i].role === 'user') {
+          userMsgIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (userMsgIndex === -1) {
       showToast('Nenhuma pergunta anterior para regenerar.');
       return;
     }
 
-    const userMsg = chat.messages[lastUserIndex];
-    
-    // Truncar mensagens a partir da pergunta do usuário (remove a resposta da IA atual)
-    chat.messages = chat.messages.slice(0, lastUserIndex + 1);
+    const userMsg = chat.messages[userMsgIndex];
+
+    // Truncar mensagens a partir da pergunta do usuário selecionada (remove a resposta antiga e tudo posterior)
+    chat.messages = chat.messages.slice(0, userMsgIndex + 1);
     saveChatsToStorage();
 
     // Recarregar histórico até a pergunta do usuário
     loadChat(currentChatId);
 
-    // Disparar nova geração
+    // Disparar nova geração a partir deste ponto exato da conversa
     await executeAIGeneration(userMsg.content, userMsg.file || null);
   }
 
@@ -1827,7 +1912,31 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
         fileBadgeHtml = `<div class="msg-attached-file-badge">${iconSvg}<span>${escapeHtml(fileAttachment.name)}</span></div>`;
       }
-      row.innerHTML = `<div class="gpt-msg-bubble-user">${fileBadgeHtml}<div>${escapeHtml(text)}</div></div>`;
+      row.innerHTML = `
+        <div class="gpt-user-message-container">
+          <div class="gpt-msg-bubble-user">
+            ${fileBadgeHtml}
+            <div>${escapeHtml(text)}</div>
+          </div>
+          <div class="gpt-msg-actions user-actions">
+            <button class="gpt-action-small-btn btn-copy-msg" title="Copiar pergunta">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>Copiar</span>
+            </button>
+            <button class="gpt-action-small-btn btn-speak-msg" title="Ouvir pergunta em voz alta">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              <span>Ouvir</span>
+            </button>
+          </div>
+        </div>
+      `;
+      attachUserMessageActionEvents(row, text);
     } else {
       row.innerHTML = `
         <div class="gpt-msg-avatar-ai">
@@ -1873,7 +1982,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           </svg>
           <span>Ouvir</span>
         </button>
-        <button class="gpt-action-small-btn btn-regenerate-msg" title="Regenerar resposta">
+        <button class="gpt-action-small-btn btn-regenerate-msg" title="Regenerar resposta a partir desta pergunta">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -1882,6 +1991,26 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         </button>
       </div>
     `;
+  }
+
+  function attachUserMessageActionEvents(rowElement, text) {
+    const btnCopy = rowElement.querySelector('.btn-copy-msg');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Pergunta copiada para a área de transferência!');
+        }).catch(() => {
+          showToast('Texto copiado com sucesso.');
+        });
+      });
+    }
+
+    const btnSpeak = rowElement.querySelector('.btn-speak-msg');
+    if (btnSpeak) {
+      btnSpeak.addEventListener('click', () => {
+        speakMessage(text, btnSpeak);
+      });
+    }
   }
 
   function attachMessageActionEvents(rowElement, text) {
@@ -1906,7 +2035,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     const btnRegenerate = rowElement.querySelector('.btn-regenerate-msg');
     if (btnRegenerate) {
       btnRegenerate.addEventListener('click', () => {
-        regenerateLastResponse(rowElement);
+        regenerateResponseForMessage(rowElement);
       });
     }
   }
@@ -3273,6 +3402,60 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     });
   }
+
+  // Suporte a Colar Imagens e Arquivos da Área de Transferência (Ctrl + V)
+  document.addEventListener('paste', (e) => {
+    // Apenas se a aba ativa for o chat
+    const viewChat = document.getElementById('view-chat');
+    if (!viewChat || !viewChat.classList.contains('active')) return;
+
+    const clipboardData = e.clipboardData || window.clipboardData;
+    if (!clipboardData) return;
+
+    let targetFile = null;
+
+    // 1. Procurar imagens em clipboardData.items (Capturas de tela, Snipping Tool, imagens copiadas)
+    const items = clipboardData.items;
+    if (items && items.length > 0) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (blob) {
+            const now = new Date();
+            const timeTag = `${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}-${now.getSeconds().toString().padStart(2, '0')}`;
+            const ext = (item.type.split('/')[1] || 'png').replace('+xml', '');
+            targetFile = new File([blob], `Captura Colada ${timeTag}.${ext}`, { type: item.type });
+            break;
+          }
+        } else if (item.type === 'application/pdf') {
+          const blob = item.getAsFile();
+          if (blob) {
+            targetFile = blob;
+            break;
+          }
+        }
+      }
+    }
+
+    // 2. Fallback para clipboardData.files
+    if (!targetFile && clipboardData.files && clipboardData.files.length > 0) {
+      for (let i = 0; i < clipboardData.files.length; i++) {
+        const f = clipboardData.files[i];
+        if (f.type.startsWith('image/') || f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
+          targetFile = f;
+          break;
+        }
+      }
+    }
+
+    if (targetFile) {
+      e.preventDefault();
+      handleFileSelection(targetFile);
+      showToast('Imagem colada com sucesso!');
+      if (chatInput) chatInput.focus();
+    }
+  });
 
   // Eventos do Modal do Google AI Studio
   const btnOpenApiModal = document.getElementById('btn-open-api-modal');
