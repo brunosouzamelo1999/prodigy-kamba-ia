@@ -1654,13 +1654,90 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   // --- SÍNTESE DE VOZ (TEXT-TO-SPEECH UNIVERSAL PARA QUALQUER MENSAGEM) ---
   function loadSpeechVoices() {
     if ('speechSynthesis' in window) {
-      cachedVoices = window.speechSynthesis.getVoices();
+      const v = window.speechSynthesis.getVoices();
+      if (v && v.length > 0) {
+        cachedVoices = v;
+      }
     }
   }
 
   if ('speechSynthesis' in window) {
     loadSpeechVoices();
     window.speechSynthesis.onvoiceschanged = loadSpeechVoices;
+  }
+
+  // Seletor inteligente de voz em Português (Prioridade padrão: Português do Brasil - pt-BR)
+  function getPreferredPortugueseVoice() {
+    if (!('speechSynthesis' in window)) return null;
+
+    let voices = cachedVoices;
+    if (!voices || voices.length === 0) {
+      voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) cachedVoices = voices;
+    }
+    if (!voices || voices.length === 0) return null;
+
+    const savedPref = localStorage.getItem('meu_kota_voice_lang') || 'pt-BR';
+    let target = savedPref;
+    if (target === 'auto') {
+      const navLang = (navigator.language || '').toLowerCase();
+      target = navLang.includes('pt-pt') ? 'pt-PT' : 'pt-BR';
+    }
+
+    const norm = (str) => (str || '').toLowerCase().replace(/_/g, '-');
+
+    if (target === 'pt-BR') {
+      // 1. Vozes pt-BR de alta fidelidade / naturais (Google, Microsoft Neural/Online, Luciana, Felipe, etc.)
+      const naturalBr = voices.find(v => {
+        const l = norm(v.lang);
+        const n = norm(v.name);
+        const isBr = l === 'pt-br' || l.startsWith('pt-br') || l === 'por-bra' || n.includes('brasil') || n.includes('brazil');
+        return isBr && (n.includes('natural') || n.includes('online') || n.includes('google') || n.includes('neural') || n.includes('felipe') || n.includes('luciana'));
+      });
+      if (naturalBr) return naturalBr;
+
+      // 2. Qualquer voz identificada como Português do Brasil
+      const anyBr = voices.find(v => {
+        const l = norm(v.lang);
+        const n = norm(v.name);
+        return l === 'pt-br' || l.startsWith('pt-br') || l === 'por-bra' || n.includes('brasil') || n.includes('brazil') || n.includes('brasileiro');
+      });
+      if (anyBr) return anyBr;
+    } else if (target === 'pt-PT') {
+      // 1. Vozes pt-PT naturais
+      const naturalPt = voices.find(v => {
+        const l = norm(v.lang);
+        const n = norm(v.name);
+        const isPt = l === 'pt-pt' || l.startsWith('pt-pt') || l === 'por-prt' || n.includes('portugal');
+        return isPt && (n.includes('natural') || n.includes('online') || n.includes('google') || n.includes('neural') || n.includes('catarina') || n.includes('joana'));
+      });
+      if (naturalPt) return naturalPt;
+
+      // 2. Qualquer voz identificada como Português de Portugal
+      const anyPt = voices.find(v => {
+        const l = norm(v.lang);
+        const n = norm(v.name);
+        return l === 'pt-pt' || l.startsWith('pt-pt') || l === 'por-prt' || n.includes('portugal');
+      });
+      if (anyPt) return anyPt;
+    }
+
+    // Fallback prioritário para Português do Brasil
+    const fallbackBr = voices.find(v => {
+      const l = norm(v.lang);
+      const n = norm(v.name);
+      return l.includes('pt-br') || l.includes('por-bra') || n.includes('brasil') || n.includes('brazil');
+    });
+    if (fallbackBr) return fallbackBr;
+
+    // Fallback geral para qualquer voz em língua portuguesa instalada
+    const anyPortuguese = voices.find(v => {
+      const l = norm(v.lang);
+      const n = norm(v.name);
+      return l.startsWith('pt') || l.startsWith('por') || n.includes('portuguese') || n.includes('português');
+    });
+
+    return anyPortuguese || null;
   }
 
   function stopSpeaking() {
@@ -1746,6 +1823,12 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       return;
     }
 
+    const isVoiceActive = localStorage.getItem('meu_kota_voice_enabled') !== 'false';
+    if (!isVoiceActive) {
+      showToast('A reprodução de voz está desativada nas Configurações.');
+      return;
+    }
+
     if (activeSpeakingButton === buttonEl) {
       stopSpeaking();
       return;
@@ -1764,9 +1847,15 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     const span = buttonEl.querySelector('span');
     if (span) span.textContent = 'Parar';
 
-    // Voz em português (prioriza vozes instaladas)
-    const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
-    const ptVoice = voices.find(v => v.lang && (v.lang === 'pt-PT' || v.lang === 'pt-BR' || v.lang.startsWith('pt') || v.lang.toLowerCase().includes('portuguese'))) || null;
+    const savedPref = localStorage.getItem('meu_kota_voice_lang') || 'pt-BR';
+    let targetLang = savedPref;
+    if (targetLang === 'auto') {
+      const navLang = (navigator.language || '').toLowerCase();
+      targetLang = navLang.includes('pt-pt') ? 'pt-PT' : 'pt-BR';
+    }
+
+    // Selecionar a melhor voz em português (priorizando pt-BR)
+    const ptVoice = getPreferredPortugueseVoice();
 
     let sentenceIndex = 0;
 
@@ -1785,9 +1874,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
       if (ptVoice) {
         utterance.voice = ptVoice;
-        utterance.lang = ptVoice.lang;
+        utterance.lang = ptVoice.lang || targetLang;
       } else {
-        utterance.lang = 'pt-PT';
+        utterance.lang = targetLang;
       }
 
       utterance.rate = 1.0;
@@ -1859,7 +1948,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     let recognition = null;
     try {
       recognition = new SpeechRecognition();
-      recognition.lang = 'pt-AO';
+      const savedPref = localStorage.getItem('meu_kota_voice_lang') || 'pt-BR';
+      recognition.lang = savedPref === 'pt-PT' ? 'pt-PT' : (savedPref === 'auto' ? (navigator.language || 'pt-BR') : 'pt-BR');
       recognition.interimResults = true;
       recognition.continuous = false;
     } catch(e) {
@@ -1869,6 +1959,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     let baseText = '';
 
     recognition.onstart = () => {
+      const currentPref = localStorage.getItem('meu_kota_voice_lang') || 'pt-BR';
+      recognition.lang = currentPref === 'pt-PT' ? 'pt-PT' : (currentPref === 'auto' ? (navigator.language || 'pt-BR') : 'pt-BR');
       isVoiceRecording = true;
       btnVoice.classList.add('recording');
       btnVoice.setAttribute('title', 'A escutar... Clique para parar');
@@ -4732,6 +4824,30 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     // --- MODAL 4: CONFIGURAÇÕES ---
     if (btnCloseSettings && modalSettings) {
       btnCloseSettings.addEventListener('click', () => modalSettings.classList.remove('active'));
+    }
+
+    // Configurações de Voz / Sotaque e Síntese de Áudio
+    const selectVoiceLang = document.getElementById('select-settings-voice-lang');
+    const toggleVoiceActive = document.getElementById('toggle-voice-active');
+
+    if (selectVoiceLang) {
+      const savedLang = localStorage.getItem('meu_kota_voice_lang') || 'pt-BR';
+      selectVoiceLang.value = savedLang;
+      selectVoiceLang.addEventListener('change', (e) => {
+        const val = e.target.value;
+        localStorage.setItem('meu_kota_voice_lang', val);
+        const label = val === 'pt-BR' ? 'Português do Brasil' : (val === 'pt-PT' ? 'Português de Portugal' : 'Automático');
+        showToast(`Sotaque da voz definido para ${label}.`);
+      });
+    }
+
+    if (toggleVoiceActive) {
+      const isVoiceEnabled = localStorage.getItem('meu_kota_voice_enabled') !== 'false';
+      toggleVoiceActive.checked = isVoiceEnabled;
+      toggleVoiceActive.addEventListener('change', (e) => {
+        localStorage.setItem('meu_kota_voice_enabled', e.target.checked ? 'true' : 'false');
+        showToast(e.target.checked ? 'Síntese de voz ativada.' : 'Síntese de voz desativada.');
+      });
     }
 
     // Abas de configurações
