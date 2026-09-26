@@ -1528,9 +1528,16 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       if (welcomeCenter) welcomeCenter.style.display = 'flex';
     } else {
       if (welcomeCenter) welcomeCenter.style.display = 'none';
-      chat.messages.forEach(msg => {
-        const row = appendMessageToDOM(msg.role, msg.content, false, msg.file || null, msg.image || null);
-        if (row) applyCodeHighlighting(row);
+      let lastUserIndex = -1;
+      chat.messages.forEach((msg, idx) => {
+        if (msg.role === 'user') {
+          lastUserIndex = idx;
+          const row = appendMessageToDOM(msg.role, msg.content, false, msg.file || null, msg.image || null, idx);
+          if (row) applyCodeHighlighting(row);
+        } else {
+          const row = appendMessageToDOM(msg.role, msg.content, false, msg.file || null, msg.image || null, lastUserIndex);
+          if (row) applyCodeHighlighting(row);
+        }
       });
     }
 
@@ -1846,62 +1853,102 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   }
 
   // --- REGENERAR RESPOSTA DA IA (A PARTIR DE QUALQUER MENSAGEM DO HISTÓRICO) ---
-  async function regenerateResponseForMessage(aiRowElement) {
+  async function regenerateResponseForMessage(targetUserMsgIndex, triggerElement = null) {
     if (isGenerating) return;
     const chat = chats.find(c => c.id === currentChatId);
     if (!chat || chat.messages.length === 0) return;
 
-    // Localizar a posição exata da linha no DOM para saber qual turno da conversa regenerar
-    const allRows = Array.from(chatMessages.querySelectorAll('.gpt-msg-row'));
-    const rowIndex = allRows.indexOf(aiRowElement);
+    let userIndex = -1;
 
-    let userMsgIndex = -1;
+    // 1. Prioridade máxima: índice passado diretamente como número
+    if (typeof targetUserMsgIndex === 'number' && !isNaN(targetUserMsgIndex) && targetUserMsgIndex >= 0 && targetUserMsgIndex < chat.messages.length) {
+      userIndex = targetUserMsgIndex;
+    }
 
-    // 1. Procurar em chat.messages a pergunta do usuário que originou esta resposta
-    if (rowIndex >= 0) {
-      for (let i = Math.min(rowIndex - 1, chat.messages.length - 1); i >= 0; i--) {
-        if (chat.messages[i] && chat.messages[i].role === 'user') {
-          userMsgIndex = i;
-          break;
+    // 2. Extração via dataset no elemento disparador ou elemento de linha mais próximo
+    if (userIndex === -1 && triggerElement) {
+      const elWithData = triggerElement.getAttribute('data-user-index') !== null 
+        ? triggerElement 
+        : triggerElement.closest('[data-user-index]');
+      if (elWithData) {
+        const raw = elWithData.getAttribute('data-user-index');
+        if (raw !== null && raw !== '') {
+          const parsed = parseInt(raw, 10);
+          if (!isNaN(parsed) && parsed >= 0 && parsed < chat.messages.length) {
+            userIndex = parsed;
+          }
         }
       }
     }
 
-    // 2. Fallback: se não mapear pelo DOM, usar a última pergunta do usuário
-    if (userMsgIndex === -1) {
+    // 3. Mapeamento preciso por posição visual na lista de nós do DOM
+    if (userIndex === -1 && triggerElement) {
+      const row = triggerElement.closest('.gpt-msg-row') || triggerElement;
+      const allRows = Array.from(chatMessages.querySelectorAll('.gpt-msg-row'));
+      const rowIndex = allRows.indexOf(row);
+      if (rowIndex >= 0) {
+        let userTurnCount = 0;
+        for (let r = 0; r <= rowIndex; r++) {
+          if (allRows[r].classList.contains('user')) {
+            userTurnCount++;
+          }
+        }
+        let seenUsers = 0;
+        for (let m = 0; m < chat.messages.length; m++) {
+          if (chat.messages[m].role === 'user') {
+            seenUsers++;
+            if (seenUsers === userTurnCount) {
+              userIndex = m;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Fallback de segurança: última pergunta registrada pelo usuário
+    if (userIndex === -1) {
       for (let i = chat.messages.length - 1; i >= 0; i--) {
         if (chat.messages[i] && chat.messages[i].role === 'user') {
-          userMsgIndex = i;
+          userIndex = i;
           break;
         }
       }
     }
 
-    if (userMsgIndex === -1) {
+    // Garantir que userIndex aponte estritamente para uma mensagem do usuário
+    while (userIndex >= 0 && chat.messages[userIndex] && chat.messages[userIndex].role !== 'user') {
+      userIndex--;
+    }
+
+    if (userIndex < 0 || !chat.messages[userIndex]) {
       showToast('Nenhuma pergunta anterior para regenerar.');
       return;
     }
 
-    const userMsg = chat.messages[userMsgIndex];
+    const userMsg = chat.messages[userIndex];
 
     // Truncar mensagens a partir da pergunta do usuário selecionada (remove a resposta antiga e tudo posterior)
-    chat.messages = chat.messages.slice(0, userMsgIndex + 1);
+    chat.messages = chat.messages.slice(0, userIndex + 1);
     saveChatsToStorage();
 
-    // Recarregar histórico até a pergunta do usuário
+    // Recarregar histórico até a pergunta do usuário selecionada
     loadChat(currentChatId);
 
     // Disparar nova geração a partir deste ponto exato da conversa
-    await executeAIGeneration(userMsg.content, userMsg.file || null);
+    await executeAIGeneration(userMsg.content, userMsg.file || null, userIndex);
   }
 
   // --- RENDERIZAÇÃO DE MENSAGENS E STREAMING ---
-  function appendMessageToDOM(role, text, isStreaming = false, fileAttachment = null, imageResult = null) {
+  function appendMessageToDOM(role, text, isStreaming = false, fileAttachment = null, imageResult = null, userMsgIndex = -1) {
     if (!chatMessages) return null;
     if (welcomeCenter) welcomeCenter.style.display = 'none';
 
     const row = document.createElement('div');
     row.className = `gpt-msg-row ${role}`;
+    if (userMsgIndex !== undefined && userMsgIndex !== null && userMsgIndex >= 0) {
+      row.dataset.userIndex = userMsgIndex;
+    }
 
     if (role === 'user') {
       let fileBadgeHtml = '';
@@ -1933,10 +1980,17 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
               </svg>
               <span>Ouvir</span>
             </button>
+            <button class="gpt-action-small-btn btn-regenerate-msg" data-user-index="${userMsgIndex >= 0 ? userMsgIndex : ''}" title="Regenerar resposta a partir desta pergunta">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              <span>Regenerar</span>
+            </button>
           </div>
         </div>
       `;
-      attachUserMessageActionEvents(row, text);
+      attachUserMessageActionEvents(row, text, userMsgIndex);
     } else {
       row.innerHTML = `
         <div class="gpt-msg-avatar-ai">
@@ -1945,7 +1999,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         <div class="gpt-msg-content-ai">
           <div class="msg-text-stream">${formatMarkdown(text)}</div>
           ${isStreaming ? '<span class="typing-cursor"></span>' : ''}
-          ${!isStreaming ? createMessageActionsHtml(text) : ''}
+          ${!isStreaming ? createMessageActionsHtml(text, userMsgIndex) : ''}
         </div>
       `;
 
@@ -1955,7 +2009,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       }
 
       if (!isStreaming) {
-        attachMessageActionEvents(row, text);
+        attachMessageActionEvents(row, text, userMsgIndex);
         applyCodeHighlighting(row);
       }
     }
@@ -1965,7 +2019,8 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     return row;
   }
 
-  function createMessageActionsHtml(text) {
+  function createMessageActionsHtml(text, userMsgIndex = -1) {
+    const userIndexAttr = (userMsgIndex !== undefined && userMsgIndex !== null && userMsgIndex >= 0) ? ` data-user-index="${userMsgIndex}"` : '';
     return `
       <div class="gpt-msg-actions">
         <button class="gpt-action-small-btn btn-copy-msg" title="Copiar resposta">
@@ -1982,7 +2037,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           </svg>
           <span>Ouvir</span>
         </button>
-        <button class="gpt-action-small-btn btn-regenerate-msg" title="Regenerar resposta a partir desta pergunta">
+        <button class="gpt-action-small-btn btn-regenerate-msg"${userIndexAttr} title="Regenerar resposta a partir desta pergunta">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -1993,7 +2048,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     `;
   }
 
-  function attachUserMessageActionEvents(rowElement, text) {
+  function attachUserMessageActionEvents(rowElement, text, userMsgIndex = -1) {
     const btnCopy = rowElement.querySelector('.btn-copy-msg');
     if (btnCopy) {
       btnCopy.addEventListener('click', () => {
@@ -2011,9 +2066,17 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         speakMessage(text, btnSpeak);
       });
     }
+
+    const btnRegenerate = rowElement.querySelector('.btn-regenerate-msg');
+    if (btnRegenerate) {
+      btnRegenerate.addEventListener('click', (e) => {
+        e.stopPropagation();
+        regenerateResponseForMessage(userMsgIndex, btnRegenerate);
+      });
+    }
   }
 
-  function attachMessageActionEvents(rowElement, text) {
+  function attachMessageActionEvents(rowElement, text, userMsgIndex = -1) {
     const btnCopy = rowElement.querySelector('.btn-copy-msg');
     if (btnCopy) {
       btnCopy.addEventListener('click', () => {
@@ -2034,8 +2097,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
 
     const btnRegenerate = rowElement.querySelector('.btn-regenerate-msg');
     if (btnRegenerate) {
-      btnRegenerate.addEventListener('click', () => {
-        regenerateResponseForMessage(rowElement);
+      btnRegenerate.addEventListener('click', (e) => {
+        e.stopPropagation();
+        regenerateResponseForMessage(userMsgIndex, btnRegenerate);
       });
     }
   }
@@ -2360,7 +2424,8 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     if (!userSub.active) {
       incrementDailyQuota();
     }
-    appendMessageToDOM('user', text, false, attachedFileToSend);
+    const newUserMsgIndex = chat.messages.length - 1;
+    appendMessageToDOM('user', text, false, attachedFileToSend, null, newUserMsgIndex);
     chatInput.value = '';
     chatInput.style.height = 'auto';
 
@@ -2375,7 +2440,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     chat.updatedAt = Date.now();
     saveChatsToStorage();
 
-    await executeAIGeneration(text, attachedFileToSend);
+    await executeAIGeneration(text, attachedFileToSend, newUserMsgIndex);
   }
 
   // --- CHAMADA AO BACKEND SEGURO DO GOOGLE FIREBASE (/api/chat) ---
@@ -2393,10 +2458,13 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       };
     }
 
+    // O histórico anterior não deve conter a mensagem atual do prompt (evita duplicar turnos de usuário)
+    const priorHistory = (historyMessages || []).slice(0, -1).slice(-10);
+
     const payload = {
       prompt: promptText,
       file: fileData,
-      history: (historyMessages || []).slice(-10),
+      history: priorHistory,
       tier,
       webSearch
     };
@@ -2459,19 +2527,30 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     return fullText;
   }
 
-  async function executeAIGeneration(text, attachedFileToSend) {
+  async function executeAIGeneration(text, attachedFileToSend, explicitUserIndex = -1) {
     let chat = chats.find(c => c.id === currentChatId);
     if (!chat) {
       chat = chats[0];
       if (!chat) return;
     }
 
+    // Identificar com segurança o índice exato da pergunta do usuário correspondente
+    let effectiveUserIndex = explicitUserIndex;
+    if ((effectiveUserIndex === undefined || effectiveUserIndex === null || effectiveUserIndex < 0) && chat.messages.length > 0) {
+      for (let i = chat.messages.length - 1; i >= 0; i--) {
+        if (chat.messages[i] && chat.messages[i].role === 'user') {
+          effectiveUserIndex = i;
+          break;
+        }
+      }
+    }
+
     setGenerationState(true);
     currentAbortController = new AbortController();
     const abortSignal = currentAbortController.signal;
 
-    // Linha de resposta da IA
-    const aiRow = appendMessageToDOM('ai', '', true);
+    // Linha de resposta da IA associada ao turno da pergunta do usuário
+    const aiRow = appendMessageToDOM('ai', '', true, null, null, effectiveUserIndex);
     if (!aiRow) {
       setGenerationState(false);
       return;
@@ -2650,9 +2729,9 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
         if (existingActions) existingActions.remove();
 
         const actionsDiv = document.createElement('div');
-        actionsDiv.innerHTML = createMessageActionsHtml(finalAiResponseText);
+        actionsDiv.innerHTML = createMessageActionsHtml(finalAiResponseText, effectiveUserIndex);
         contentAiDiv.appendChild(actionsDiv.firstElementChild);
-        attachMessageActionEvents(aiRow, finalAiResponseText);
+        attachMessageActionEvents(aiRow, finalAiResponseText, effectiveUserIndex);
       }
     }
   }

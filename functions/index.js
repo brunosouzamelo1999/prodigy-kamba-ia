@@ -83,13 +83,13 @@ exports.chat = onRequest(
       const model = tier === "pro" ? "models/gemini-3.1-pro-preview" : "models/gemini-3.5-flash-lite";
 
       // Formatar histórico compatível com a API v1beta do Gemini
-      const contents = [];
+      const rawHistory = [];
 
       if (Array.isArray(history)) {
         history.slice(-10).forEach((msg) => {
           if (!msg || !msg.content) return;
           const role = msg.role === "user" ? "user" : "model";
-          contents.push({
+          rawHistory.push({
             role,
             parts: [{ text: String(msg.content) }],
           });
@@ -109,7 +109,24 @@ exports.chat = onRequest(
       if (prompt) {
         currentParts.push({ text: prompt });
       }
-      contents.push({ role: "user", parts: currentParts });
+
+      // Sanitizar alternância estrita para o Gemini (evita erros de múltiplos turnos user consecutivos)
+      const contents = [];
+      let lastRole = null;
+      for (const msg of rawHistory) {
+        if (msg.role === lastRole && contents.length > 0) {
+          contents[contents.length - 1].parts.push(...msg.parts);
+        } else {
+          contents.push({ role: msg.role, parts: [...msg.parts] });
+          lastRole = msg.role;
+        }
+      }
+
+      if (contents.length > 0 && contents[contents.length - 1].role === "user") {
+        contents[contents.length - 1].parts.push(...currentParts);
+      } else {
+        contents.push({ role: "user", parts: currentParts });
+      }
 
       // Montar payload da requisição
       const requestPayload = {
