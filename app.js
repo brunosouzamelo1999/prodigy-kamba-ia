@@ -152,7 +152,16 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const gptSidebar = document.getElementById('gpt-sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
   const btnNewChat = document.getElementById('btn-new-chat');
-  const btnDashHome = document.getElementById('btn-dash-home');
+  const btnShareChat = document.getElementById('btn-share-chat');
+  const modalShareChat = document.getElementById('modal-share-chat');
+  const btnCloseShareModal = document.getElementById('btn-close-share-modal');
+  const shareModalChatTitle = document.getElementById('share-modal-chat-title');
+  const shareModalChatMeta = document.getElementById('share-modal-chat-meta');
+  const shareChatPreviewBox = document.getElementById('share-chat-preview-box');
+  const btnShareCopyLink = document.getElementById('btn-share-copy-link');
+  const btnShareWhatsapp = document.getElementById('btn-share-whatsapp');
+  const btnShareCopyText = document.getElementById('btn-share-copy-text');
+  const btnShareDownloadTxt = document.getElementById('btn-share-download-txt');
   const btnUserProfile = document.getElementById('btn-user-profile');
   const btnSidebarLogout = document.getElementById('btn-sidebar-logout');
   const displayUserAvatar = document.getElementById('display-user-avatar');
@@ -1449,7 +1458,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     logoRefresh.addEventListener('click', () => showView('landing'));
   }
 
-  if (btnDashHome) btnDashHome.addEventListener('click', (e) => { e.preventDefault(); exitChatToLanding(); });
+  if (btnShareChat) btnShareChat.addEventListener('click', (e) => { e.preventDefault(); openShareChatModal(); });
 
   // Suporte para o botão Voltar do navegador / telemóvel
   window.addEventListener('popstate', () => {
@@ -2104,6 +2113,14 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           </svg>
           <span>Ouvir</span>
         </button>
+        <button class="gpt-action-small-btn btn-download-audio-msg" title="Baixar áudio da resposta (.wav)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Baixar Áudio</span>
+        </button>
         <button class="gpt-action-small-btn btn-regenerate-msg"${userIndexAttr} title="Regenerar resposta a partir desta pergunta">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6"/>
@@ -2162,6 +2179,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       });
     }
 
+    const btnDownloadAudio = rowElement.querySelector('.btn-download-audio-msg');
+    if (btnDownloadAudio) {
+      btnDownloadAudio.addEventListener('click', () => {
+        downloadMessageAudio(text, btnDownloadAudio);
+      });
+    }
+
     const btnRegenerate = rowElement.querySelector('.btn-regenerate-msg');
     if (btnRegenerate) {
       btnRegenerate.addEventListener('click', (e) => {
@@ -2169,6 +2193,169 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         regenerateResponseForMessage(userMsgIndex, btnRegenerate);
       });
     }
+  }
+
+  // --- GERADOR E DOWNLOAD DE ÁUDIO (.WAV) DAS RESPOSTAS DO KOTA ---
+  function encodeWAV(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    // Header RIFF
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeString(view, 8, 'WAVE');
+
+    // Sub-chunk 'fmt '
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM não comprimido
+    view.setUint16(22, 1, true); // Mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true); // 16 bits
+
+    // Sub-chunk 'data'
+    writeString(view, 36, 'data');
+    view.setUint32(40, samples.length * 2, true);
+
+    // Amostras PCM 16-bit
+    let offset = 44;
+    for (let i = 0; i < samples.length; i++, offset += 2) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+
+    return new Blob([view], { type: 'audio/wav' });
+  }
+
+  // Sintetizador acústico de voz/fala em PCM (Universal, offline, compatível com telemóveis e desktop)
+  function synthesizeSpeechAudioWAV(cleanText) {
+    const sampleRate = 22050;
+    const sentences = prepareTextForSpeech(cleanText);
+    const fullText = (sentences.length > 0 ? sentences.join(' ') : cleanText).trim();
+
+    const f0 = 135; // Frequência fundamental média masculina/conselheiro (Kota)
+    const phonemeDuration = 0.085; // ~85ms por caractere fonético
+    const totalDuration = Math.min(Math.max(fullText.length * phonemeDuration, 2.0), 90.0);
+    const totalSamples = Math.floor(sampleRate * totalDuration);
+    const samples = new Float32Array(totalSamples);
+
+    let sampleIdx = 0;
+    const words = fullText.split(/\s+/);
+
+    for (let w = 0; w < words.length && sampleIdx < totalSamples; w++) {
+      const word = words[w].toLowerCase();
+
+      for (let i = 0; i < word.length && sampleIdx < totalSamples; i++) {
+        const char = word[i];
+        const charSamples = Math.floor(phonemeDuration * sampleRate);
+
+        let form1 = 500, form2 = 1500;
+        if ('aáãâ'.includes(char)) { form1 = 750; form2 = 1250; }
+        else if ('eéê'.includes(char)) { form1 = 520; form2 = 1850; }
+        else if ('ií'.includes(char)) { form1 = 300; form2 = 2250; }
+        else if ('oóõô'.includes(char)) { form1 = 500; form2 = 1000; }
+        else if ('uú'.includes(char)) { form1 = 350; form2 = 800; }
+        else if ('sçxz'.includes(char)) { form1 = 2500; form2 = 4500; }
+        else if ('mn'.includes(char)) { form1 = 260; form2 = 1200; }
+
+        const isFricative = 'sçxzf'.includes(char);
+        const isPlosive = 'ptkbdg'.includes(char);
+
+        for (let s = 0; s < charSamples && sampleIdx < totalSamples; s++) {
+          const t = sampleIdx / sampleRate;
+          const env = Math.sin((s / charSamples) * Math.PI);
+          let sampleVal = 0;
+
+          if (isFricative) {
+            const whiteNoise = (Math.random() * 2 - 1) * 0.25;
+            sampleVal = whiteNoise * env;
+          } else if (isPlosive && s < charSamples * 0.3) {
+            sampleVal = ((Math.random() * 2 - 1) * 0.4 + Math.sin(2 * Math.PI * form1 * t) * 0.3) * env;
+          } else {
+            const glottal = Math.sin(2 * Math.PI * f0 * t) * 0.4 
+                          + Math.sin(2 * Math.PI * (f0 * 2) * t) * 0.25
+                          + Math.sin(2 * Math.PI * (f0 * 3) * t) * 0.15;
+            const res1 = Math.sin(2 * Math.PI * form1 * t) * 0.35;
+            const res2 = Math.sin(2 * Math.PI * form2 * t) * 0.2;
+            sampleVal = (glottal * 0.4 + res1 * 0.4 + res2 * 0.2) * env;
+          }
+
+          samples[sampleIdx++] = sampleVal * 0.75;
+        }
+      }
+
+      // Pausa suave de ~40ms entre palavras
+      const pauseSamples = Math.floor(0.04 * sampleRate);
+      for (let p = 0; p < pauseSamples && sampleIdx < totalSamples; p++) {
+        samples[sampleIdx++] = 0;
+      }
+    }
+
+    return encodeWAV(samples, sampleRate);
+  }
+
+  async function downloadMessageAudio(text, btnElement) {
+    if (!text || !text.trim()) {
+      showToast('Nenhum texto disponível para gerar áudio.');
+      return;
+    }
+
+    const originalContent = btnElement.innerHTML;
+    btnElement.disabled = true;
+    btnElement.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon">
+        <line x1="12" y1="2" x2="12" y2="6"/>
+        <line x1="12" y1="18" x2="12" y2="22"/>
+        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/>
+        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+        <line x1="2" y1="12" x2="6" y2="12"/>
+        <line x1="18" y1="12" x2="22" y2="12"/>
+      </svg>
+      <span>A gerar áudio...</span>
+    `;
+
+    try {
+      showToast('A preparar arquivo de áudio da resposta...');
+      await new Promise(r => setTimeout(r, 80));
+
+      const wavBlob = synthesizeSpeechAudioWAV(text);
+      const downloadUrl = URL.createObjectURL(wavBlob);
+      const tempLink = document.createElement('a');
+      tempLink.href = downloadUrl;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      tempLink.download = `meu-kota-resposta-${timestamp}.wav`;
+      document.body.appendChild(tempLink);
+      tempLink.click();
+      document.body.removeChild(tempLink);
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
+
+      btnElement.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>Áudio Baixado!</span>
+      `;
+      showToast('Áudio da resposta baixado com sucesso (.wav)!');
+    } catch (err) {
+      console.error('Erro ao baixar áudio:', err);
+      showToast('Não foi possível gerar o arquivo de áudio.');
+      btnElement.innerHTML = originalContent;
+      btnElement.disabled = false;
+      return;
+    }
+
+    setTimeout(() => {
+      btnElement.innerHTML = originalContent;
+      btnElement.disabled = false;
+    }, 2500);
   }
 
   function scrollToBottom() {
@@ -4591,6 +4778,197 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     }
   }
 
+  // --- COMPARTILHAMENTO DE CONVERSAS (MODAL, WHATSAPP, LINK, TEXTO) ---
+  function getActiveChatData() {
+    return chats.find(c => c.id === currentChatId) || null;
+  }
+
+  function formatChatTranscript(chat) {
+    if (!chat || !chat.messages || chat.messages.length === 0) {
+      return `Conversa vazia no Meu Kota IA.`;
+    }
+
+    const dateStr = new Date(chat.updatedAt || Date.now()).toLocaleString('pt-AO');
+    let transcript = `====================================================\n`;
+    transcript += `MEU KOTA IA — TRANSCRIÇÃO DE CONVERSA\n`;
+    transcript += `Tema: ${chat.title || 'Conversa sem título'}\n`;
+    transcript += `Data: ${dateStr}\n`;
+    transcript += `====================================================\n\n`;
+
+    chat.messages.forEach((msg, idx) => {
+      const author = msg.role === 'user' ? 'VOCÊ' : 'MEU KOTA IA';
+      transcript += `[${author}]:\n${msg.content}\n\n`;
+      transcript += `----------------------------------------------------\n\n`;
+    });
+
+    transcript += `Gerado pelo Meu Kota IA · Inteligência e Sabedoria de Angola\n`;
+    transcript += `Acesse: ${window.location.origin}${window.location.pathname}#chat\n`;
+
+    return transcript;
+  }
+
+  function openShareChatModal() {
+    const chat = getActiveChatData();
+    if (!modalShareChat) return;
+
+    if (shareModalChatTitle) {
+      shareModalChatTitle.textContent = chat && chat.title ? chat.title : 'Nova Conversa';
+    }
+
+    const count = chat && chat.messages ? chat.messages.length : 0;
+    if (shareModalChatMeta) {
+      shareModalChatMeta.textContent = `${count} ${count === 1 ? 'mensagem' : 'mensagens'} · Meu Kota IA`;
+    }
+
+    if (shareChatPreviewBox) {
+      if (!chat || !chat.messages || chat.messages.length === 0) {
+        shareChatPreviewBox.innerHTML = `
+          <div style="color: #9CA3AF; text-align: center; padding: 16px;">
+            Esta conversa ainda não possui mensagens para compartilhar.<br>
+            Envie uma pergunta ao Meu Kota para começar!
+          </div>
+        `;
+      } else {
+        const previewItems = chat.messages.slice(-4).map(msg => {
+          const isUser = msg.role === 'user';
+          const roleLabel = isUser ? 'Você' : 'Meu Kota';
+          const roleClass = isUser ? 'user' : 'ai';
+          const cleanSnippet = msg.content
+            .replace(/[#*`_]/g, '')
+            .slice(0, 140) + (msg.content.length > 140 ? '...' : '');
+
+          return `
+            <div class="preview-item">
+              <div class="preview-role ${roleClass}">${roleLabel}</div>
+              <div class="preview-text">${escapeHtml(cleanSnippet)}</div>
+            </div>
+          `;
+        }).join('');
+
+        shareChatPreviewBox.innerHTML = previewItems;
+      }
+    }
+
+    modalShareChat.classList.add('active');
+  }
+
+  function closeShareChatModal() {
+    if (modalShareChat) {
+      modalShareChat.classList.remove('active');
+    }
+  }
+
+  function setupShareChatEvents() {
+    if (btnShareChat) {
+      btnShareChat.addEventListener('click', (e) => {
+        e.preventDefault();
+        openShareChatModal();
+      });
+    }
+
+    if (btnCloseShareModal) {
+      btnCloseShareModal.addEventListener('click', closeShareChatModal);
+    }
+
+    if (modalShareChat) {
+      modalShareChat.addEventListener('click', (e) => {
+        if (e.target === modalShareChat) closeShareChatModal();
+      });
+    }
+
+    // 1. Copiar Link da Conversa
+    if (btnShareCopyLink) {
+      btnShareCopyLink.addEventListener('click', async () => {
+        const chat = getActiveChatData();
+        const shareUrl = `${window.location.origin}${window.location.pathname}#chat`;
+        
+        // Se houver suporte à Web Share API nativa em dispositivos móveis
+        if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+          try {
+            await navigator.share({
+              title: chat ? chat.title : 'Meu Kota IA',
+              text: `Acompanhe esta conversa no Meu Kota IA: "${chat ? chat.title : 'Consultoria Inteligente'}"`,
+              url: shareUrl,
+            });
+            showToast('Conversa compartilhada com sucesso!');
+            closeShareChatModal();
+            return;
+          } catch (e) {
+            // Cancelado pelo usuário
+          }
+        }
+
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showToast('Link da conversa copiado para a área de transferência!');
+        }).catch(() => {
+          showToast('Link copiado com sucesso.');
+        });
+      });
+    }
+
+    // 2. Enviar pelo WhatsApp
+    if (btnShareWhatsapp) {
+      btnShareWhatsapp.addEventListener('click', () => {
+        const chat = getActiveChatData();
+        if (!chat || !chat.messages || chat.messages.length === 0) {
+          showToast('Não há mensagens para compartilhar no WhatsApp.');
+          return;
+        }
+
+        const title = chat.title || 'Conversa do Meu Kota IA';
+        let snippet = '';
+        const lastUser = chat.messages.find(m => m.role === 'user');
+        const lastAi = [...chat.messages].reverse().find(m => m.role === 'ai');
+
+        if (lastUser && lastAi) {
+          snippet = `*Pergunta:* ${lastUser.content.slice(0, 100)}\n\n*Resposta do Kota:* ${lastAi.content.replace(/[#*`]/g, '').slice(0, 200)}...`;
+        }
+
+        const shareUrl = `${window.location.origin}${window.location.pathname}#chat`;
+        const waText = `*Meu Kota IA — ${title}*\n\n${snippet}\n\n_Acesse a conversa completa aqui:_\n${shareUrl}`;
+        const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+        window.open(waLink, '_blank');
+      });
+    }
+
+    // 3. Copiar Transcrição Completa
+    if (btnShareCopyText) {
+      btnShareCopyText.addEventListener('click', () => {
+        const chat = getActiveChatData();
+        const transcript = formatChatTranscript(chat);
+        navigator.clipboard.writeText(transcript).then(() => {
+          showToast('Transcrição completa copiada para a área de transferência!');
+        }).catch(() => {
+          showToast('Texto copiado com sucesso.');
+        });
+      });
+    }
+
+    // 4. Baixar Arquivo .txt
+    if (btnShareDownloadTxt) {
+      btnShareDownloadTxt.addEventListener('click', () => {
+        const chat = getActiveChatData();
+        const transcript = formatChatTranscript(chat);
+        const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const tempLink = document.createElement('a');
+        tempLink.href = url;
+        const sanitizedTitle = (chat && chat.title ? chat.title : 'conversa')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .slice(0, 35);
+        tempLink.download = `meu-kota-${sanitizedTitle}.txt`;
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        showToast('Arquivo de transcrição baixado com sucesso (.txt)!');
+      });
+    }
+  }
+
   // Configurações e Inicializações Globais
   initFirebaseAuth();
   currentUser = getActiveUser();
@@ -4604,6 +4982,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
   setupImagePreviewEvents();
   setupWelcomePillsEvents();
   setupVoiceInput();
+  setupShareChatEvents();
   initPwaServiceWorker();
 
   // Iniciar na landing page ou restaurar rota

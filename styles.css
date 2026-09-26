@@ -6914,3 +6914,175 @@ body {
   font-size: 0.95em;
   line-height: 1.5;
 }
+
+/* ============================================================
+   BOTÃO DE COMPARTILHAMENTO NO TOPO E MODAL DE COMPARTILHAR
+   ============================================================ */
+.gpt-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ECECEC;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gpt-share-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 209, 0, 0.5);
+  color: #FFD100;
+  transform: translateY(-1px);
+}
+
+.gpt-action-small-btn.btn-download-audio-msg:hover {
+  color: #FFD100;
+}
+
+/* Modal de Compartilhamento */
+.share-modal-box {
+  max-width: 540px;
+  width: 92%;
+  background: #18181B;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.share-chat-header-info {
+  margin-bottom: 16px;
+}
+
+.share-chat-title {
+  color: #FFFFFF;
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  line-height: 1.35;
+}
+
+.share-chat-meta {
+  color: #8E8EA0;
+  font-size: 12.5px;
+  margin: 0;
+}
+
+.share-chat-preview-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  max-height: 160px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: #D1D5DB;
+  line-height: 1.5;
+}
+
+.share-chat-preview-box .preview-item {
+  margin-bottom: 8px;
+}
+
+.share-chat-preview-box .preview-role {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.share-chat-preview-box .preview-role.user {
+  color: #9CA3AF;
+}
+
+.share-chat-preview-box .preview-role.ai {
+  color: #FFD100;
+}
+
+.share-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .share-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.share-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #ECECEC;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.share-option-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1.5px);
+}
+
+.share-option-btn.primary-share-btn {
+  background: rgba(255, 209, 0, 0.1);
+  border-color: rgba(255, 209, 0, 0.35);
+}
+
+.share-option-btn.primary-share-btn:hover {
+  background: rgba(255, 209, 0, 0.18);
+  border-color: rgba(255, 209, 0, 0.6);
+  color: #FFD100;
+}
+
+.share-option-btn.whatsapp-share-btn:hover {
+  background: rgba(37, 211, 102, 0.12);
+  border-color: rgba(37, 211, 102, 0.45);
+  color: #25D366;
+}
+
+.share-btn-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #FFD100;
+}
+
+.share-btn-icon-wrap.wa-icon-wrap {
+  color: #25D366;
+}
+
+.share-btn-texts {
+  display: flex;
+  flex-direction: column;
+}
+
+.share-btn-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.share-btn-desc {
+  font-size: 11px;
+  color: #8E8EA0;
+  margin-top: 2px;
+}
