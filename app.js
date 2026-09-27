@@ -152,6 +152,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const gptSidebar = document.getElementById('gpt-sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
   const btnNewChat = document.getElementById('btn-new-chat');
+  const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+  const btnOpenSidebar = document.getElementById('btn-open-sidebar');
+  const btnTopNewChat = document.getElementById('btn-top-new-chat');
   const btnShareChat = document.getElementById('btn-share-chat');
   const modalShareChat = document.getElementById('modal-share-chat');
   const btnCloseShareModal = document.getElementById('btn-close-share-modal');
@@ -664,29 +667,94 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }, 2500);
   }
 
-  // --- CONTROLE DA BARRA LATERAL (FIXA NO DESKTOP / DRAWER NO MOBILE) ---
+  // --- CONTROLE DA BARRA LATERAL (RESPONSIVO PARA CELULAR, TABLET E COMPUTADOR) ---
   function toggleSidebar(collapse) {
     const isMobile = window.innerWidth <= 768;
     if (isMobile) {
-      if (collapse) {
-        if (gptSidebar) gptSidebar.classList.remove('open');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+      if (typeof collapse === 'boolean') {
+        if (collapse) {
+          if (gptSidebar) gptSidebar.classList.remove('open');
+          if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        } else {
+          if (gptSidebar) gptSidebar.classList.add('open');
+          if (sidebarOverlay) sidebarOverlay.classList.add('active');
+        }
       } else {
-        if (gptSidebar) gptSidebar.classList.add('open');
-        if (sidebarOverlay) sidebarOverlay.classList.add('active');
+        const isOpen = gptSidebar && gptSidebar.classList.contains('open');
+        if (isOpen) {
+          if (gptSidebar) gptSidebar.classList.remove('open');
+          if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        } else {
+          if (gptSidebar) gptSidebar.classList.add('open');
+          if (sidebarOverlay) sidebarOverlay.classList.add('active');
+        }
+      }
+    } else {
+      // Computador e Tablet: Minimizar / Expandir da frente do chat
+      if (typeof collapse === 'boolean') {
+        if (collapse) {
+          if (gptLayout) gptLayout.classList.add('sidebar-collapsed');
+          localStorage.setItem('gpt_sidebar_collapsed', 'true');
+        } else {
+          if (gptLayout) gptLayout.classList.remove('sidebar-collapsed');
+          localStorage.setItem('gpt_sidebar_collapsed', 'false');
+        }
+      } else {
+        const isCollapsed = gptLayout && gptLayout.classList.contains('sidebar-collapsed');
+        if (isCollapsed) {
+          if (gptLayout) gptLayout.classList.remove('sidebar-collapsed');
+          localStorage.setItem('gpt_sidebar_collapsed', 'false');
+        } else {
+          if (gptLayout) gptLayout.classList.add('sidebar-collapsed');
+          localStorage.setItem('gpt_sidebar_collapsed', 'true');
+        }
       }
     }
+  }
+
+  if (btnToggleSidebar) {
+    btnToggleSidebar.addEventListener('click', () => toggleSidebar(true));
+  }
+
+  if (btnOpenSidebar) {
+    btnOpenSidebar.addEventListener('click', () => toggleSidebar(false));
+  }
+
+  if (btnTopNewChat) {
+    btnTopNewChat.addEventListener('click', () => {
+      createNewChat();
+      if (window.innerWidth <= 768) {
+        toggleSidebar(true);
+      }
+    });
   }
 
   if (sidebarOverlay) {
     sidebarOverlay.addEventListener('click', () => toggleSidebar(true));
   }
 
-  // No Desktop, a barra lateral é sempre fixa e aberta (sem opção de minimizar)
-  if (gptLayout) {
-    gptLayout.classList.remove('sidebar-collapsed');
+  // Restaurar preferência do usuário no Desktop / Tablet
+  if (gptLayout && window.innerWidth > 768) {
+    const isCollapsed = localStorage.getItem('gpt_sidebar_collapsed') === 'true';
+    if (isCollapsed) {
+      gptLayout.classList.add('sidebar-collapsed');
+    } else {
+      gptLayout.classList.remove('sidebar-collapsed');
+    }
   }
-  localStorage.removeItem('gpt_sidebar_collapsed');
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      if (gptSidebar) gptSidebar.classList.remove('open');
+      if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+      const isCollapsed = localStorage.getItem('gpt_sidebar_collapsed') === 'true';
+      if (isCollapsed && gptLayout) {
+        gptLayout.classList.add('sidebar-collapsed');
+      } else if (gptLayout) {
+        gptLayout.classList.remove('sidebar-collapsed');
+      }
+    }
+  });
 
   // --- GERENCIAMENTO DE TELAS (SPA COM SUPORTE A HISTÓRICO DO NAVEGADOR) ---
   function showView(viewName, pushHistory = true) {
@@ -4182,10 +4250,14 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
   // --- INICIALIZAÇÃO ---
   function initChatDashboard() {
-    // No desktop, garantir que a barra lateral esteja aberta e visível
+    // No desktop e tablet, restaurar a preferência de barra minimizada do usuário
     if (window.innerWidth > 768 && gptLayout) {
-      gptLayout.classList.remove('sidebar-collapsed');
-      localStorage.setItem('gpt_sidebar_collapsed', 'false');
+      const isCollapsed = localStorage.getItem('gpt_sidebar_collapsed') === 'true';
+      if (isCollapsed) {
+        gptLayout.classList.add('sidebar-collapsed');
+      } else {
+        gptLayout.classList.remove('sidebar-collapsed');
+      }
     }
     currentUser = getActiveUser();
     updateUserProfileUI();
