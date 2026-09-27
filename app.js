@@ -2495,7 +2495,9 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   function scrollToBottom() {
     const scrollArea = document.querySelector('.gpt-scroll-area');
     if (scrollArea) {
-      scrollArea.scrollTop = scrollArea.scrollHeight;
+      requestAnimationFrame(() => {
+        scrollArea.scrollTop = scrollArea.scrollHeight;
+      });
     }
   }
 
