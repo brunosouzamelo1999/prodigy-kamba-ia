@@ -2782,6 +2782,14 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
     // Permitir envio se houver texto digitado OU arquivo anexado
     if (!text && !attachedFileToSend) return;
 
+    // Bloqueio amigável se o dispositivo estiver offline
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      showToast('Sem conexão à internet. Conecte-se para que o Meu Kota possa responder.');
+      const offlineBanner = document.getElementById('kota-offline-banner');
+      if (offlineBanner) offlineBanner.style.display = 'block';
+      return;
+    }
+
     // Verificação de Teto Diário de Segurança com Bypass para Assinantes Pro
     const userSub = getUserSubscription();
     if (!userSub.active) {
@@ -4326,6 +4334,87 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     });
   }
 
+  // --- GERENCIADOR DE CONEXÃO & MODO OFFLINE RESILIENTE ---
+  function setupOfflineAndNetworkEvents() {
+    const offlineScreen = document.getElementById('kota-offline-screen');
+    const offlineBanner = document.getElementById('kota-offline-banner');
+    const btnOfflineRetry = document.getElementById('btn-offline-retry');
+
+    function checkConnectionAndToggleUI(isOnline) {
+      if (!isOnline) {
+        // Se já estiver no chat com histórico local ativo, exibe banner discreto no topo
+        // para permitir leitura de mensagens salvas sem travar a interface
+        if (views.dashboard && views.dashboard.classList.contains('active')) {
+          if (offlineBanner) offlineBanner.style.display = 'block';
+          if (offlineScreen) offlineScreen.style.display = 'none';
+        } else {
+          // Na inicialização ou landing page, exibe a tela de carregamento Meu Kota
+          if (offlineScreen) {
+            offlineScreen.style.display = 'flex';
+            offlineScreen.style.animation = 'fadeInGpt 0.3s ease';
+          }
+          if (offlineBanner) offlineBanner.style.display = 'none';
+        }
+      } else {
+        // Conexão ativa: esconde a tela de carregamento offline suavemente
+        if (offlineScreen && offlineScreen.style.display !== 'none') {
+          offlineScreen.style.animation = 'fadeOutGpt 0.3s ease forwards';
+          setTimeout(() => {
+            offlineScreen.style.display = 'none';
+            offlineScreen.style.animation = '';
+          }, 280);
+        }
+        if (offlineBanner) {
+          offlineBanner.style.display = 'none';
+        }
+      }
+    }
+
+    // Verificação inicial
+    if (typeof navigator !== 'undefined') {
+      if (!navigator.onLine) {
+        checkConnectionAndToggleUI(false);
+      }
+    }
+
+    // Eventos do navegador ao alternar estado de rede
+    window.addEventListener('online', () => {
+      checkConnectionAndToggleUI(true);
+      showToast('Conexão à internet restabelecida! Meu Kota IA conectado.');
+    });
+
+    window.addEventListener('offline', () => {
+      checkConnectionAndToggleUI(false);
+      showToast('Você está sem internet.');
+    });
+
+    // Botão de Reconectar Manual na tela de carregamento
+    if (btnOfflineRetry) {
+      btnOfflineRetry.addEventListener('click', () => {
+        const textSpan = btnOfflineRetry.querySelector('span');
+        if (textSpan) textSpan.textContent = 'Verificando conexão...';
+        btnOfflineRetry.style.opacity = '0.7';
+        btnOfflineRetry.style.pointerEvents = 'none';
+
+        fetch('./manifest.json?t=' + Date.now(), { method: 'HEAD', cache: 'no-cache' })
+          .then(() => {
+            checkConnectionAndToggleUI(true);
+            showToast('Conexão restabelecida com sucesso!');
+          })
+          .catch(() => {
+            showToast('Ainda sem internet. O Meu Kota continuará aguardando o sinal.');
+          })
+          .finally(() => {
+            setTimeout(() => {
+              if (textSpan) textSpan.textContent = 'Tentar Reconectar Agora';
+              btnOfflineRetry.style.opacity = '1';
+              btnOfflineRetry.style.pointerEvents = 'auto';
+            }, 800);
+          });
+      });
+    }
+  }
+
   // --- EVENTOS DO MODAL DE CHECKOUT & PAGAMENTOS (FASE 5) ---
   let checkoutCountdownInterval = null;
 
@@ -5148,6 +5237,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
   setupVoiceInput();
   setupShareChatEvents();
   initPwaServiceWorker();
+  setupOfflineAndNetworkEvents();
 
   // Iniciar na landing page ou restaurar rota
   if (window.location.hash === '#chat') {

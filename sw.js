@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v31';
+const CACHE_NAME = 'meu-kota-cache-v32';
 
 const PRECACHE_ASSETS = [
   './',
@@ -70,7 +70,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // ESTRATÉGIA NETWORK-FIRST PARA CÓDIGO (HTML, JS, CSS):
-  // Garante que qualquer atualização no app.js, index.html ou styles.css apareça de imediato!
+  // Garante atualização imediata online e resiliência offline com ignoreSearch
   const isHtml = req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html');
   const isCodeAsset = isHtml || url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.search.includes('v=');
 
@@ -84,8 +84,26 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        return caches.match(req).then((cached) => cached || (isHtml ? caches.match('./index.html') : null));
+      }).catch(async () => {
+        // 1. Tentar correspondência exata
+        const exactMatch = await caches.match(req);
+        if (exactMatch) return exactMatch;
+
+        // 2. Tentar ignorando parâmetros de versão/busca (?v=...)
+        const ignoreSearchMatch = await caches.match(req, { ignoreSearch: true });
+        if (ignoreSearchMatch) return ignoreSearchMatch;
+
+        // 3. Fallbacks estritos por tipo de recurso
+        if (isHtml) {
+          return (await caches.match('./index.html')) || (await caches.match('./', { ignoreSearch: true }));
+        }
+        if (url.pathname.endsWith('.css') || req.destination === 'style') {
+          return await caches.match('./styles.css', { ignoreSearch: true });
+        }
+        if (url.pathname.endsWith('.js') || req.destination === 'script') {
+          return await caches.match('./app.js', { ignoreSearch: true });
+        }
+        return null;
       })
     );
     return;
@@ -93,7 +111,7 @@ self.addEventListener('fetch', (event) => {
 
   // Estratégia Stale-While-Revalidate para outros assets (imagens, fontes)
   event.respondWith(
-    caches.match(req).then((cachedResponse) => {
+    caches.match(req, { ignoreSearch: true }).then((cachedResponse) => {
       const fetchPromise = fetch(req).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();

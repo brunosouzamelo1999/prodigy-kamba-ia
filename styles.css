@@ -7759,3 +7759,213 @@ body {
   color: #8E8EA0;
   margin-top: 2px;
 }
+
+/* ============================================================
+   TELA DE CARREGAMENTO & MODO OFFLINE MEU KOTA IA
+   ============================================================ */
+#kota-offline-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: radial-gradient(circle at 50% 35%, #1F2536 0%, #11141D 65%, #0B0E14 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.offline-content-box {
+  max-width: 440px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeInGpt 0.3s ease;
+}
+
+.offline-logo-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.offline-logo-glow {
+  position: absolute;
+  inset: -15px;
+  background: radial-gradient(circle, rgba(255, 209, 0, 0.35) 0%, rgba(216, 26, 45, 0.28) 50%, transparent 70%);
+  filter: blur(25px);
+  border-radius: 50%;
+  animation: pulseGlowOffline 3s ease-in-out infinite;
+}
+
+@keyframes pulseGlowOffline {
+  0%, 100% { opacity: 0.6; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.offline-logo-img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 0 25px rgba(255, 209, 0, 0.4), 0 0 50px rgba(216, 26, 45, 0.3);
+  animation: floatKota 3.5s ease-in-out infinite;
+}
+
+.offline-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #FCA5A5;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.offline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #EF4444;
+  box-shadow: 0 0 8px #EF4444;
+  animation: blinkDotOffline 1.4s ease-in-out infinite;
+}
+
+@keyframes blinkDotOffline {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+.offline-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.offline-desc {
+  font-size: 14.5px;
+  color: #9CA3AF;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 360px;
+}
+
+.offline-loader-bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 6px;
+}
+
+.offline-loader-progress {
+  position: absolute;
+  top: 0;
+  left: -45%;
+  height: 100%;
+  width: 45%;
+  background: linear-gradient(90deg, #D81A2D, #FFD100);
+  border-radius: 4px;
+  animation: offlineLoaderSweep 1.8s ease-in-out infinite;
+}
+
+@keyframes offlineLoaderSweep {
+  0% { left: -45%; }
+  100% { left: 100%; }
+}
+
+.offline-loader-caption {
+  font-size: 12.5px;
+  color: #6B7280;
+  font-weight: 400;
+  letter-spacing: 0.1px;
+}
+
+.btn-offline-retry {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFD100;
+  color: #000000;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 22px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(255, 209, 0, 0.25);
+}
+
+.btn-offline-retry:hover {
+  background: #FFE033;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(255, 209, 0, 0.35);
+}
+
+.btn-offline-retry:active {
+  transform: scale(0.97);
+}
+
+/* Banner de Alerta Flutuante (quando cai internet no chat) */
+.kota-offline-banner {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  background: rgba(20, 20, 20, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65);
+  border-radius: 30px;
+  padding: 8px 20px;
+  animation: slideDownBanner 0.3s ease;
+}
+
+@keyframes slideDownBanner {
+  from { opacity: 0; transform: translate(-50%, -15px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.offline-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #F3F4F6;
+  font-weight: 500;
+}
+
+.offline-banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F59E0B;
+  box-shadow: 0 0 8px #F59E0B;
+  animation: blinkDotOffline 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes fadeOutGpt {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.98); }
+}

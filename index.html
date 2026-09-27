@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt" style="background-color: #171717; color: #ECECEC;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -15,6 +15,17 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="icons/favicon.png">
 
+  <!-- Estilos Críticos Inline para Nunca Apresentar Tela Branca -->
+  <style>
+    html, body {
+      background-color: #171717 !important;
+      color: #ECECEC !important;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+
   <!-- Tipografia Oficial Geist & Geist Mono (Vercel Style) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,9 +35,64 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   
   <!-- Estilos Globais -->
-  <link rel="stylesheet" href="styles.css?v=20260927_v31_tablet_scroll_fix">
+  <link rel="stylesheet" href="styles.css?v=20260927_v32_offline_resilience">
 </head>
-<body>
+<body style="background-color: #171717; color: #ECECEC; margin: 0; min-height: 100vh;">
+
+  <!-- Script Instantâneo de Deteção Offline (evita qualquer transição ou flash) -->
+  <script>
+    (function() {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        document.addEventListener('DOMContentLoaded', function() {
+          var scr = document.getElementById('kota-offline-screen');
+          if (scr) scr.style.display = 'flex';
+        });
+      }
+    })();
+  </script>
+
+  <!-- TELA DE CARREGAMENTO & MODO OFFLINE MEU KOTA IA -->
+  <div id="kota-offline-screen" style="display: none;">
+    <div class="offline-content-box">
+      <!-- Logo Flutuante com Brilho Radiante de Angola -->
+      <div class="offline-logo-wrap">
+        <div class="offline-logo-glow"></div>
+        <img src="assets/logo-meu-kota-circle.png" alt="Meu Kota IA" class="offline-logo-img">
+      </div>
+
+      <!-- Badge de Status -->
+      <div class="offline-status-badge">
+        <span class="offline-dot"></span>
+        <span>Sem Conexão à Internet</span>
+      </div>
+
+      <h2 class="offline-title">Meu Kota IA</h2>
+      <p class="offline-desc">Você está sem internet no momento. O Meu Kota carregará automaticamente assim que a conexão for restabelecida.</p>
+
+      <!-- Barra de Carregamento Pulsante -->
+      <div class="offline-loader-bar">
+        <div class="offline-loader-progress"></div>
+      </div>
+      <span class="offline-loader-caption">A carregar o Meu Kota assim que a rede responder...</span>
+
+      <button type="button" class="btn-offline-retry" id="btn-offline-retry">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/>
+          <polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>Tentar Reconectar Agora</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Banner Flutuante de Alerta Offline (durante o uso) -->
+  <div id="kota-offline-banner" class="kota-offline-banner" style="display: none;">
+    <div class="offline-banner-content">
+      <span class="offline-banner-dot"></span>
+      <span>Você está sem internet. O Meu Kota reconectará automaticamente assim que a rede voltar.</span>
+    </div>
+  </div>
 
   <!-- ============================================================ -->
   <!-- 1. LANDING PAGE — FOCO NO PÚBLICO DE CHAT IA & MULTI-APARELHO -->
@@ -1961,6 +2027,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260927_v31_tablet_scroll_fix"></script>
+  <script src="app.js?v=20260927_v32_offline_resilience"></script>
 </body>
 </html>
