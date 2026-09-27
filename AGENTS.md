@@ -10,7 +10,7 @@ O **Meu Kota IA** é uma aplicação web de inteligência artificial conversacio
 - **Estilos:** Vanilla CSS moderno (`styles.css`) sem TailwindCSS
 - **Lógica:** Vanilla JavaScript modular (`app.js`)
 - **Ícones:** 100% Vetoriais SVG minimalistas (sem emojis informais)
-- **Hospedagem / Deploy:** GitHub Pages (`main` branch)
+- **Hospedagem / Deploy:** GitHub Pages (`main` branch) e Firebase Hosting (`firebase deploy --only hosting` para `meu-kota-ia.web.app`)
 
 ## 📁 Estrutura de Arquivos
 - `index.html`: Landing page multi-aparelho e visualizador de chat estilo ChatGPT
