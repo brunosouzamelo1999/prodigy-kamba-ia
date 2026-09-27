@@ -7,7 +7,7 @@
   "display": "standalone",
   "background_color": "#0D111A",
   "theme_color": "#171717",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "lang": "pt-AO",
   "categories": [
     "productivity",
