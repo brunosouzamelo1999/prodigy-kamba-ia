@@ -2633,7 +2633,323 @@ body {
   .chat-main-container { padding: 12px 10px; }
   .msg-row { max-width: 95%; }
   .chat-messages-container { padding: 14px; gap: 14px; }
-  .auth-card { padding: 26px 20px; }
+  .auth-card { padding: 22px 16px; }
+
+  /* --- HARMONIZAÇÃO VISUAL & TIPOGRAFIA MOBILE (LANDING PAGE) --- */
+  /* Faixa de Anúncio Superior */
+  .vercel-top-banner {
+    padding: 7px 12px;
+    font-size: 11.5px;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .vercel-top-banner a {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  /* Header e Navbar no Celular */
+  .header-container {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .brand-logo {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .palanca-svg,
+  .kota-logo-img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-text {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+    line-height: 1;
+  }
+
+  .brand-title {
+    font-size: 14.5px;
+    letter-spacing: 0.5px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .brand-subtitle {
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: var(--angola-yellow);
+    white-space: nowrap;
+  }
+
+  .header-cta-group {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn-pwa-install {
+    padding: 6px 9px;
+    font-size: 11.5px;
+    gap: 4px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+  }
+
+  .btn-vercel-pill-ghost {
+    padding: 6px 11px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .btn-vercel-pill-solid {
+    padding: 6px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap !important;
+    line-height: 1.25;
+    border-radius: var(--radius-pill);
+  }
+
+  /* Hero Section e Monólito Central */
+  .vercel-hero-layout {
+    padding: 24px 16px 36px;
+  }
+
+  .vercel-hero-columns {
+    gap: 22px;
+  }
+
+  .hero-col-center {
+    order: -1;
+    margin-bottom: 2px;
+  }
+
+  .monolith-aura-box {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+  }
+
+  .monolith-prism {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+  }
+
+  .monolith-palanca-svg,
+  .monolith-kota-img {
+    width: 78px;
+    height: 78px;
+  }
+
+  .monolith-back-glow {
+    filter: blur(24px);
+    inset: -8px;
+  }
+
+  .hero-col-left {
+    text-align: center;
+  }
+
+  .hero-tag-pill {
+    margin: 0 auto 12px;
+    padding: 4px 11px;
+    font-size: 11.5px;
+    display: inline-flex;
+  }
+
+  .vercel-big-title {
+    font-size: clamp(1.85rem, 6.8vw, 2.35rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 14px;
+  }
+
+  .vercel-big-title span {
+    font-size: clamp(1.7rem, 6.2vw, 2.2rem);
+    margin-top: 4px;
+  }
+
+  .hero-description-text {
+    font-size: 13.5px !important;
+    line-height: 1.55 !important;
+    margin-bottom: 20px !important;
+    padding: 0 4px;
+  }
+
+  .hero-btn-group-vercel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .btn-pill-primary,
+  .btn-pill-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 13.5px;
+  }
+
+  .hero-col-right {
+    padding-left: 0;
+    margin-top: 10px;
+    gap: 14px;
+  }
+
+  .hero-feature-bullet {
+    padding-left: 12px;
+    gap: 2px;
+    text-align: left;
+  }
+
+  .feature-bullet-title {
+    font-size: 13.5px;
+  }
+
+  .feature-bullet-desc {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  /* Barra de Setores */
+  .vercel-sectors-bar {
+    padding: 0 14px;
+    margin-bottom: 40px;
+  }
+
+  .sectors-bar-inner {
+    padding: 14px 6px;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .sector-logo-item {
+    font-size: 11px;
+    gap: 5px;
+  }
+
+  /* Terminal de Demonstração */
+  .vercel-preview-wrapper {
+    margin-bottom: 50px;
+    padding: 0 12px;
+  }
+
+  .terminal-header {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .terminal-tabs {
+    gap: 4px;
+  }
+
+  .t-tab {
+    padding: 5px 9px;
+    font-size: 11.5px;
+    gap: 5px;
+  }
+
+  .terminal-body {
+    padding: 16px 14px;
+    gap: 14px;
+  }
+
+  .terminal-prompt {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .prompt-user-text {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  .terminal-response {
+    padding: 14px;
+  }
+
+  #interactive-ai-response {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* Títulos de Seções e Cards */
+  .section-badge {
+    font-size: 10.5px;
+    padding: 3px 9px;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 1.55rem;
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+
+  .section-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .bento-card {
+    padding: 20px 18px;
+  }
+
+  .bento-card-title {
+    font-size: 15px;
+  }
+
+  .bento-card-desc {
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .faq-question {
+    font-size: 13.5px;
+    padding: 13px 14px;
+  }
+
+  .faq-answer {
+    font-size: 12.5px;
+    padding: 0 14px 13px;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 8px 10px;
+  }
+  .btn-pwa-install span {
+    display: none;
+  }
+  .btn-pwa-install {
+    padding: 6px 8px;
+  }
+  .btn-vercel-pill-ghost {
+    padding: 5px 9px;
+    font-size: 11.5px;
+  }
+  .btn-vercel-pill-solid {
+    padding: 5px 11px;
+    font-size: 11.5px;
+  }
+  .brand-title {
+    font-size: 13.5px;
+  }
+  .brand-subtitle {
+    font-size: 10.5px;
+  }
 }
 
 /* ============================================================
