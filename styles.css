@@ -401,20 +401,18 @@ body {
   background: radial-gradient(circle, rgba(255, 209, 0, 0.28) 0%, rgba(216, 26, 45, 0.28) 45%, transparent 70%);
   filter: blur(40px);
   border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .monolith-prism {
   position: relative;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle at 50% 40%, #161C2A 0%, #05070D 100%);
-  border: 1px solid rgba(255, 209, 0, 0.45);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 0 50px rgba(216, 26, 45, 0.4), inset 0 0 30px rgba(0, 0, 0, 0.85);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .monolith-palanca-svg {
@@ -2735,18 +2733,23 @@ body {
     width: 140px;
     height: 140px;
     margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .monolith-prism {
-    width: 120px;
-    height: 120px;
-    border-radius: 20px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
   }
 
   .monolith-palanca-svg,
   .monolith-kota-img {
-    width: 78px;
-    height: 78px;
+    width: 104px;
+    height: 104px;
   }
 
   .monolith-back-glow {
@@ -5665,13 +5668,15 @@ body {
 }
 
 .monolith-kota-img {
-  width: 144px;
-  height: 144px;
+  width: 176px;
+  height: 176px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 0 35px rgba(255, 209, 0, 0.45), 0 0 70px rgba(216, 26, 45, 0.35);
   display: block;
   margin: 0 auto;
+  position: relative;
+  z-index: 2;
   animation: floatKota 4s ease-in-out infinite;
 }
 
