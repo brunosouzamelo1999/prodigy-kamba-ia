@@ -2287,111 +2287,83 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     }
   }
 
-  // --- GERADOR E DOWNLOAD DE ÁUDIO (.WAV) DAS RESPOSTAS DO KOTA ---
-  function encodeWAV(samples, sampleRate) {
-    const buffer = new ArrayBuffer(44 + samples.length * 2);
-    const view = new DataView(buffer);
+  // --- GERADOR E DOWNLOAD DE ÁUDIO (.WAV) DAS RESPOSTAS DO KOTA (NEURAL TTS OFICIAL) ---
+  async function generateSpeechAudioWAV(text) {
+    const sentences = prepareTextForSpeech(text);
+    if (!sentences || sentences.length === 0) {
+      throw new Error('Nenhum texto legível disponível para sintetizar áudio.');
+    }
 
-    function writeString(view, offset, string) {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
+    // Unir o texto limpo (removendo código, formatações pesadas e notações)
+    let cleanText = sentences.join(' ').trim();
+    if (cleanText.length > 900) {
+      // Para textos extensos, sintetizar até o fim da frase mais próxima de 850 caracteres
+      const sliceIdx = cleanText.lastIndexOf('.', 850);
+      if (sliceIdx > 350) {
+        cleanText = cleanText.slice(0, sliceIdx + 1);
+      } else {
+        cleanText = cleanText.slice(0, 850) + '...';
       }
     }
 
-    // Header RIFF
-    writeString(view, 0, 'RIFF');
-    view.setUint32(4, 36 + samples.length * 2, true);
-    writeString(view, 8, 'WAVE');
-
-    // Sub-chunk 'fmt '
-    writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true); // PCM não comprimido
-    view.setUint16(22, 1, true); // Mono
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true); // 16 bits
-
-    // Sub-chunk 'data'
-    writeString(view, 36, 'data');
-    view.setUint32(40, samples.length * 2, true);
-
-    // Amostras PCM 16-bit
-    let offset = 44;
-    for (let i = 0; i < samples.length; i++, offset += 2) {
-      const s = Math.max(-1, Math.min(1, samples[i]));
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    const apiKey = (getCustomGeminiApiKey() || '').trim();
+    if (!apiKey) {
+      throw new Error('Chave de API não configurada.');
     }
 
-    return new Blob([view], { type: 'audio/wav' });
-  }
+    const ttsEndpoints = [
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-lite-tts:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent'
+    ];
 
-  // Sintetizador acústico de voz/fala em PCM (Universal, offline, compatível com telemóveis e desktop)
-  function synthesizeSpeechAudioWAV(cleanText) {
-    const sampleRate = 22050;
-    const sentences = prepareTextForSpeech(cleanText);
-    const fullText = (sentences.length > 0 ? sentences.join(' ') : cleanText).trim();
+    let lastError = null;
 
-    const f0 = 135; // Frequência fundamental média masculina/conselheiro (Kota)
-    const phonemeDuration = 0.085; // ~85ms por caractere fonético
-    const totalDuration = Math.min(Math.max(fullText.length * phonemeDuration, 2.0), 90.0);
-    const totalSamples = Math.floor(sampleRate * totalDuration);
-    const samples = new Float32Array(totalSamples);
+    for (const endpoint of ttsEndpoints) {
+      try {
+        const url = `${endpoint}?key=${encodeURIComponent(apiKey)}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: cleanText }]
+            }]
+          })
+        });
 
-    let sampleIdx = 0;
-    const words = fullText.split(/\s+/);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData.error?.message || `HTTP ${response.status}`;
+          console.warn(`[TTS Neural] Falha no endpoint ${endpoint}:`, errMsg);
+          lastError = new Error(errMsg);
+          continue;
+        }
 
-    for (let w = 0; w < words.length && sampleIdx < totalSamples; w++) {
-      const word = words[w].toLowerCase();
+        const data = await response.json();
+        const candidate = data.candidates && data.candidates[0];
+        const audioPart = candidate && candidate.content && candidate.content.parts && candidate.content.parts.find(p => p.inlineData && p.inlineData.data);
 
-      for (let i = 0; i < word.length && sampleIdx < totalSamples; i++) {
-        const char = word[i];
-        const charSamples = Math.floor(phonemeDuration * sampleRate);
+        if (audioPart && audioPart.inlineData && audioPart.inlineData.data) {
+          const base64Data = audioPart.inlineData.data;
+          const mimeType = audioPart.inlineData.mimeType || 'audio/wav';
 
-        let form1 = 500, form2 = 1500;
-        if ('aáãâ'.includes(char)) { form1 = 750; form2 = 1250; }
-        else if ('eéê'.includes(char)) { form1 = 520; form2 = 1850; }
-        else if ('ií'.includes(char)) { form1 = 300; form2 = 2250; }
-        else if ('oóõô'.includes(char)) { form1 = 500; form2 = 1000; }
-        else if ('uú'.includes(char)) { form1 = 350; form2 = 800; }
-        else if ('sçxz'.includes(char)) { form1 = 2500; form2 = 4500; }
-        else if ('mn'.includes(char)) { form1 = 260; form2 = 1200; }
-
-        const isFricative = 'sçxzf'.includes(char);
-        const isPlosive = 'ptkbdg'.includes(char);
-
-        for (let s = 0; s < charSamples && sampleIdx < totalSamples; s++) {
-          const t = sampleIdx / sampleRate;
-          const env = Math.sin((s / charSamples) * Math.PI);
-          let sampleVal = 0;
-
-          if (isFricative) {
-            const whiteNoise = (Math.random() * 2 - 1) * 0.25;
-            sampleVal = whiteNoise * env;
-          } else if (isPlosive && s < charSamples * 0.3) {
-            sampleVal = ((Math.random() * 2 - 1) * 0.4 + Math.sin(2 * Math.PI * form1 * t) * 0.3) * env;
-          } else {
-            const glottal = Math.sin(2 * Math.PI * f0 * t) * 0.4 
-                          + Math.sin(2 * Math.PI * (f0 * 2) * t) * 0.25
-                          + Math.sin(2 * Math.PI * (f0 * 3) * t) * 0.15;
-            const res1 = Math.sin(2 * Math.PI * form1 * t) * 0.35;
-            const res2 = Math.sin(2 * Math.PI * form2 * t) * 0.2;
-            sampleVal = (glottal * 0.4 + res1 * 0.4 + res2 * 0.2) * env;
+          // Decodificar Base64 diretamente para Blob WAV nativo com fala humana
+          const binaryString = atob(base64Data);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
           }
 
-          samples[sampleIdx++] = sampleVal * 0.75;
+          return new Blob([bytes], { type: mimeType });
         }
-      }
-
-      // Pausa suave de ~40ms entre palavras
-      const pauseSamples = Math.floor(0.04 * sampleRate);
-      for (let p = 0; p < pauseSamples && sampleIdx < totalSamples; p++) {
-        samples[sampleIdx++] = 0;
+      } catch (err) {
+        console.warn(`[TTS Neural] Erro na requisição para ${endpoint}:`, err);
+        lastError = err;
       }
     }
 
-    return encodeWAV(samples, sampleRate);
+    throw lastError || new Error('Não foi possível gerar a síntese de voz neural.');
   }
 
   async function downloadMessageAudio(text, btnElement) {
@@ -2411,14 +2383,13 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         <line x1="2" y1="12" x2="6" y2="12"/>
         <line x1="18" y1="12" x2="22" y2="12"/>
       </svg>
-      <span>A gerar áudio...</span>
+      <span>A sintetizar voz neural...</span>
     `;
 
     try {
-      showToast('A preparar arquivo de áudio da resposta...');
-      await new Promise(r => setTimeout(r, 80));
+      showToast('A sintetizar áudio com voz humana do Kota...');
+      const wavBlob = await generateSpeechAudioWAV(text);
 
-      const wavBlob = synthesizeSpeechAudioWAV(text);
       const downloadUrl = URL.createObjectURL(wavBlob);
       const tempLink = document.createElement('a');
       tempLink.href = downloadUrl;
@@ -2427,7 +2398,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       document.body.appendChild(tempLink);
       tempLink.click();
       document.body.removeChild(tempLink);
-      setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 8000);
 
       btnElement.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5">
@@ -2437,8 +2408,11 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
       `;
       showToast('Áudio da resposta baixado com sucesso (.wav)!');
     } catch (err) {
-      console.error('Erro ao baixar áudio:', err);
-      showToast('Não foi possível gerar o arquivo de áudio.');
+      console.error('Erro ao baixar áudio neural:', err);
+      const isQuota = err.message && (err.message.includes('quota') || err.message.includes('429'));
+      showToast(isQuota 
+        ? 'Limite de geração de áudio temporariamente atingido. Aguarde alguns instantes e tente novamente.' 
+        : 'Não foi possível gerar o arquivo de áudio falado.');
       btnElement.innerHTML = originalContent;
       btnElement.disabled = false;
       return;
@@ -2447,7 +2421,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
     setTimeout(() => {
       btnElement.innerHTML = originalContent;
       btnElement.disabled = false;
-    }, 2500);
+    }, 3500);
   }
 
   function scrollToBottom() {
