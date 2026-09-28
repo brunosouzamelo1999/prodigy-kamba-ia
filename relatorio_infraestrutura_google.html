@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório Executivo — Arquitetura de Nuvem e Servidores Google Firebase</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #0F172A;
+      background: #FFFFFF;
+      margin: 0;
+      padding: 0;
+      font-size: 11pt;
+      line-height: 1.55;
+    }
+
+    /* Cabeçalho Oficial */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2.5px solid #0F172A;
+      padding-bottom: 14px;
+      margin-bottom: 22px;
+    }
+    .brand-title {
+      font-size: 18pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #0F172A;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-tag {
+      font-size: 8pt;
+      background: #D81A2D;
+      color: #FFFFFF;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .doc-meta {
+      text-align: right;
+      font-size: 8.5pt;
+      color: #475569;
+      line-height: 1.35;
+    }
+
+    /* Título do Documento */
+    .doc-title-block {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      color: #FFFFFF;
+      padding: 18px 20px;
+      border-radius: 6px;
+      margin-bottom: 22px;
+      border-left: 5px solid #FFD100;
+    }
+    .doc-title {
+      font-size: 15pt;
+      font-weight: 800;
+      margin: 0 0 6px 0;
+      letter-spacing: -0.3px;
+    }
+    .doc-subtitle {
+      font-size: 9.5pt;
+      color: #CBD5E1;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    /* Seções */
+    h2 {
+      font-size: 12.5pt;
+      font-weight: 800;
+      color: #0F172A;
+      border-bottom: 1.5px solid #E2E8F0;
+      padding-bottom: 4px;
+      margin: 20px 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      page-break-after: avoid;
+    }
+    h2 .section-num {
+      color: #D81A2D;
+      font-weight: 900;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 12px 0 4px 0;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: #334155;
+      text-align: justify;
+    }
+
+    /* Grid de Pilares de Servidores */
+    .server-pillars {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+    .pillar-card {
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #F8FAFC;
+      border-top: 3px solid #0F172A;
+    }
+    .pillar-card.accent {
+      border-top-color: #D81A2D;
+    }
+    .pillar-card.gold {
+      border-top-color: #FFD100;
+    }
+    .pillar-card.blue {
+      border-top-color: #2563EB;
+    }
+    .pillar-title {
+      font-weight: 800;
+      font-size: 10pt;
+      color: #0F172A;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pillar-desc {
+      font-size: 8.5pt;
+      color: #475569;
+      line-height: 1.45;
+      margin: 0;
+      text-align: left;
+    }
+
+    /* Tabelas Executivas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+    }
+    th {
+      background: #0F172A;
+      color: #FFFFFF;
+      font-weight: 700;
+      text-align: left;
+      padding: 7px 9px;
+      border: 1px solid #0F172A;
+      letter-spacing: 0.2px;
+    }
+    td {
+      padding: 6.5px 9px;
+      border: 1px solid #E2E8F0;
+      color: #1E293B;
+    }
+    tr:nth-child(even) td {
+      background: #F8FAFC;
+    }
+    .price-tag {
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .free-pill {
+      display: inline-block;
+      background: #DCFCE7;
+      color: #166534;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+      font-size: 7.5pt;
+    }
+    .blaze-pill {
+      display: inline-block;
+      background: #EFF6FF;
+      color: #1E40AF;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+      font-size: 7.5pt;
+    }
+
+    /* Box de Destaque / Conclusão */
+    .highlight-box {
+      background: #FEF2F2;
+      border-left: 3.5px solid #D81A2D;
+      padding: 10px 14px;
+      border-radius: 4px;
+      margin: 14px 0;
+      font-size: 9pt;
+      color: #991B1B;
+      page-break-inside: avoid;
+    }
+    .highlight-box.blue {
+      background: #EFF6FF;
+      border-left-color: #2563EB;
+      color: #1E40AF;
+    }
+    .highlight-box strong {
+      color: inherit;
+    }
+
+    /* Rodapé */
+    .footer-bar {
+      margin-top: 24px;
+      border-top: 1px solid #E2E8F0;
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      color: #64748B;
+      page-break-inside: avoid;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CABEÇALHO -->
+  <div class="header-bar">
+    <div class="brand-title">
+      MEU KOTA IA <span class="brand-tag">Relatório Técnico</span>
+    </div>
+    <div class="doc-meta">
+      <strong>Documento Nº:</strong> MK-REL-2026-0928<br>
+      <strong>Data de Emissão:</strong> 28 de Setembro de 2026<br>
+      <strong>Classificação:</strong> Comercial / Executivo
+    </div>
+  </div>
+
+  <!-- TÍTULO -->
+  <div class="doc-title-block">
+    <div class="doc-title">Arquitetura de Nuvem e Servidores Google Firebase</div>
+    <div class="doc-subtitle">Análise Técnica dos 4 Servidores Disponibilizados, Domínios Oficiais e Comparativo de Custos Reais (Planos Spark vs. Blaze)</div>
+  </div>
+
+  <!-- SEÇÃO 1: INTRODUÇÃO -->
+  <h2><span class="section-num">1.</span> Visão Geral da Infraestrutura Google</h2>
+  <p>
+    O aplicativo <strong>Meu Kota IA</strong> é hospedado e executado sobre a infraestrutura global do <strong>Google Cloud Platform (GCP)</strong> por intermédio do ecossistema <strong>Google Firebase</strong>. Diferente de hospedagens convencionais que alocam uma única máquina virtual estática em data center isolado, o Firebase fornece uma malha distribuída de alta disponibilidade, redundância geográfica e latência ultrabaixa, idêntica à que sustenta serviços globais de missão crítica como a Busca do Google, YouTube e Google Workspace.
+  </p>
+  <p>
+    Ao implantar a solução no Firebase, o projeto recebe automaticamente <strong>dois domínios seguros HTTPS</strong> com certificados SSL renovados automaticamente pelo Google (<code>meu-kota-ia.web.app</code> e <code>meu-kota-ia.firebaseapp.com</code>), além de permitir o apontamento de domínio próprio personalizado (ex: <code>meukota.ao</code> ou <code>suaempresa.com</code>) com custo zero de licenciamento de certificado.
+  </p>
+
+  <!-- SEÇÃO 2: OS 4 TIPOS DE SERVIDORES -->
+  <h2><span class="section-num">2.</span> Os 4 Tipos de Servidores Disponibilizados pelo Google</h2>
+  <p>
+    O ecossistema do Google não entrega apenas um servidor web estático. Ele disponibiliza quatro camadas de computação e armazenamento de alta performance:
+  </p>
+
+  <div class="server-pillars">
+    <div class="pillar-card">
+      <div class="pillar-title">A) Servidores de Borda Globais (Hosting CDN)</div>
+      <p class="pillar-desc">
+        Distribuição do aplicativo em mais de 100 nós de borda (Edge Locations) espalhados pelo mundo. O código é armazenado em SSD de alta performance e servido a partir do data center mais próximo do usuário (África, América Latina, Europa), garantindo carregamento em milissegundos.
+      </p>
+    </div>
+    <div class="pillar-card accent">
+      <div class="pillar-title">B) Servidores de Banco de Dados (Cloud Firestore)</div>
+      <p class="pillar-desc">
+        Banco de dados NoSQL distribuído e multi-região. Sincroniza dados em tempo real (web sockets) entre celulares, tablets e computadores, com resolução de conflitos, suporte completo a cache offline e integridade de transações ACID.
+      </p>
+    </div>
+    <div class="pillar-card gold">
+      <div class="pillar-title">C) Servidores Serverless de Código (Cloud Functions)</div>
+      <p class="pillar-desc">
+        Ambiente computacional sem servidor que executa rotinas em Node.js e Python sob demanda. Ideal para processar lógica de negócios protegida, webhooks de pagamentos, disparos de automações de e-mail e orquestrações sem necessidade de manter uma máquina ligada 24 horas.
+      </p>
+    </div>
+    <div class="pillar-card blue">
+      <div class="pillar-title">D) Servidores de Containers & VMs (Cloud Run / GCE)</div>
+      <p class="pillar-desc">
+        Servidores completos de virtualização onde é possível hospedar containers Docker, instâncias de automação (como o <strong>n8n</strong>), robôs em Python e bancos de dados relacionais dedicados. Inclui cota gratuita perpétua no nível <em>Always Free</em> do Google Cloud.
+      </p>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SEÇÃO 3: PLANOS E VALORES REAIS -->
+  <h2><span class="section-num">3.</span> Comparativo de Planos e Valores Reais (Oficial Google 2026)</h2>
+  <p>
+    O Google estrutura o faturamento do Firebase em dois planos fundamentais: o plano <strong>Spark (No-Cost / Gratuito)</strong> e o plano <strong>Blaze (Pay-as-you-go / Pagamento por Consumo Real)</strong>. Abaixo estão detalhadas as cotas oficiais, os preços unitários em Dólares (USD) e as estimativas de conversão cambial:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Recurso de Servidor</th>
+        <th style="width: 35%;">Plano Spark (100% Gratuito)</th>
+        <th style="width: 40%;">Plano Blaze (Pague pelo que Exceder)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Hospedagem & CDN (Hosting)</strong></td>
+        <td>
+          <span class="free-pill">GRÁTIS</span> 10 GB de armazenamento<br>
+          <span class="free-pill">GRÁTIS</span> 10 GB tráfego/mês (360 MB/dia)<br>
+          Dois domínios + SSL ilimitado
+        </td>
+        <td>
+          Mantém toda a cota grátis do Spark.<br>
+          Excedente: <span class="price-tag">$0,15 por GB</span> de tráfego adicional (~140 AOA / R$ 0,85 por GB).
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Banco de Dados (Cloud Firestore)</strong></td>
+        <td>
+          <span class="free-pill">GRÁTIS</span> 1 GiB de armazenamento<br>
+          <span class="free-pill">GRÁTIS</span> 50.000 leituras/dia<br>
+          <span class="free-pill">GRÁTIS</span> 20.000 gravações/dia
+        </td>
+        <td>
+          Mantém toda a cota grátis diária.<br>
+          Excedente: <span class="price-tag">$0,30 por milhão de leituras</span> e <span class="price-tag">$0,06 por 100k gravações</span>.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Autenticação de Usuários</strong></td>
+        <td>
+          <span class="free-pill">GRÁTIS</span> Até 50.000 usuários ativos/mês (E-mail/Senha, Google, Apple).
+        </td>
+        <td>
+          Mesma cota de 50.000 usuários grátis.<br>
+          Acima de 50k: <span class="price-tag">$0,0055 por usuário</span> ativo. SMS faturado à parte por operadora.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Servidor de Funções (Cloud Functions)</strong></td>
+        <td>
+          Não incluído no plano gratuito (restrito a chamadas internas do Firebase).
+        </td>
+        <td>
+          <span class="blaze-pill">COTA INCLUSA</span> Primeiras <strong>2.000.000 de chamadas/mês GRÁTIS</strong>.<br>
+          Excedente: apenas <span class="price-tag">$0,40 por 1 milhão</span> de chamadas.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Containers & VMs (Cloud Run / Compute)</strong></td>
+        <td>
+          Acesso via Google Cloud Console vinculado ao projeto.
+        </td>
+        <td>
+          <span class="blaze-pill">ALWAYS FREE</span> <strong>2 milhões de requisições/mês grátis</strong> no Cloud Run e 1 máquina virtual <code>e2-micro</code> sem custo.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SEÇÃO 4: CENÁRIOS PRÁTICOS DE CONSUMO -->
+  <h2><span class="section-num">4.</span> Cenários Práticos de Custo para o Cliente</h2>
+  <p>
+    Para dimensionar o impacto orçamentário em ambiente de produção, foram calculados três cenários reais de uso:
+  </p>
+
+  <div class="server-pillars">
+    <div class="pillar-card">
+      <div class="pillar-title">Cenário A: Lançamento & Pequena Empresa</div>
+      <p class="pillar-desc">
+        • Até 1.500 usuários ativos por mês.<br>
+        • Cerca de 15.000 interações/mês no chat.<br>
+        • Tráfego médio: ~5 GB/mês.<br>
+        <strong>Custo Mensal Estimado: $0,00 (100% Coberto pelo Plano Gratuito).</strong>
+      </p>
+    </div>
+    <div class="pillar-card gold">
+      <div class="pillar-title">Cenário B: Operação Comercial Média</div>
+      <p class="pillar-desc">
+        • 10.000 usuários ativos por mês.<br>
+        • 150.000 interações e geração de relatórios.<br>
+        • Funções de integração e webhooks ativas.<br>
+        <strong>Custo Mensal Estimado: $1,50 a $5,00 USD (~1.400 a 4.600 AOA / R$ 8 a R$ 28).</strong>
+      </p>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 5: SEGURANÇA E CONTROLE ORÇAMENTÁRIO -->
+  <h2><span class="section-num">5.</span> Mecanismos de Blindagem Orçamentária (Budget Alerts)</h2>
+  <div class="highlight-box blue">
+    <strong>Garantia contra Gastos Inesperados:</strong><br>
+    No Google Cloud / Firebase, o cliente nunca fica vulnerável a cobranças imprevistas. A infraestrutura possui o recurso de <strong>Budget Alerts (Alertas de Orçamento)</strong> e <strong>Capping Automático</strong>: define-se um limite máximo mensal (ex: $10,00 ou $20,00 USD). Caso o consumo atinja 80% do valor estipulado, os administradores recebem avisos imediatos por e-mail e SMS, podendo inclusive pausar execuções automaticamente.
+  </div>
+
+  <!-- SEÇÃO 6: CONCLUSÃO E RECOMENDAÇÃO -->
+  <h2><span class="section-num">6.</span> Conclusão e Parecer Estratégico</h2>
+  <p>
+    A utilização da infraestrutura Google Firebase para o <strong>Meu Kota IA</strong> confere ao cliente robustez corporativa de primeiro nível mundial com despesas operacionais virtualmente nulas na fase inicial de adoção. Recomenda-se iniciar no plano <strong>Spark (Gratuito)</strong> para consolidação da base de usuários e, no momento em que rotinas de backend externas (webhooks n8n ou Cloud Functions) forem acionadas, efetuar a ativação do plano <strong>Blaze</strong> com teto orçamentário configurado em $10 USD/mês, assegurando escalabilidade irrestrita com segurança financeira total.
+  </p>
+
+  <!-- ASSINATURAS / RODAPÉ -->
+  <div class="footer-bar">
+    <div>
+      <strong>Meu Kota IA</strong> — Inteligência Artificial Conversacional Corporativa<br>
+      Tecnologia de Nuvem: Google Cloud Platform & Firebase Hosting
+    </div>
+    <div style="text-align: right;">
+      Status da Infraestrutura: <strong style="color: #16A34A;">100% Operacional</strong><br>
+      Página 1 de 2 / 2 de 2 (Documento Autêntico)
+    </div>
+  </div>
+
+</body>
+</html>

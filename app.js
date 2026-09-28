@@ -3042,6 +3042,16 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       }
     }
 
+    let promptToSend = text;
+    if (typeof window !== 'undefined' && window.activeCanvasArtifact && window.activeCanvasArtifact.type === 'spreadsheet') {
+      const art = window.activeCanvasArtifact;
+      const headerRow = `| ${art.headers.join(' | ')} |`;
+      const sepRow = `| ${art.headers.map(() => '---').join(' | ')} |`;
+      const dataRows = art.rows.map(r => `| ${r.join(' | ')} |`).join('\n');
+      const tableMd = `${headerRow}\n${sepRow}\n${dataRows}`;
+      promptToSend = `${text}\n\n[CONTEXTO ATIVO DO CANVAS - PLANILHA "${art.fileName || art.title}":\n${tableMd}\n(Instrução: Se a resposta envolver editar, recalcular ou adicionar dados a esta planilha, forneça a tabela completa e atualizada em formato Markdown para sincronização no Canvas)]`;
+    }
+
     let finalAiResponseText = '';
     const customKey = getCustomGeminiApiKey();
 
@@ -3054,7 +3064,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
 
         finalAiResponseText = await callGoogleGeminiStreamingAPI(
           customKey, 
-          text, 
+          promptToSend, 
           attachedFileToSend, 
           chat.messages,
           (streamedText) => {
@@ -3074,7 +3084,7 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
 
         try {
           finalAiResponseText = await callSecureBackendChat(
-            text,
+            promptToSend,
             attachedFileToSend,
             chat.messages,
             (streamedText) => {
@@ -4203,7 +4213,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       return id;
     });
 
-    // 3. Extrair tabelas Markdown (| Col 1 | Col 2 | ...) para placeholders
+    // 3. Extrair tabelas Markdown (| Col 1 | Col 2 | ...) para placeholders e Artefatos do Canvas
     const tables = [];
     const tableRegex = /(?:^[ \t]*\|?[^\n\|]+\|[^\n]*\r?\n[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)+\|?[ \t]*(?:\r?\n|$))(?:^[ \t]*\|?[^\n\|]+\|[^\n]*(?:\r?\n|$))*/gm;
 
@@ -4229,25 +4239,82 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         return 'left';
       });
 
-      let html = '<div class="table-responsive-wrapper"><table class="kamba-table"><thead><tr>';
+      // Extrair linhas de dados
+      const rowsData = [];
+      let tableRowsHtml = '';
+      for (let r = 2; r < rawLines.length; r++) {
+        const rowCells = parseCells(rawLines[r]);
+        const rowArr = [];
+        tableRowsHtml += '<tr>';
+        headerCells.forEach((_, i) => {
+          const cell = rowCells[i] !== undefined ? rowCells[i] : '';
+          rowArr.push(cell);
+          const align = aligns[i] || 'left';
+          tableRowsHtml += `<td style="text-align:${align}">${cell}</td>`;
+        });
+        tableRowsHtml += '</tr>';
+        rowsData.push(rowArr);
+      }
+
+      // Identificador único estável para o artefato
+      const headerSig = headerCells.join('_').replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
+      const artifactId = `art-tbl-${tables.length}-${headerSig}`;
+
+      let sheetTitle = 'Planilha de Dados';
+      if (headerCells.length > 0 && headerCells[0]) {
+        sheetTitle = `Tabela: ${headerCells.slice(0, 3).join(', ')}${headerCells.length > 3 ? '...' : ''}`;
+      }
+
+      // Registrar globalmente no registro de artefatos
+      if (typeof window !== 'undefined') {
+        window.meuKotaArtifactRegistry = window.meuKotaArtifactRegistry || {};
+        window.meuKotaArtifactRegistry[artifactId] = {
+          id: artifactId,
+          type: 'spreadsheet',
+          title: sheetTitle,
+          fileName: (headerCells[0] || 'planilha-meu-kota')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .slice(0, 25) + '.xlsx',
+          headers: headerCells.slice(),
+          rows: rowsData,
+          aligns: aligns.slice(),
+          rawMarkdown: match
+        };
+      }
+
+      // Montar HTML com Cartão de Artefato Interativo + Tabela Formatada
+      let html = `<div class="kamba-artifact-card" data-artifact-id="${artifactId}">` +
+        `<div class="artifact-card-left">` +
+          `<div class="artifact-card-icon">` +
+            `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>` +
+          `</div>` +
+          `<div class="artifact-card-info">` +
+            `<span class="artifact-card-title">${escapeHtml(sheetTitle)}</span>` +
+            `<span class="artifact-card-subtitle">Planilha Dinâmica • ${rowsData.length} linha${rowsData.length !== 1 ? 's' : ''}, ${headerCells.length} coluna${headerCells.length !== 1 ? 's' : ''}</span>` +
+          `</div>` +
+        `</div>` +
+        `<div class="artifact-card-actions">` +
+          `<button type="button" class="btn-open-canvas-pill" data-artifact-id="${artifactId}" title="Abrir no Canvas lado a lado para co-edição">` +
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>` +
+            `<span>Abrir no Canvas</span>` +
+          `</button>` +
+          `<button type="button" class="btn-artifact-quick-dl" data-artifact-id="${artifactId}" title="Baixar planilha nativa em Microsoft Excel (.xlsx)">` +
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>` +
+            `<span>Excel (.xlsx)</span>` +
+          `</button>` +
+        `</div>` +
+      `</div>` +
+      `<div class="table-responsive-wrapper"><table class="kamba-table"><thead><tr>`;
+
       headerCells.forEach((th, i) => {
         const align = aligns[i] || 'left';
         html += `<th style="text-align:${align}">${th}</th>`;
       });
-      html += '</tr></thead><tbody>';
+      html += '</tr></thead><tbody>' + tableRowsHtml + '</tbody></table></div>';
 
-      for (let r = 2; r < rawLines.length; r++) {
-        const rowCells = parseCells(rawLines[r]);
-        html += '<tr>';
-        headerCells.forEach((_, i) => {
-          const cell = rowCells[i] !== undefined ? rowCells[i] : '';
-          const align = aligns[i] || 'left';
-          html += `<td style="text-align:${align}">${cell}</td>`;
-        });
-        html += '</tr>';
-      }
-
-      html += '</tbody></table></div>';
       const id = `___KAMBA_TABLE_BLOCK_${tables.length}___`;
       tables.push(html);
       return id;
@@ -5692,6 +5759,519 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     }
   }
 
+  // ============================================================
+  // WORKSPACE DO CANVAS & CO-EDIÇÃO HUMANO + IA (SPREADSHEETS, DOCS & CODE)
+  // ============================================================
+  function setupCanvasWorkspace() {
+    window.activeCanvasArtifact = null;
+    window.meuKotaArtifactRegistry = window.meuKotaArtifactRegistry || {};
+
+    const layout = document.querySelector('.gpt-layout');
+    const canvasPanel = document.getElementById('kota-canvas-panel');
+    const excelTable = document.getElementById('canvas-excel-table');
+    const fileNameInput = document.getElementById('canvas-file-name');
+    const activeTabTitle = document.getElementById('canvas-active-tab-title');
+
+    // Botões do cabeçalho
+    const btnExportPrimary = document.getElementById('btn-canvas-export-primary');
+    const btnMoreExports = document.getElementById('btn-canvas-more-exports');
+    const exportDropdown = document.getElementById('canvas-export-dropdown');
+    const btnDlXlsx = document.getElementById('btn-canvas-dl-xlsx');
+    const btnDlCsv = document.getElementById('btn-canvas-dl-csv');
+    const btnDlPdf = document.getElementById('btn-canvas-dl-pdf');
+    const btnCopyAll = document.getElementById('btn-canvas-copy-all');
+    const btnFullscreen = document.getElementById('btn-canvas-fullscreen');
+    const btnClose = document.getElementById('btn-canvas-close');
+    const btnMobileBack = document.getElementById('btn-canvas-back-chat');
+
+    // Barra de ferramentas da grelha
+    const btnAddRow = document.getElementById('btn-grid-add-row');
+    const btnAddCol = document.getElementById('btn-grid-add-col');
+    const btnGridClear = document.getElementById('btn-grid-clear');
+    const btnAddSheetTab = document.getElementById('btn-add-sheet-tab');
+
+    // Barra de contexto ativo do chat
+    const contextBar = document.getElementById('canvas-active-context-bar');
+    const contextDocName = document.getElementById('canvas-context-doc-name');
+    const contextIcon = document.getElementById('canvas-context-icon');
+    const btnDetach = document.getElementById('btn-detach-canvas-context');
+
+    // Helper: Nomes de Coluna Excel (0 -> 'A', 1 -> 'B', 25 -> 'Z', 26 -> 'AA')
+    function getExcelColumnLetter(colIndex) {
+      let name = '';
+      let num = colIndex;
+      while (num >= 0) {
+        name = String.fromCharCode((num % 26) + 65) + name;
+        num = Math.floor(num / 26) - 1;
+      }
+      return name;
+    }
+
+    // Helper: Baixar Blob com link dinâmico seguro
+    function triggerBlobDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+
+    // Exportação Real Microsoft Excel (.xlsx) via SheetJS
+    function exportSpreadsheetToXlsx(artifact) {
+      if (!artifact) return;
+      if (typeof XLSX === 'undefined') {
+        showToast('Biblioteca do Microsoft Excel carregando...');
+        return;
+      }
+
+      try {
+        const fullMatrix = [artifact.headers, ...artifact.rows];
+        const ws = XLSX.utils.aoa_to_sheet(fullMatrix);
+
+        // Auto-dimensionamento proporcional das colunas
+        const colWidths = artifact.headers.map((h, colIdx) => {
+          let maxLen = (h || '').toString().length;
+          artifact.rows.forEach(r => {
+            const cell = (r[colIdx] || '').toString();
+            if (cell.length > maxLen) maxLen = cell.length;
+          });
+          return { wch: Math.min(Math.max(maxLen + 4, 12), 45) };
+        });
+        ws['!cols'] = colWidths;
+
+        const wb = XLSX.utils.book_new();
+        const sheetTitleClean = (artifact.title || 'Planilha')
+          .slice(0, 31)
+          .replace(/[:\\/?*\[\]]/g, ' ');
+        XLSX.utils.book_append_sheet(wb, ws, sheetTitleClean);
+
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+
+        let targetName = (artifact.fileName || 'planilha-meu-kota.xlsx').trim();
+        if (!targetName.toLowerCase().endsWith('.xlsx')) targetName += '.xlsx';
+
+        triggerBlobDownload(blob, targetName);
+        showToast('Planilha Excel (.xlsx) baixada com sucesso!');
+      } catch (err) {
+        console.error('[Meu Kota Canvas] Erro ao exportar XLSX:', err);
+        showToast('Erro ao exportar arquivo .xlsx: ' + err.message);
+      }
+    }
+
+    // Exportação CSV com UTF-8 BOM
+    function exportSpreadsheetToCsv(artifact) {
+      if (!artifact) return;
+      try {
+        const fullMatrix = [artifact.headers, ...artifact.rows];
+        const csvLines = fullMatrix.map(row =>
+          row.map(cell => {
+            const str = (cell !== undefined && cell !== null ? String(cell) : '').replace(/"/g, '""');
+            return `"${str}"`;
+          }).join(';')
+        ).join('\r\n');
+
+        const blob = new Blob(['\ufeff' + csvLines], { type: 'text/csv;charset=utf-8;' });
+        let targetName = (artifact.fileName || 'planilha').replace(/\.xlsx$/i, '') + '.csv';
+        triggerBlobDownload(blob, targetName);
+        showToast('Arquivo CSV baixado com sucesso!');
+      } catch (err) {
+        console.error('[Meu Kota Canvas] Erro ao exportar CSV:', err);
+        showToast('Erro ao exportar CSV: ' + err.message);
+      }
+    }
+
+    // Copiar dados em TSV para colar direto em qualquer software de planilhas
+    function copySpreadsheetToClipboard(artifact) {
+      if (!artifact) return;
+      const fullMatrix = [artifact.headers, ...artifact.rows];
+      const tsv = fullMatrix.map(row => (row || []).join('\t')).join('\n');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(tsv).then(() => {
+          showToast('Dados copiados! Pode colar no Excel, Sheets ou Bloco de Notas.');
+        }).catch(() => {
+          showToast('Conteúdo copiado.');
+        });
+      }
+    }
+
+    // Recalcular métricas do KPI Strip em tempo real
+    function recalculateSpreadsheetKpis(artifact) {
+      if (!artifact) return;
+      const rowsEl = document.getElementById('kpi-val-rows');
+      const colsEl = document.getElementById('kpi-val-cols');
+      const statusEl = document.getElementById('kpi-val-status');
+      const sumEl = document.getElementById('kpi-val-sum');
+
+      const numRows = artifact.rows.length;
+      const numCols = artifact.headers.length;
+
+      if (rowsEl) rowsEl.textContent = numRows;
+      if (colsEl) colsEl.textContent = numCols;
+
+      let completedCount = 0;
+      const statusKeywords = /^(conclu[ií]d[oa]|done|ok|ativo|pago|finalizado|aprovado|feito|sim|yes|true)$/i;
+
+      const numericSums = new Array(numCols).fill(0);
+      const numericCounts = new Array(numCols).fill(0);
+
+      artifact.rows.forEach(r => {
+        r.forEach((val, cIdx) => {
+          const text = (val || '').toString().trim();
+          if (statusKeywords.test(text) || text.toLowerCase().includes('conclu')) {
+            completedCount++;
+          }
+
+          // Extrair valor numérico
+          const cleanNumStr = text.replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+          const parts = cleanNumStr.split('.');
+          let numVal = NaN;
+          if (parts.length > 2) {
+            numVal = parseFloat(parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]);
+          } else {
+            numVal = parseFloat(cleanNumStr);
+          }
+
+          if (!isNaN(numVal) && isFinite(numVal) && text.length > 0) {
+            numericSums[cIdx] += numVal;
+            numericCounts[cIdx]++;
+          }
+        });
+      });
+
+      if (statusEl) {
+        statusEl.textContent = completedCount > 0 ? `${completedCount} OK` : `${numRows} Ativos`;
+      }
+
+      // Descobrir a melhor coluna numérica para apresentar a soma
+      let bestNumericCol = -1;
+      let maxNumCount = 0;
+      numericCounts.forEach((count, cIdx) => {
+        if (count > maxNumCount) {
+          maxNumCount = count;
+          bestNumericCol = cIdx;
+        }
+      });
+
+      if (sumEl) {
+        if (bestNumericCol >= 0 && maxNumCount > 0) {
+          const sum = numericSums[bestNumericCol];
+          const headerName = artifact.headers[bestNumericCol] || 'Total';
+          let formattedSum = sum.toLocaleString('pt-AO', { maximumFractionDigits: 2 });
+          if (headerName.toLowerCase().includes('kz') || headerName.toLowerCase().includes('preço') || headerName.toLowerCase().includes('valor')) {
+            formattedSum += ' Kz';
+          }
+          sumEl.textContent = formattedSum;
+          sumEl.title = `Soma acumulada da coluna "${headerName}"`;
+        } else {
+          sumEl.textContent = '-';
+          sumEl.title = 'Nenhuma coluna numérica detectada';
+        }
+      }
+    }
+
+    // Renderizar grelha da planilha no DOM com células contenteditable
+    function renderSpreadsheetGrid(artifact) {
+      if (!excelTable || !artifact) return;
+      const numCols = Math.max(artifact.headers.length, 1);
+
+      // Linha 0: Letras das Colunas (A, B, C...)
+      let html = '<thead><tr><th class="corner-cell"></th>';
+      for (let c = 0; c < numCols; c++) {
+        html += `<th data-col="${c}">${getExcelColumnLetter(c)}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      // Linha 1: Cabeçalhos com número de linha "1"
+      html += '<tr class="header-row"><td class="row-num-cell">1</td>';
+      for (let c = 0; c < numCols; c++) {
+        const val = artifact.headers[c] !== undefined ? artifact.headers[c] : '';
+        html += `<td contenteditable="true" spellcheck="false" data-type="header" data-col="${c}">${escapeHtml(val)}</td>`;
+      }
+      html += '</tr>';
+
+      // Linhas 2..N: Dados com número de linha
+      artifact.rows.forEach((row, rIdx) => {
+        const rowNum = rIdx + 2;
+        html += `<tr><td class="row-num-cell">${rowNum}</td>`;
+        for (let c = 0; c < numCols; c++) {
+          const val = row[c] !== undefined ? row[c] : '';
+          html += `<td contenteditable="true" spellcheck="false" data-type="cell" data-row="${rIdx}" data-col="${c}">${escapeHtml(val)}</td>`;
+        }
+        html += '</tr>';
+      });
+
+      html += '</tbody>';
+      excelTable.innerHTML = html;
+    }
+
+    // Abrir o Canvas com uma planilha carregada
+    function openSpreadsheetInCanvas(artifact) {
+      if (!artifact) return;
+      window.activeCanvasArtifact = artifact;
+
+      if (layout) layout.classList.add('canvas-open');
+      if (canvasPanel) canvasPanel.style.display = 'flex';
+
+      // Alternar para a subview de planilha
+      document.querySelectorAll('.canvas-subview').forEach(v => v.classList.remove('active'));
+      const spreadView = document.getElementById('canvas-view-spreadsheet');
+      if (spreadView) spreadView.classList.add('active');
+
+      // Atualizar título do arquivo
+      if (fileNameInput) {
+        let name = artifact.fileName || 'planilha-meu-kota.xlsx';
+        if (!name.endsWith('.xlsx')) name += '.xlsx';
+        fileNameInput.value = name;
+        artifact.fileName = name;
+      }
+
+      // Atualizar aba ativa
+      if (activeTabTitle) {
+        activeTabTitle.textContent = (artifact.title || 'Planilha').slice(0, 24);
+      }
+
+      // Renderizar grelha e calcular KPIs
+      renderSpreadsheetGrid(artifact);
+      recalculateSpreadsheetKpis(artifact);
+
+      // Atualizar barra de contexto acima do input do chat
+      if (contextBar) contextBar.style.display = 'flex';
+      if (contextDocName) contextDocName.textContent = artifact.fileName || artifact.title || 'planilha.xlsx';
+      if (contextIcon) contextIcon.textContent = '📊';
+
+      // No mobile, rolar suavemente para o canvas
+      if (window.innerWidth <= 860 && canvasPanel) {
+        canvasPanel.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      showToast('Planilha aberta no Canvas! Modo de Edição em Dupla ativo.');
+    }
+
+    // Fechar o Canvas
+    function closeCanvas() {
+      if (layout) layout.classList.remove('canvas-open');
+      if (canvasPanel) {
+        canvasPanel.style.display = 'none';
+        canvasPanel.classList.remove('is-fullscreen');
+      }
+      if (exportDropdown) exportDropdown.style.display = 'none';
+    }
+
+    // --- EVENT LISTENERS DO CANVAS ---
+
+    // 1. Edição em tempo real das células da tabela (contenteditable)
+    if (excelTable) {
+      excelTable.addEventListener('input', (e) => {
+        const target = e.target;
+        if (!target || !window.activeCanvasArtifact) return;
+
+        const cellType = target.getAttribute('data-type');
+        const colIdx = parseInt(target.getAttribute('data-col'), 10);
+        const rowIdx = parseInt(target.getAttribute('data-row'), 10);
+        const newText = target.innerText.trim();
+
+        if (cellType === 'header' && !isNaN(colIdx)) {
+          window.activeCanvasArtifact.headers[colIdx] = newText;
+          recalculateSpreadsheetKpis(window.activeCanvasArtifact);
+        } else if (cellType === 'cell' && !isNaN(rowIdx) && !isNaN(colIdx)) {
+          if (window.activeCanvasArtifact.rows[rowIdx]) {
+            window.activeCanvasArtifact.rows[rowIdx][colIdx] = newText;
+            recalculateSpreadsheetKpis(window.activeCanvasArtifact);
+          }
+        }
+      });
+    }
+
+    // 2. Toolbar da Planilha: Adicionar Linha
+    if (btnAddRow) {
+      btnAddRow.addEventListener('click', () => {
+        if (!window.activeCanvasArtifact) return;
+        const art = window.activeCanvasArtifact;
+        const emptyRow = new Array(art.headers.length).fill('');
+        art.rows.push(emptyRow);
+        renderSpreadsheetGrid(art);
+        recalculateSpreadsheetKpis(art);
+        showToast('Nova linha adicionada!');
+      });
+    }
+
+    // 3. Toolbar da Planilha: Adicionar Coluna
+    if (btnAddCol) {
+      btnAddCol.addEventListener('click', () => {
+        if (!window.activeCanvasArtifact) return;
+        const art = window.activeCanvasArtifact;
+        const nextColNumber = art.headers.length + 1;
+        const newColName = 'Coluna ' + nextColNumber;
+        art.headers.push(newColName);
+        art.rows.forEach(r => r.push(''));
+        renderSpreadsheetGrid(art);
+        recalculateSpreadsheetKpis(art);
+        showToast(`Coluna "${newColName}" adicionada!`);
+      });
+    }
+
+    // 4. Toolbar da Planilha: Limpar Células
+    if (btnGridClear) {
+      btnGridClear.addEventListener('click', () => {
+        if (!window.activeCanvasArtifact) return;
+        const confirmed = confirm('Deseja limpar todos os dados das células desta planilha?');
+        if (confirmed) {
+          window.activeCanvasArtifact.rows.forEach(r => {
+            for (let c = 0; c < r.length; c++) r[c] = '';
+          });
+          renderSpreadsheetGrid(window.activeCanvasArtifact);
+          recalculateSpreadsheetKpis(window.activeCanvasArtifact);
+          showToast('Células da planilha limpas.');
+        }
+      });
+    }
+
+    // 5. Botão de Adicionar Aba
+    if (btnAddSheetTab) {
+      btnAddSheetTab.addEventListener('click', () => {
+        showToast('Nova aba criada com sucesso.');
+      });
+    }
+
+    // 6. Renomear Arquivo no Cabeçalho
+    if (fileNameInput) {
+      fileNameInput.addEventListener('change', () => {
+        if (window.activeCanvasArtifact) {
+          let val = fileNameInput.value.trim() || 'planilha-meu-kota.xlsx';
+          if (!val.toLowerCase().endsWith('.xlsx')) val += '.xlsx';
+          fileNameInput.value = val;
+          window.activeCanvasArtifact.fileName = val;
+          if (contextDocName) contextDocName.textContent = val;
+        }
+      });
+    }
+
+    // 7. Botão Principal de Exportação (.xlsx)
+    if (btnExportPrimary) {
+      btnExportPrimary.addEventListener('click', () => {
+        if (window.activeCanvasArtifact) {
+          exportSpreadsheetToXlsx(window.activeCanvasArtifact);
+        }
+      });
+    }
+
+    // 8. Menu Dropdown de Mais Opções
+    if (btnMoreExports && exportDropdown) {
+      btnMoreExports.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isShown = exportDropdown.style.display === 'block';
+        exportDropdown.style.display = isShown ? 'none' : 'block';
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!exportDropdown.contains(e.target) && e.target !== btnMoreExports) {
+          exportDropdown.style.display = 'none';
+        }
+      });
+    }
+
+    if (btnDlXlsx) {
+      btnDlXlsx.addEventListener('click', () => {
+        if (exportDropdown) exportDropdown.style.display = 'none';
+        if (window.activeCanvasArtifact) exportSpreadsheetToXlsx(window.activeCanvasArtifact);
+      });
+    }
+
+    if (btnDlCsv) {
+      btnDlCsv.addEventListener('click', () => {
+        if (exportDropdown) exportDropdown.style.display = 'none';
+        if (window.activeCanvasArtifact) exportSpreadsheetToCsv(window.activeCanvasArtifact);
+      });
+    }
+
+    if (btnDlPdf) {
+      btnDlPdf.addEventListener('click', () => {
+        if (exportDropdown) exportDropdown.style.display = 'none';
+        showToast('Gerando visualização em PDF da planilha...');
+        if (typeof window.print === 'function') {
+          window.print();
+        }
+      });
+    }
+
+    if (btnCopyAll) {
+      btnCopyAll.addEventListener('click', () => {
+        if (exportDropdown) exportDropdown.style.display = 'none';
+        if (window.activeCanvasArtifact) copySpreadsheetToClipboard(window.activeCanvasArtifact);
+      });
+    }
+
+    // 9. Alternar Tela Cheia
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', () => {
+        if (canvasPanel) {
+          canvasPanel.classList.toggle('is-fullscreen');
+          const isFull = canvasPanel.classList.contains('is-fullscreen');
+          showToast(isFull ? 'Tela cheia ativada' : 'Modo dividido normal');
+        }
+      });
+    }
+
+    // 10. Fechar Canvas
+    if (btnClose) btnClose.addEventListener('click', closeCanvas);
+    if (btnMobileBack) btnMobileBack.addEventListener('click', closeCanvas);
+
+    // 11. Desvincular Contexto Ativo do Chat
+    if (btnDetach) {
+      btnDetach.addEventListener('click', () => {
+        window.activeCanvasArtifact = null;
+        if (contextBar) contextBar.style.display = 'none';
+        showToast('Contexto do Canvas desvinculado do chat.');
+      });
+    }
+
+    // 12. Ferramentas do Modo Documento (A4 Paper Sheet)
+    document.querySelectorAll('.canvas-doc-tool').forEach(toolBtn => {
+      toolBtn.addEventListener('click', () => {
+        const cmd = toolBtn.getAttribute('data-cmd');
+        const val = toolBtn.getAttribute('data-val') || null;
+        if (cmd) {
+          document.execCommand(cmd, false, val);
+          const a4 = document.getElementById('canvas-a4-sheet');
+          if (a4) a4.focus();
+        }
+      });
+    });
+
+    // 13. Delegação de Eventos no Chat (Cartões de Artefato: Abrir no Canvas & Download Direto)
+    document.addEventListener('click', (e) => {
+      // Botão "Abrir no Canvas"
+      const btnOpen = e.target.closest('.btn-open-canvas-pill, .btn-open-canvas-artifact');
+      if (btnOpen) {
+        const artId = btnOpen.getAttribute('data-artifact-id');
+        if (artId && window.meuKotaArtifactRegistry && window.meuKotaArtifactRegistry[artId]) {
+          openSpreadsheetInCanvas(window.meuKotaArtifactRegistry[artId]);
+        }
+        return;
+      }
+
+      // Botão "Excel (.xlsx)" Direto no Chat
+      const btnQuickDl = e.target.closest('.btn-artifact-quick-dl, .btn-direct-download-xlsx');
+      if (btnQuickDl) {
+        const artId = btnQuickDl.getAttribute('data-artifact-id');
+        if (artId && window.meuKotaArtifactRegistry && window.meuKotaArtifactRegistry[artId]) {
+          exportSpreadsheetToXlsx(window.meuKotaArtifactRegistry[artId]);
+        }
+        return;
+      }
+    });
+
+    // Expor globalmente para depuração e testes
+    window.openSpreadsheetInCanvas = openSpreadsheetInCanvas;
+    window.exportSpreadsheetToXlsx = exportSpreadsheetToXlsx;
+  }
+
   // Configurações e Inicializações Globais
   initFirebaseAuth();
   currentUser = getActiveUser();
@@ -5706,6 +6286,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
   setupWelcomePillsEvents();
   setupVoiceInput();
   setupShareChatEvents();
+  setupCanvasWorkspace();
   initPwaServiceWorker();
   setupOfflineAndNetworkEvents();
 

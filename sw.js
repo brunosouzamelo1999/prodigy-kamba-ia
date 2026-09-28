@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v37-tables';
+const CACHE_NAME = 'meu-kota-cache-v38-canvas-artifacts';
 
 const PRECACHE_ASSETS = [
   './',
@@ -12,6 +12,7 @@ const PRECACHE_ASSETS = [
   './app.js',
   './manifest.json',
   './libs/html2pdf.bundle.min.js',
+  './libs/xlsx.full.min.js',
   './assets/logo-meu-kota.png',
   './assets/logo-meu-kota-circle.png',
   './icons/icon-192x192.png',

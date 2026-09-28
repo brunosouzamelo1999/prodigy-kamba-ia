@@ -1386,6 +1386,19 @@
           
           <div class="gpt-input-box">
             
+            <!-- Pílula de Contexto Ativo do Canvas (Edição em Dupla) -->
+            <div id="canvas-active-context-bar" class="canvas-active-context-bar" style="display: none;">
+              <div class="canvas-context-info">
+                <span class="canvas-context-icon" id="canvas-context-icon">📊</span>
+                <span class="canvas-context-label">Editando em Dupla:</span>
+                <span id="canvas-context-doc-name" class="canvas-context-doc-name">workbook.xlsx</span>
+                <span class="canvas-context-hint">• O que você pedir atualizará o arquivo ao lado</span>
+              </div>
+              <button type="button" id="btn-detach-canvas-context" class="btn-detach-canvas" title="Desvincular arquivo da conversa">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
             <!-- Barra de Pré-visualização de Anexo (PDF ou Imagem) -->
             <div id="attachment-preview-container" class="attachment-preview-container" style="display: none;">
               <div class="attachment-chip">
@@ -1451,6 +1464,186 @@
         </div>
 
       </main>
+
+      <!-- ============================================================ -->
+      <!-- CANVAS DE ARTEFATOS & CO-EDIÇÃO EM DUPLA (SPLIT VIEW)         -->
+      <!-- ============================================================ -->
+      <aside id="kota-canvas-panel" class="kota-canvas-panel" style="display: none;">
+        <!-- Cabeçalho do Canvas -->
+        <div class="canvas-header">
+          <div class="canvas-header-left">
+            <button id="btn-canvas-back-chat" class="canvas-btn-icon canvas-mobile-back" title="Voltar ao Chat" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div class="canvas-type-icon" id="canvas-type-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <div class="canvas-title-wrapper">
+              <input type="text" id="canvas-file-name" class="canvas-title-input" value="workbook.xlsx" title="Clique para renomear" spellcheck="false">
+              <div class="canvas-badge-live">
+                <span class="canvas-pulse-dot"></span>
+                <span id="canvas-mode-status">Edição em Dupla</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="canvas-header-right">
+            <!-- Botão Principal de Exportação Nativa -->
+            <button id="btn-canvas-export-primary" class="canvas-btn-export-primary" type="button" title="Baixar arquivo no formato nativo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span id="canvas-export-label">Exportar (.xlsx)</span>
+            </button>
+
+            <!-- Dropdown de Mais Formatos de Exportação -->
+            <div class="canvas-export-menu-wrap">
+              <button id="btn-canvas-more-exports" class="canvas-btn-icon" type="button" title="Mais opções de download">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="canvas-export-dropdown" class="canvas-dropdown-menu" style="display: none;">
+                <button type="button" id="btn-canvas-dl-xlsx" class="canvas-drop-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  <span>Microsoft Excel (.xlsx)</span>
+                </button>
+                <button type="button" id="btn-canvas-dl-csv" class="canvas-drop-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span>Valores Separados por Vírgula (.csv)</span>
+                </button>
+                <button type="button" id="btn-canvas-dl-pdf" class="canvas-drop-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+                  <span>Documento Comercial (.pdf)</span>
+                </button>
+                <button type="button" id="btn-canvas-copy-all" class="canvas-drop-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span>Copiar Conteúdo</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Botão Expandir / Tela Cheia -->
+            <button id="btn-canvas-fullscreen" class="canvas-btn-icon" type="button" title="Alternar tela cheia">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+
+            <!-- Botão Fechar Painel Lateral -->
+            <button id="btn-canvas-close" class="canvas-btn-icon btn-canvas-close" type="button" title="Fechar Painel Lateral">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Corpo Principal do Canvas -->
+        <div class="canvas-body" id="canvas-body">
+
+          <!-- 1. MODO PLANILHA INTERATIVA (SPREADSHEET) -->
+          <div id="canvas-view-spreadsheet" class="canvas-subview active">
+            <!-- Barra de Resumo e Métricas (KPI Strip) -->
+            <div class="canvas-kpi-strip" id="canvas-kpi-strip">
+              <div class="canvas-kpi-card">
+                <span class="kpi-title">TOTAL LINHAS</span>
+                <span class="kpi-number" id="kpi-val-rows">0</span>
+              </div>
+              <div class="canvas-kpi-card">
+                <span class="kpi-title">COLUNAS</span>
+                <span class="kpi-number" id="kpi-val-cols">0</span>
+              </div>
+              <div class="canvas-kpi-card highlight-green">
+                <span class="kpi-title">CONCLUÍDAS / STATUS</span>
+                <span class="kpi-number" id="kpi-val-status">0</span>
+              </div>
+              <div class="canvas-kpi-card highlight-gold">
+                <span class="kpi-title">SOMA CALCULADA</span>
+                <span class="kpi-number" id="kpi-val-sum">-</span>
+              </div>
+            </div>
+
+            <!-- Barra de Ações da Planilha -->
+            <div class="canvas-grid-toolbar">
+              <div class="toolbar-left">
+                <button type="button" id="btn-grid-add-row" class="canvas-toolbar-btn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>+ Linha</span>
+                </button>
+                <button type="button" id="btn-grid-add-col" class="canvas-toolbar-btn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>+ Coluna</span>
+                </button>
+                <button type="button" id="btn-grid-clear" class="canvas-toolbar-btn btn-danger-soft">
+                  <span>Limpar</span>
+                </button>
+              </div>
+              <div class="toolbar-right">
+                <span class="canvas-editing-hint">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Edição em dupla: clique em qualquer célula para alterar
+                </span>
+              </div>
+            </div>
+
+            <!-- Grelha da Planilha Excel -->
+            <div class="canvas-spreadsheet-grid-scroll">
+              <table class="canvas-excel-table" id="canvas-excel-table">
+                <!-- Cabeçalho A, B, C, D... e linhas 1, 2, 3... dinâmicos -->
+              </table>
+            </div>
+
+            <!-- Barra Inferior de Abas da Planilha -->
+            <div class="canvas-sheet-tabs-bar">
+              <div class="canvas-sheet-tab active">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                <span id="canvas-active-tab-title">Tracker Principal</span>
+              </div>
+              <button type="button" class="btn-canvas-add-tab" id="btn-add-sheet-tab" title="Adicionar nova aba">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. MODO DOCUMENTO COMERCIAL (A4 DOC / PDF) -->
+          <div id="canvas-view-document" class="canvas-subview">
+            <!-- Barra de Formatação Rica -->
+            <div class="canvas-doc-toolbar">
+              <button type="button" class="canvas-doc-tool" data-cmd="bold" title="Negrito"><b>B</b></button>
+              <button type="button" class="canvas-doc-tool" data-cmd="italic" title="Itálico"><i>I</i></button>
+              <button type="button" class="canvas-doc-tool" data-cmd="underline" title="Sublinhado"><u>U</u></button>
+              <div class="toolbar-sep"></div>
+              <button type="button" class="canvas-doc-tool" data-cmd="formatBlock" data-val="h2" title="Título H2">H2</button>
+              <button type="button" class="canvas-doc-tool" data-cmd="formatBlock" data-val="h3" title="Subtítulo H3">H3</button>
+              <button type="button" class="canvas-doc-tool" data-cmd="formatBlock" data-val="p" title="Parágrafo">¶</button>
+              <div class="toolbar-sep"></div>
+              <button type="button" class="canvas-doc-tool" data-cmd="insertUnorderedList" title="Marcadores">• Lista</button>
+            </div>
+
+            <!-- Folha A4 Comercial -->
+            <div class="canvas-paper-scroll">
+              <div class="canvas-a4-sheet" id="canvas-a4-sheet" contenteditable="true" spellcheck="false">
+                <!-- Conteúdo dinâmico do documento -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. MODO CÓDIGO & WEB APP (SANDBOX) -->
+          <div id="canvas-view-code" class="canvas-subview">
+            <div class="canvas-code-tabs">
+              <button type="button" class="code-tab-btn active" id="tab-code-editor">Código Fonte</button>
+              <button type="button" class="code-tab-btn" id="tab-code-preview">Visualização ao Vivo</button>
+            </div>
+            <div class="canvas-code-editor-wrap" id="canvas-code-editor-wrap">
+              <textarea id="canvas-code-textarea" class="canvas-code-textarea" spellcheck="false"></textarea>
+            </div>
+            <div class="canvas-code-preview-wrap" id="canvas-code-preview-wrap" style="display: none;">
+              <iframe id="canvas-preview-iframe" class="canvas-preview-iframe" sandbox="allow-scripts allow-modals"></iframe>
+            </div>
+          </div>
+
+          <!-- 4. MODO IMAGEM (VIEWER) -->
+          <div id="canvas-view-image" class="canvas-subview">
+            <div class="canvas-image-stage">
+              <img id="canvas-display-image" src="" alt="Artefato" class="canvas-main-img">
+            </div>
+          </div>
+
+        </div>
+      </aside>
 
     </div>
   </section>
@@ -2275,7 +2468,10 @@
   <!-- html2pdf.js Bundle Oficial (Local & 100% Offline) -->
   <script src="libs/html2pdf.bundle.min.js"></script>
 
+  <!-- SheetJS Oficial para Planilhas Excel .xlsx Reais (Local & 100% Offline) -->
+  <script src="libs/xlsx.full.min.js"></script>
+
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260928_v37_tables"></script>
+  <script src="app.js?v=20260928_v38_canvas_artifacts"></script>
 </body>
 </html>
