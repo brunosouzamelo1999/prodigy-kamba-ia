@@ -4079,6 +4079,62 @@ body {
   box-sizing: border-box;
 }
 
+/* Tabelas Formatadas Inteligentes (Padrão ChatGPT / Google Docs) */
+.table-responsive-wrapper {
+  margin: 16px 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 20, 30, 0.6);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+.kamba-table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  line-height: 1.5;
+  text-align: left;
+  color: #E2E8F0;
+}
+
+.kamba-table thead {
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.kamba-table th {
+  padding: 10px 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.kamba-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #CBD5E1;
+}
+
+.kamba-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.kamba-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.kamba-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
 /* ÁREA INFERIOR DE ENTRADA (PILL EXATA DO CHATGPT) */
 .gpt-input-area {
   width: 100%;

@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v36-commercial-pdf';
+const CACHE_NAME = 'meu-kota-cache-v37-tables';
 
 const PRECACHE_ASSETS = [
   './',
@@ -36,7 +36,7 @@ self.addEventListener('install', (event) => {
           });
         })
       );
-      console.log('[SW] Pré-cache v33 concluído com sucesso.');
+      console.log('[SW] Pré-cache v37 concluído com sucesso.');
     })
   );
 });

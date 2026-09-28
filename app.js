@@ -3479,6 +3479,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 - ANÁLISE PROFUNDA DE DOCUMENTOS: Você possui visão computacional nativa e leitura multimodal completa. Extraia todo o texto visível de imagens com fidelidade absoluta (OCR) e faça análises executivas de PDFs e relatórios.
 - NOTAÇÃO MATEMÁTICA E CIENTÍFICA CLARA E HUMANA: NUNCA use código LaTeX bruto nem símbolos de cifrão no meio do texto (como $3 \times 3$, $\det(R)$, $T_1 \cdot T_2 \neq T_2 \cdot T_1$, \\quad, \\times, \\cdot). Escreva SEMPRE em linguagem humana natural, limpa e legível para qualquer pessoa comum (ex: escreva "3x3" ou "3 × 3", "T1 · T2 ≠ T2 · T1", "det(R) = +1", "R^T · R = I", "[0 0 0 1]"). Todas as equações, matrizes e expressões devem ser compreensíveis de imediato sem códigos de programação matemática.
 - GERAÇÃO DE DOCUMENTOS E RELATÓRIOS EM PADRÃO COMERCIAL (CARDÁPIOS, CONTRATOS, PROPOSTAS, RELATÓRIOS): Quando o usuário solicitar a elaboração de um cardápio, contrato, proposta, orçamento, relatório, plano de negócios ou minuta, elabore diretamente o documento completo em padrão comercial impecável, pronto para apresentação ou impressão. Inicie imediatamente com o título formal do documento (ex: **CASA DE PASTO E LANCHONETE... — CARDÁPIO OFICIAL** ou **CONTRATO DE...**), sem preâmbulos protocolares nem notas de encerramento sobre botões da interface, mantendo o conteúdo 100% limpo e executivo.
+- FORMATAÇÃO DE TABELAS VISUAIS: Sempre que o usuário solicitar projeções financeiras, comparativos, cardápios com colunas de preços, cronogramas, custos operacionais ou dados estruturados, utilize SEMPRE tabelas no padrão oficial Markdown (| Coluna 1 | Coluna 2 | ... | :--- | :---: |), pois o Meu Kota renderiza automaticamente tabelas visuais interativas, elegantes e com rolagem responsiva no chat e no PDF.
 - BLINDAGEM DE IDENTIDADE WHITE-LABEL: Você é estritamente o "Meu Kota IA". NUNCA mencione "Google", "Gemini", "Google Search", "AI Studio" ou provedores externos. Ao realizar pesquisas ao vivo na web (clima, eventos, notícias ou cotações), JAMAIS diga "pesquisei no Google" e JAMAIS inclua links, URLs externas ou listas de fontes ao final da resposta. Responda de forma natural, direta e soberana, integrando as informações com a autoridade e sabedoria de um Kota.
 - IDIOMA: Responda em português formal impecável, fluido, respeitoso e acolhedor, refletindo a dignidade de um Kota.`
       }]
@@ -4179,7 +4180,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       .trim();
   }
 
-  // --- FORMATAÇÃO MARKDOWN LEVE, SEGURA E COM DESTAQUE DE CÓDIGO ---
+  // --- FORMATAÇÃO MARKDOWN LEVE, SEGURA E COM DESTAQUE DE CÓDIGO E TABELAS ---
   function formatMarkdown(text) {
     if (!text) return '';
     let formatted = escapeHtml(text);
@@ -4202,22 +4203,72 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       return id;
     });
 
+    // 3. Extrair tabelas Markdown (| Col 1 | Col 2 | ...) para placeholders
+    const tables = [];
+    const tableRegex = /(?:^[ \t]*\|?[^\n\|]+\|[^\n]*\r?\n[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)+\|?[ \t]*(?:\r?\n|$))(?:^[ \t]*\|?[^\n\|]+\|[^\n]*(?:\r?\n|$))*/gm;
+
+    formatted = formatted.replace(tableRegex, (match) => {
+      const rawLines = match.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (rawLines.length < 2) return match;
+
+      const parseCells = (row) => {
+        let trimmed = row.trim();
+        if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+        if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+        return trimmed.split('|').map(c => c.trim());
+      };
+
+      const headerCells = parseCells(rawLines[0]);
+      const alignLine = parseCells(rawLines[1]);
+      const aligns = alignLine.map(col => {
+        const trimmed = col.trim();
+        const left = trimmed.startsWith(':');
+        const right = trimmed.endsWith(':');
+        if (left && right) return 'center';
+        if (right) return 'right';
+        return 'left';
+      });
+
+      let html = '<div class="table-responsive-wrapper"><table class="kamba-table"><thead><tr>';
+      headerCells.forEach((th, i) => {
+        const align = aligns[i] || 'left';
+        html += `<th style="text-align:${align}">${th}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      for (let r = 2; r < rawLines.length; r++) {
+        const rowCells = parseCells(rawLines[r]);
+        html += '<tr>';
+        headerCells.forEach((_, i) => {
+          const cell = rowCells[i] !== undefined ? rowCells[i] : '';
+          const align = aligns[i] || 'left';
+          html += `<td style="text-align:${align}">${cell}</td>`;
+        });
+        html += '</tr>';
+      }
+
+      html += '</tbody></table></div>';
+      const id = `___KAMBA_TABLE_BLOCK_${tables.length}___`;
+      tables.push(html);
+      return id;
+    });
+
     // Código inline `codigo`
     formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
 
-    // 3. Fórmulas matemáticas em bloco $$ ... $$
+    // 4. Fórmulas matemáticas em bloco $$ ... $$
     formatted = formatted.replace(/\$\$([\s\S]+?)\$\$/g, (match, formula) => {
       const clean = cleanHumanMath(formula);
       return `<div class="human-math-block">${clean}</div>`;
     });
 
-    // 4. Fórmulas matemáticas inline $ ... $
+    // 5. Fórmulas matemáticas inline $ ... $
     formatted = formatted.replace(/\$([^$]+)\$/g, (match, formula) => {
       const clean = cleanHumanMath(formula);
       return `<span class="human-math">${clean}</span>`;
     });
 
-    // 5. Limpeza de comandos LaTeX soltos fora de cifrões
+    // 6. Limpeza de comandos LaTeX soltos fora de cifrões
     formatted = formatted
       .replace(/\\times\b/g, '×')
       .replace(/\\cdot\b/g, '·')
@@ -4253,6 +4304,15 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
     // Marcadores de lista •
     formatted = formatted.replace(/•\s?/g, '<span style="color:#EAB308;margin-right:6px;">●</span>');
+
+    // Restaurar tabelas com markdown interno processado (negrito, itálico, código)
+    tables.forEach((tableHtml, index) => {
+      const formattedTable = tableHtml
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+      formatted = formatted.replace(`___KAMBA_TABLE_BLOCK_${index}___`, formattedTable);
+    });
 
     // Restaurar blocos de código com containers profissionais e botões de cópia
     codeBlocks.forEach((item, index) => {
@@ -5231,7 +5291,58 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     if (!text) return '';
     let html = escapeHtml(text);
 
-    // 1. Blocos de Código (Code blocks)
+    // 1. Extrair e formatar tabelas Markdown para o PDF comercial
+    const pdfTables = [];
+    const tableRegex = /(?:^[ \t]*\|?[^\n\|]+\|[^\n]*\r?\n[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)+\|?[ \t]*(?:\r?\n|$))(?:^[ \t]*\|?[^\n\|]+\|[^\n]*(?:\r?\n|$))*/gm;
+
+    html = html.replace(tableRegex, (match) => {
+      const rawLines = match.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (rawLines.length < 2) return match;
+
+      const parseCells = (row) => {
+        let trimmed = row.trim();
+        if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+        if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+        return trimmed.split('|').map(c => c.trim());
+      };
+
+      const headerCells = parseCells(rawLines[0]);
+      const alignLine = parseCells(rawLines[1]);
+      const aligns = alignLine.map(col => {
+        const trimmed = col.trim();
+        const left = trimmed.startsWith(':');
+        const right = trimmed.endsWith(':');
+        if (left && right) return 'center';
+        if (right) return 'right';
+        return 'left';
+      });
+
+      let tableHtml = '<div style="margin: 16px 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid;"><table style="width: 100%; border-collapse: collapse; font-size: 11px; line-height: 1.45; border: 1px solid #CBD5E1;"><thead><tr style="background: #F1F5F9;">';
+      headerCells.forEach((th, i) => {
+        const align = aligns[i] || 'left';
+        tableHtml += `<th style="padding: 7px 10px; font-weight: 700; color: #0F172A; border: 1px solid #CBD5E1; text-align: ${align};">${th}</th>`;
+      });
+      tableHtml += '</tr></thead><tbody>';
+
+      for (let r = 2; r < rawLines.length; r++) {
+        const rowCells = parseCells(rawLines[r]);
+        const bg = (r % 2 === 0) ? '#FFFFFF' : '#F8FAFC';
+        tableHtml += `<tr style="background: ${bg};">`;
+        headerCells.forEach((_, i) => {
+          const cell = rowCells[i] !== undefined ? rowCells[i] : '';
+          const align = aligns[i] || 'left';
+          tableHtml += `<td style="padding: 6px 10px; color: #1E293B; border: 1px solid #E2E8F0; text-align: ${align};">${cell}</td>`;
+        });
+        tableHtml += '</tr>';
+      }
+
+      tableHtml += '</tbody></table></div>';
+      const id = `___PDF_TABLE_BLOCK_${pdfTables.length}___`;
+      pdfTables.push(tableHtml);
+      return id;
+    });
+
+    // 2. Blocos de Código (Code blocks)
     html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const cleanLang = (lang || 'código').toUpperCase();
       return `
@@ -5242,49 +5353,58 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       `;
     });
 
-    // 2. Código inline
+    // 3. Código inline
     html = html.replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #BE123C; padding: 1px 4px; border-radius: 3px; font-family: monospace; font-size: 11px;">$1</code>');
 
-    // 3. Seções Principais (I. AS DELÍCIAS..., CLÁUSULA PRIMEIRA..., ANEXO I..., etc.)
+    // 4. Seções Principais (I. AS DELÍCIAS..., CLÁUSULA PRIMEIRA..., ANEXO I..., etc.)
     html = html.replace(/(?:^|\n)\s*(?:\*{2}|#{1,4})\s*(CLÁUSULA\s+[^\n*]+|ANEXO\s+[^\n*]+|CAPÍTULO\s+[^\n*]+|SEÇÃO\s+[^\n*]+|ARTIGO\s+[^\n*]+|[I|V|X]+\.\s+[^\n*]+)\s*(?:\*{2}|#{1,4})?/gi, (m, clause) => {
       return `\n\n<div style="margin-top: 22px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #0F172A; page-break-inside: avoid; break-inside: avoid;"><span style="font-size: 13px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px;">${clause.trim()}</span></div>\n\n`;
     });
 
-    // 4. Marcadores de Assinatura formal ([Assinatura]) - Linha limpa e autêntica para caneta
+    // 5. Marcadores de Assinatura formal ([Assinatura]) - Linha limpa e autêntica para caneta
     html = html.replace(/\[Assinatura\]/gi, `
       <div style="margin: 30px 0 6px 0; page-break-inside: avoid; break-inside: avoid;">
         <div style="width: 240px; border-bottom: 1px solid #0F172A; margin-bottom: 4px;"></div>
       </div>
     `);
 
-    // 5. Placeholders editáveis entre colchetes [Exemplo] (texto fluído, sem caixas quebradas ou espaçamentos deformados)
+    // 6. Placeholders editáveis entre colchetes [Exemplo] (texto fluído, sem caixas quebradas ou espaçamentos deformados)
     html = html.replace(/\[([^\]<\n]{2,80})\]/g, '<span style="color: #1D4ED8; font-weight: 600;">[$1]</span>');
 
-    // 6. Títulos e Subtítulos Markdown
+    // 7. Títulos e Subtítulos Markdown
     html = html.replace(/^#### (.*$)/gm, '<h4 style="color: #1E293B; font-size: 12.5px; font-weight: 700; margin: 14px 0 4px 0; page-break-inside: avoid; break-inside: avoid;">$1</h4>');
     html = html.replace(/^### (.*$)/gm, '<h3 style="color: #0F172A; font-size: 13.5px; font-weight: 700; margin: 16px 0 6px 0; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; page-break-inside: avoid; break-inside: avoid;">$1</h3>');
     html = html.replace(/^## (.*$)/gm, '<h2 style="color: #0F172A; font-size: 15px; font-weight: 800; margin: 18px 0 8px 0; border-bottom: 1.5px solid #0F172A; padding-bottom: 4px; page-break-inside: avoid; break-inside: avoid;">$1</h2>');
     html = html.replace(/^# (.*$)/gm, '<h1 style="color: #0F172A; font-size: 17px; font-weight: 800; margin: 20px 0 10px 0; border-bottom: 2px solid #0F172A; padding-bottom: 6px; page-break-inside: avoid; break-inside: avoid;">$1</h1>');
 
-    // 7. Divisores
+    // 8. Divisores
     html = html.replace(/(?:^|\n)\s*---+\s*(?:\n|$)/g, '<hr style="border: none; border-top: 1px solid #E2E8F0; margin: 16px 0;">');
 
-    // 8. Negrito e Itálico
+    // 9. Negrito e Itálico
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #0F172A; font-weight: 700;">$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em style="color: #334155;">$1</em>');
 
-    // 9. Citações
+    // 10. Citações
     html = html.replace(/^> (.*$)/gm, '<blockquote style="border-left: 3px solid #D81A2D; background: #F8FAFC; padding: 6px 12px; margin: 10px 0; color: #475569; font-style: italic; page-break-inside: avoid; break-inside: avoid;">$1</blockquote>');
 
-    // 10. Sub-itens: a), b), c)
+    // 11. Sub-itens: a), b), c)
     html = html.replace(/^(\s*)([a-z]\))\s*(.*$)/gim, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px 18px;"><span style="color: #0F172A; font-weight: 700; font-size: 12px;">$2</span><span style="color: #1E293B; line-height: 1.5;">$3</span></div>');
 
-    // 11. Itens com Marcadores
+    // 12. Itens com Marcadores
     html = html.replace(/^[•\-\*] (.*$)/gm, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px 8px;"><span style="color: #D81A2D; font-size: 11px;">•</span><span style="color: #1E293B; line-height: 1.5;">$1</span></div>');
 
-    // 12. Parágrafos normais (alinhamento limpo à esquerda para não distorcer itens de cardápio, preços e cláusulas)
+    // 13. Parágrafos normais (alinhamento limpo à esquerda para não distorcer itens de cardápio, preços e cláusulas)
     html = html.replace(/\n\n+/g, '</p><p style="margin: 8px 0; line-height: 1.6; color: #1E293B; text-align: left;">');
     html = `<p style="margin: 8px 0; line-height: 1.6; color: #1E293B; text-align: left;">${html}</p>`;
+
+    // Restaurar tabelas do PDF com formatação interna
+    pdfTables.forEach((tableHtml, index) => {
+      const formattedTable = tableHtml
+        .replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #0F172A; font-weight: 700;">$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em style="color: #334155;">$1</em>')
+        .replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #BE123C; padding: 1px 4px; border-radius: 3px; font-family: monospace; font-size: 11px;">$1</code>');
+      html = html.replace(`___PDF_TABLE_BLOCK_${index}___`, formattedTable);
+    });
 
     return html;
   }
