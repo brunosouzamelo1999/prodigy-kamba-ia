@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v32';
+const CACHE_NAME = 'meu-kota-cache-v33';
 
 const PRECACHE_ASSETS = [
   './',
@@ -21,14 +21,21 @@ const PRECACHE_ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js'
 ];
 
-// Instalação do Service Worker & Pre-caching
+// Instalação do Service Worker & Pre-caching individual resiliente
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[SW] Aviso ao pré-cachear assets:', err);
-      });
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Usar Promise.allSettled para que nenhuma falha em CDN externa impeça
+      // os arquivos locais (index.html, styles.css, app.js) de ficarem salvos em cache
+      await Promise.allSettled(
+        PRECACHE_ASSETS.map((asset) => {
+          return cache.add(asset).catch((err) => {
+            console.warn('[SW] Aviso ao pré-cachear asset individual:', asset, err);
+          });
+        })
+      );
+      console.log('[SW] Pré-cache v33 concluído com sucesso.');
     })
   );
 });
@@ -93,17 +100,22 @@ self.addEventListener('fetch', (event) => {
         const ignoreSearchMatch = await caches.match(req, { ignoreSearch: true });
         if (ignoreSearchMatch) return ignoreSearchMatch;
 
-        // 3. Fallbacks estritos por tipo de recurso
+        // 3. Fallbacks estritos garantindo retorno de Response válida (nunca null)
         if (isHtml) {
-          return (await caches.match('./index.html')) || (await caches.match('./', { ignoreSearch: true }));
+          const htmlMatch = (await caches.match('./index.html')) || (await caches.match('./', { ignoreSearch: true }));
+          if (htmlMatch) return htmlMatch;
         }
-        if (url.pathname.endsWith('.css') || req.destination === 'style') {
-          return await caches.match('./styles.css', { ignoreSearch: true });
+        if (url.pathname.endsWith('.css') || req.destination === 'style' || url.pathname.includes('.css')) {
+          const cssMatch = await caches.match('./styles.css', { ignoreSearch: true });
+          if (cssMatch) return cssMatch;
+          return new Response('/* offline fallback */', { headers: { 'Content-Type': 'text/css' } });
         }
-        if (url.pathname.endsWith('.js') || req.destination === 'script') {
-          return await caches.match('./app.js', { ignoreSearch: true });
+        if (url.pathname.endsWith('.js') || req.destination === 'script' || url.pathname.includes('.js')) {
+          const jsMatch = await caches.match('./app.js', { ignoreSearch: true });
+          if (jsMatch) return jsMatch;
+          return new Response('console.warn("[SW] Offline fallback script");', { headers: { 'Content-Type': 'application/javascript' } });
         }
-        return null;
+        return (await caches.match('./index.html')) || new Response('Offline', { status: 503, statusText: 'Offline' });
       })
     );
     return;

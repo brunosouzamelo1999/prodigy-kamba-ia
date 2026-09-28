@@ -4342,13 +4342,14 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
     function checkConnectionAndToggleUI(isOnline) {
       if (!isOnline) {
+        document.documentElement.classList.add('is-offline');
         // Se já estiver no chat com histórico local ativo, exibe banner discreto no topo
         // para permitir leitura de mensagens salvas sem travar a interface
         if (views.dashboard && views.dashboard.classList.contains('active')) {
           if (offlineBanner) offlineBanner.style.display = 'block';
           if (offlineScreen) offlineScreen.style.display = 'none';
         } else {
-          // Na inicialização ou landing page, exibe a tela de carregamento Meu Kota
+          // Na inicialização ou landing page, exibe exclusivamente a tela de carregamento Meu Kota
           if (offlineScreen) {
             offlineScreen.style.display = 'flex';
             offlineScreen.style.animation = 'fadeInGpt 0.3s ease';
@@ -4356,6 +4357,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           if (offlineBanner) offlineBanner.style.display = 'none';
         }
       } else {
+        document.documentElement.classList.remove('is-offline');
         // Conexão ativa: esconde a tela de carregamento offline suavemente
         if (offlineScreen && offlineScreen.style.display !== 'none') {
           offlineScreen.style.animation = 'fadeOutGpt 0.3s ease forwards';

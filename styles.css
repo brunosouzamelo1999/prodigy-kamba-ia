@@ -7763,6 +7763,14 @@ body {
 /* ============================================================
    TELA DE CARREGAMENTO & MODO OFFLINE MEU KOTA IA
    ============================================================ */
+html.is-offline body > *:not(#kota-offline-screen) {
+  display: none !important;
+}
+
+html.is-offline #kota-offline-screen {
+  display: flex !important;
+}
+
 #kota-offline-screen {
   position: fixed;
   inset: 0;
