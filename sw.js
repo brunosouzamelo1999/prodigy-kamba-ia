@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v33';
+const CACHE_NAME = 'meu-kota-cache-v34';
 
 const PRECACHE_ASSETS = [
   './',
@@ -11,6 +11,7 @@ const PRECACHE_ASSETS = [
   './styles.css',
   './app.js',
   './manifest.json',
+  './libs/html2pdf.bundle.min.js',
   './assets/logo-meu-kota.png',
   './assets/logo-meu-kota-circle.png',
   './icons/icon-192x192.png',

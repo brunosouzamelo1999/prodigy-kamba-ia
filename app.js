@@ -165,6 +165,7 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
   const btnShareWhatsapp = document.getElementById('btn-share-whatsapp');
   const btnShareCopyText = document.getElementById('btn-share-copy-text');
   const btnShareDownloadTxt = document.getElementById('btn-share-download-txt');
+  const btnShareDownloadPdf = document.getElementById('btn-share-download-pdf');
   const btnUserProfile = document.getElementById('btn-user-profile');
   const btnSidebarLogout = document.getElementById('btn-sidebar-logout');
   const displayUserAvatar = document.getElementById('display-user-avatar');
@@ -2266,6 +2267,16 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
           </svg>
           <span>Copiar</span>
         </button>
+        <button class="gpt-action-small-btn btn-pdf-msg" title="Baixar resposta como Relatório PDF (Padrão Docs)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>PDF</span>
+        </button>
         <button class="gpt-action-small-btn btn-speak-msg" title="Ouvir resposta em voz alta">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -2329,6 +2340,20 @@ Einstein chamava isso de <em>"ação fantasmagórica à distância"</em>. Hoje �
         }).catch(() => {
           showToast('Texto copiado com sucesso.');
         });
+      });
+    }
+
+    const btnPdf = rowElement.querySelector('.btn-pdf-msg');
+    if (btnPdf) {
+      btnPdf.addEventListener('click', async () => {
+        let userPrompt = '';
+        if (userMsgIndex >= 0 && currentChatId) {
+          const chat = chats.find(c => c.id === currentChatId);
+          if (chat && chat.messages && chat.messages[userMsgIndex]) {
+            userPrompt = chat.messages[userMsgIndex].content || '';
+          }
+        }
+        await exportSingleMessageToExecutivePdf(text, userPrompt);
       });
     }
 
@@ -5113,6 +5138,234 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     }
   }
 
+  // --- MOTOR DE EXPORTAÇÃO DE RELATÓRIOS PDF EXECUTIVOS (PADRÃO GOOGLE DOCS) ---
+  function formatMarkdownForExecutivePdf(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+
+    // 1. Extrair e formatar blocos de código
+    html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const cleanLang = (lang || 'código').toUpperCase();
+      return `
+        <div style="margin: 12px 0; background: #0F172A; border-radius: 6px; overflow: hidden; page-break-inside: avoid;">
+          <div style="background: #1E293B; color: #94A3B8; font-size: 10px; font-weight: 700; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px;">${cleanLang}</div>
+          <pre style="margin: 0; padding: 10px 14px; color: #F8FAFC; font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-all;"><code>${code.trim()}</code></pre>
+        </div>
+      `;
+    });
+
+    // 2. Código inline
+    html = html.replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #BE123C; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-size: 11.5px; border: 1px solid #E2E8F0;">$1</code>');
+
+    // 3. Títulos Markdown (Google Docs Style)
+    html = html.replace(/^#### (.*$)/gm, '<h4 style="color: #1E293B; font-size: 13.5px; font-weight: 700; margin: 14px 0 4px 0; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px;">$1</h4>');
+    html = html.replace(/^### (.*$)/gm, '<h3 style="color: #0F172A; font-size: 15px; font-weight: 700; margin: 16px 0 6px 0; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">$1</h3>');
+    html = html.replace(/^## (.*$)/gm, '<h2 style="color: #0F172A; font-size: 17px; font-weight: 800; margin: 18px 0 8px 0; border-bottom: 2px solid #D81A2D; padding-bottom: 4px;">$1</h2>');
+    html = html.replace(/^# (.*$)/gm, '<h1 style="color: #0F172A; font-size: 19px; font-weight: 800; margin: 20px 0 10px 0; border-bottom: 2px solid #0F172A; padding-bottom: 6px;">$1</h1>');
+
+    // 4. Negrito e Itálico
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #0F172A; font-weight: 700;">$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em style="color: #334155;">$1</em>');
+
+    // 5. Citações / Blockquotes
+    html = html.replace(/^> (.*$)/gm, '<blockquote style="border-left: 3px solid #D81A2D; background: #FFF5F5; padding: 8px 12px; margin: 10px 0; color: #475569; font-style: italic; border-radius: 0 4px 4px 0;">$1</blockquote>');
+
+    // 6. Itens de Lista com Marcadores
+    html = html.replace(/^[•\-\*] (.*$)/gm, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0;"><span style="color: #D81A2D; font-size: 12px;">•</span><span style="color: #1E293B; line-height: 1.55;">$1</span></div>');
+
+    // 7. Quebras de parágrafo normais
+    html = html.replace(/\n\n+/g, '</p><p style="margin: 8px 0; line-height: 1.6; color: #1E293B;">');
+    html = `<p style="margin: 8px 0; line-height: 1.6; color: #1E293B;">${html}</p>`;
+
+    return html;
+  }
+
+  async function generateExecutivePdfDoc({ title, subtitle, items, filename }) {
+    if (typeof html2pdf === 'undefined') {
+      showToast('Aguarde: carregando biblioteca de PDF...');
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'libs/html2pdf.bundle.min.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      } catch (e) {
+        showToast('Erro ao carregar módulo de PDF. Verifique sua conexão.');
+        return;
+      }
+    }
+
+    showToast('Gerando Relatório Executivo em PDF no padrão Docs...');
+
+    const activeUser = getActiveUser();
+    const userName = (activeUser && activeUser.name) ? activeUser.name : 'Bruno Souza';
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
+    const formattedTime = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+    const docId = `MK-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    let bodyHtml = '';
+    items.forEach((item) => {
+      if (item.role === 'user') {
+        bodyHtml += `
+          <div style="margin-top: 18px; margin-bottom: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #2563EB; padding: 12px 16px; border-radius: 6px; page-break-inside: avoid;">
+            <div style="font-size: 11px; font-weight: 800; color: #1D4ED8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Demanda / Pergunta do Requisitante</div>
+            <div style="font-size: 13.5px; color: #0F172A; font-weight: 500; line-height: 1.5;">${escapeHtml(item.content)}</div>
+          </div>
+        `;
+      } else {
+        bodyHtml += `
+          <div style="margin-bottom: 22px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 4px;">
+              <span style="font-size: 11px; font-weight: 800; color: #D81A2D; text-transform: uppercase; letter-spacing: 0.5px;">Parecer Oficial • Meu Kota IA</span>
+              <span style="font-size: 10px; color: #94A3B8;">| Motor Conversacional Inteligente</span>
+            </div>
+            <div style="font-size: 13.5px; color: #1E293B; line-height: 1.65;">
+              ${formatMarkdownForExecutivePdf(item.content)}
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    const reportElement = document.createElement('div');
+    reportElement.style.position = 'fixed';
+    reportElement.style.top = '-9999px';
+    reportElement.style.left = '-9999px';
+    reportElement.style.width = '794px'; // Largura A4 padrão a 96 DPI
+    reportElement.style.background = '#FFFFFF';
+    reportElement.style.color = '#1E293B';
+    reportElement.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    reportElement.style.padding = '36px 42px';
+    reportElement.style.boxSizing = 'border-box';
+
+    reportElement.innerHTML = `
+      <!-- Cabeçalho Oficial Corporativo -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 2px solid #E2E8F0;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <svg width="44" height="44" viewBox="0 0 100 100" style="flex-shrink: 0;">
+            <circle cx="50" cy="50" r="48" fill="#111827" stroke="#FFD100" stroke-width="4"/>
+            <path d="M50 2 A48 48 0 0 1 50 98 Z" fill="#D81A2D"/>
+            <circle cx="50" cy="50" r="28" fill="none" stroke="#FFD100" stroke-width="4" stroke-dasharray="8 4"/>
+            <polygon points="50,28 55,42 70,43 58,52 62,66 50,57 38,66 42,52 30,43 45,42" fill="#FFD100"/>
+          </svg>
+          <div>
+            <div style="font-size: 19px; font-weight: 900; color: #0F172A; letter-spacing: -0.4px;">MEU KOTA IA</div>
+            <div style="font-size: 10.5px; font-weight: 700; color: #D81A2D; text-transform: uppercase; letter-spacing: 0.8px;">Relatório Executivo Inteligente</div>
+          </div>
+        </div>
+
+        <div style="text-align: right; font-size: 11px; color: #475569; line-height: 1.45;">
+          <div><strong>Emissão:</strong> ${formattedDate}, ${formattedTime}</div>
+          <div><strong>Requisitante:</strong> ${escapeHtml(userName)}</div>
+          <div><strong>Protocolo:</strong> <code style="font-family: monospace; color: #0F172A;">${docId}</code></div>
+        </div>
+      </div>
+
+      <!-- Barra Gradiente Angola (Vermelho Carmim e Amarelo Dourado) -->
+      <div style="height: 3px; background: linear-gradient(90deg, #D81A2D 0%, #FFD100 100%); margin-bottom: 22px;"></div>
+
+      <!-- Caixa de Título do Relatório (Estilo Google Docs) -->
+      <div style="margin-bottom: 20px;">
+        <h1 style="font-size: 23px; font-weight: 800; color: #0F172A; margin: 0 0 6px 0; letter-spacing: -0.4px;">${escapeHtml(title)}</h1>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="background: #F1F5F9; border: 1px solid #E2E8F0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #475569; font-weight: 600;">
+            ${escapeHtml(subtitle || 'Documento Oficial')}
+          </span>
+          <span style="font-size: 11px; color: #94A3B8;">•</span>
+          <span style="font-size: 11px; color: #16A34A; font-weight: 600;">Verificado e Autenticado Digitalmente</span>
+        </div>
+      </div>
+
+      <!-- Corpo do Documento -->
+      <div class="pdf-report-body" style="font-size: 13.5px;">
+        ${bodyHtml}
+      </div>
+
+      <!-- Rodapé Oficial de Encerramento -->
+      <div style="margin-top: 40px; padding-top: 14px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94A3B8; page-break-inside: avoid;">
+        <span><strong>Meu Kota IA</strong> — Assistente Conversacional de Alta Inteligência</span>
+        <span>Página gerada pelo dispositivo • Documento Privado e Oficial</span>
+      </div>
+    `;
+
+    document.body.appendChild(reportElement);
+
+    const opt = {
+      margin: [12, 12, 12, 12],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    try {
+      await html2pdf().set(opt).from(reportElement).save();
+      showToast('Relatório PDF baixado com sucesso!');
+    } catch (err) {
+      console.error('[PDF Generation Error]', err);
+      showToast('Erro ao compilar o PDF. Tente novamente.');
+    } finally {
+      reportElement.remove();
+    }
+  }
+
+  async function exportChatToExecutivePdf(chat) {
+    if (!chat || !chat.messages || chat.messages.length === 0) {
+      showToast('Nenhuma conversa disponível para exportar.');
+      return;
+    }
+    const title = chat.title || 'Relatório de Conversa';
+    const sanitizedTitle = title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .slice(0, 35);
+
+    await generateExecutivePdfDoc({
+      title: title,
+      subtitle: `Transcrição Completa • ${chat.messages.length} Interações`,
+      items: chat.messages,
+      filename: `meu-kota-${sanitizedTitle}.pdf`
+    });
+  }
+
+  async function exportSingleMessageToExecutivePdf(aiText, userPrompt) {
+    if (!aiText) return;
+    const cleanSubject = userPrompt 
+      ? userPrompt.slice(0, 50) + (userPrompt.length > 50 ? '...' : '') 
+      : 'Relatório Executivo';
+
+    const sanitizedTitle = cleanSubject
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .slice(0, 30);
+
+    const items = [];
+    if (userPrompt) {
+      items.push({ role: 'user', content: userPrompt });
+    }
+    items.push({ role: 'ai', content: aiText });
+
+    await generateExecutivePdfDoc({
+      title: cleanSubject,
+      subtitle: 'Parecer Executivo & Síntese da Inteligência Artificial',
+      items: items,
+      filename: `meu-kota-relatorio-${sanitizedTitle}.pdf`
+    });
+  }
+
   function setupShareChatEvents() {
     if (btnShareChat) {
       btnShareChat.addEventListener('click', (e) => {
@@ -5199,7 +5452,19 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 4. Baixar Arquivo .txt
+    // 4. Baixar Relatório Executivo em PDF (.pdf)
+    if (btnShareDownloadPdf) {
+      btnShareDownloadPdf.addEventListener('click', async () => {
+        const chat = getActiveChatData();
+        if (!chat || !chat.messages || chat.messages.length === 0) {
+          showToast('Nenhuma conversa disponível para gerar PDF.');
+          return;
+        }
+        await exportChatToExecutivePdf(chat);
+      });
+    }
+
+    // 5. Baixar Arquivo .txt
     if (btnShareDownloadTxt) {
       btnShareDownloadTxt.addEventListener('click', () => {
         const chat = getActiveChatData();
