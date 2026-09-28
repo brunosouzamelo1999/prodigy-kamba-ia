@@ -1352,6 +1352,44 @@
           </div>
 
           <div class="gpt-header-right">
+            <!-- Launcher Rápido do Canvas (Acesso de Antemão aos 3 Tipos de Arquivo) -->
+            <div class="canvas-launcher-dropdown-wrap" style="position: relative;">
+              <button class="gpt-canvas-launcher-btn" id="btn-open-canvas-launcher" type="button" title="Abrir ou Criar Novo Arquivo no Canvas">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>
+                <span>Novo Arquivo</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="canvas-launcher-menu" class="canvas-launcher-menu" style="display: none;">
+                <button type="button" class="canvas-menu-item" data-action="new-spreadsheet">
+                  <span class="c-menu-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9M3 15h18"/></svg>
+                  </span>
+                  <div class="c-menu-info">
+                    <span class="c-menu-title">Planilha Excel (.xlsx)</span>
+                    <span class="c-menu-desc">Grelha Excel, KPIs (Tasks, Done, Overdue) e Abas</span>
+                  </div>
+                </button>
+                <button type="button" class="canvas-menu-item" data-action="new-document">
+                  <span class="c-menu-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  </span>
+                  <div class="c-menu-info">
+                    <span class="c-menu-title">Documento Comercial (.pdf)</span>
+                    <span class="c-menu-desc">Folha A4 Executiva com Timbre e Assinaturas</span>
+                  </div>
+                </button>
+                <button type="button" class="canvas-menu-item" data-action="new-code">
+                  <span class="c-menu-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  </span>
+                  <div class="c-menu-info">
+                    <span class="c-menu-title">Código & Web App (.html)</span>
+                    <span class="c-menu-desc">Editor de Código e Sandbox ao Vivo</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             <button class="gpt-share-btn" id="btn-share-chat" title="Compartilhar esta conversa">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="18" cy="5" r="3"/>
@@ -1369,9 +1407,32 @@
         <div class="gpt-scroll-area">
           <div class="gpt-conversation-wrap">
             
-            <!-- Estado Inicial: Apenas "Como o Meu Kota pode ajudar você hoje?" -->
+            <!-- Estado Inicial: Acesso Rápido para Criar Arquivos de Antemão -->
             <div class="gpt-start-hero" id="gpt-welcome-center">
               <h1 class="gpt-start-title">Como o Meu Kota pode ajudar você hoje?</h1>
+              <div class="canvas-quick-cards-grid">
+                <div class="canvas-quick-card" data-action="new-spreadsheet" title="Criar Planilha Excel interativa">
+                  <div class="quick-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9M3 15h18"/></svg>
+                  </div>
+                  <div class="quick-card-title">Planilha & Tracker (.xlsx)</div>
+                  <div class="quick-card-desc">Grelha tipo Excel, métricas Total/Progress/Done/Overdue e abas</div>
+                </div>
+                <div class="canvas-quick-card" data-action="new-document" title="Criar Documento A4 Executivo">
+                  <div class="quick-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  </div>
+                  <div class="quick-card-title">Documento Comercial (.pdf)</div>
+                  <div class="quick-card-desc">Folha A4 timbrada oficial, cláusulas e seção de assinaturas</div>
+                </div>
+                <div class="canvas-quick-card" data-action="new-code" title="Criar Web App ou Código interativo">
+                  <div class="quick-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  </div>
+                  <div class="quick-card-title">Página Web & Sandbox (.html)</div>
+                  <div class="quick-card-desc">Editor de código com pré-visualização ao vivo no navegador</div>
+                </div>
+              </div>
             </div>
 
             <!-- Contêiner de Mensagens em Rolagem -->
@@ -1389,7 +1450,9 @@
             <!-- Pílula de Contexto Ativo do Canvas (Edição em Dupla) -->
             <div id="canvas-active-context-bar" class="canvas-active-context-bar" style="display: none;">
               <div class="canvas-context-info">
-                <span class="canvas-context-icon" id="canvas-context-icon">📊</span>
+                <span class="canvas-context-icon" id="canvas-context-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                </span>
                 <span class="canvas-context-label">Editando em Dupla:</span>
                 <span id="canvas-context-doc-name" class="canvas-context-doc-name">workbook.xlsx</span>
                 <span class="canvas-context-hint">• O que você pedir atualizará o arquivo ao lado</span>
@@ -1536,22 +1599,26 @@
 
           <!-- 1. MODO PLANILHA INTERATIVA (SPREADSHEET) -->
           <div id="canvas-view-spreadsheet" class="canvas-subview active">
-            <!-- Barra de Resumo e Métricas (KPI Strip) -->
+            <!-- Barra de Resumo e Métricas (KPI Strip) Exata: Total Tasks, In Progress, Done, Overdue + Soma Total -->
             <div class="canvas-kpi-strip" id="canvas-kpi-strip">
               <div class="canvas-kpi-card">
-                <span class="kpi-title">TOTAL LINHAS</span>
-                <span class="kpi-number" id="kpi-val-rows">0</span>
+                <span class="kpi-title">TOTAL TASKS</span>
+                <span class="kpi-number" id="kpi-val-tasks">0</span>
               </div>
-              <div class="canvas-kpi-card">
-                <span class="kpi-title">COLUNAS</span>
-                <span class="kpi-number" id="kpi-val-cols">0</span>
+              <div class="canvas-kpi-card highlight-amber">
+                <span class="kpi-title">IN PROGRESS</span>
+                <span class="kpi-number" id="kpi-val-progress">0</span>
               </div>
               <div class="canvas-kpi-card highlight-green">
-                <span class="kpi-title">CONCLUÍDAS / STATUS</span>
-                <span class="kpi-number" id="kpi-val-status">0</span>
+                <span class="kpi-title">DONE</span>
+                <span class="kpi-number" id="kpi-val-done">0</span>
               </div>
-              <div class="canvas-kpi-card highlight-gold">
-                <span class="kpi-title">SOMA CALCULADA</span>
+              <div class="canvas-kpi-card highlight-red">
+                <span class="kpi-title">OVERDUE</span>
+                <span class="kpi-number" id="kpi-val-overdue">0</span>
+              </div>
+              <div class="canvas-kpi-card highlight-gold" id="kpi-card-sum">
+                <span class="kpi-title">SOMA TOTAL</span>
                 <span class="kpi-number" id="kpi-val-sum">-</span>
               </div>
             </div>
@@ -1574,24 +1641,38 @@
               <div class="toolbar-right">
                 <span class="canvas-editing-hint">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  Edição em dupla: clique em qualquer célula para alterar
+                  Grelha Excel editável • Clique em qualquer célula
                 </span>
               </div>
             </div>
 
-            <!-- Grelha da Planilha Excel -->
-            <div class="canvas-spreadsheet-grid-scroll">
-              <table class="canvas-excel-table" id="canvas-excel-table">
-                <!-- Cabeçalho A, B, C, D... e linhas 1, 2, 3... dinâmicos -->
-              </table>
+            <!-- Conteúdo da Aba: 1) Grelha Tracker ou 2) Painel Resumo -->
+            <div class="canvas-spreadsheet-content-wrap">
+              <!-- Vista Tracker (Grelha de Dados) -->
+              <div class="canvas-spreadsheet-grid-scroll" id="canvas-tab-view-tracker">
+                <table class="canvas-excel-table" id="canvas-excel-table">
+                  <!-- Cabeçalho A, B, C, D... e linhas 1, 2, 3... dinâmicos -->
+                </table>
+              </div>
+
+              <!-- Vista Resumo (Dashboard Executivo Consolidado) -->
+              <div class="canvas-spreadsheet-summary-scroll" id="canvas-tab-view-resumo" style="display: none;">
+                <div class="canvas-summary-dashboard" id="canvas-summary-dashboard">
+                  <!-- Gerado dinamicamente com estatísticas, barra de progresso e detalhamento -->
+                </div>
+              </div>
             </div>
 
-            <!-- Barra Inferior de Abas da Planilha -->
+            <!-- Barra Inferior de Abas Funcionais (Tracker, Resumo) -->
             <div class="canvas-sheet-tabs-bar">
-              <div class="canvas-sheet-tab active">
+              <button type="button" class="canvas-sheet-tab active" data-sheet-tab="tracker" id="tab-sheet-tracker">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                <span id="canvas-active-tab-title">Tracker Principal</span>
-              </div>
+                <span>Tracker</span>
+              </button>
+              <button type="button" class="canvas-sheet-tab" data-sheet-tab="resumo" id="tab-sheet-resumo">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Resumo</span>
+              </button>
               <button type="button" class="btn-canvas-add-tab" id="btn-add-sheet-tab" title="Adicionar nova aba">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </button>
@@ -1611,12 +1692,66 @@
               <button type="button" class="canvas-doc-tool" data-cmd="formatBlock" data-val="p" title="Parágrafo">¶</button>
               <div class="toolbar-sep"></div>
               <button type="button" class="canvas-doc-tool" data-cmd="insertUnorderedList" title="Marcadores">• Lista</button>
+              <button type="button" class="canvas-doc-tool" data-cmd="insertOrderedList" title="Numeração">1. Lista</button>
+              <div class="toolbar-sep"></div>
+              <button type="button" class="canvas-doc-tool" id="btn-doc-today-date" title="Atualizar Data Atual">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Hoje</span>
+              </button>
             </div>
 
-            <!-- Folha A4 Comercial -->
+            <!-- Folha A4 Comercial com Cabeçalho Timbrado e Assinaturas -->
             <div class="canvas-paper-scroll">
               <div class="canvas-a4-sheet" id="canvas-a4-sheet" contenteditable="true" spellcheck="false">
-                <!-- Conteúdo dinâmico do documento -->
+                <!-- Cabeçalho Timbrado Oficial Comercial -->
+                <div class="a4-header-timbrado" contenteditable="false">
+                  <div class="a4-timbrado-brand">
+                    <div class="a4-timbrado-badge">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <div>
+                      <div class="a4-timbrado-title">MEU KOTA IA — SISTEMAS INTELIGENTES</div>
+                      <div class="a4-timbrado-sub">Documento Oficial & Relatório Executivo Comercial</div>
+                    </div>
+                  </div>
+                  <div class="a4-timbrado-meta">
+                    <div><strong>Data:</strong> <span id="a4-meta-date">28/09/2026</span></div>
+                    <div><strong>Ref.:</strong> <span id="a4-meta-ref">MK-DOC-2026/09</span></div>
+                    <div><strong>Status:</strong> <span class="a4-badge-confidencial">CONFIDENCIAL</span></div>
+                  </div>
+                </div>
+
+                <!-- Conteúdo Editável do Documento -->
+                <div class="a4-body-content" id="a4-body-content">
+                  <h1 style="color:#0F172A;font-size:22px;margin:20px 0 12px 0;font-weight:800;border-bottom:2px solid #FFD100;padding-bottom:8px;">Relatório & Proposta Comercial Executiva</h1>
+                  <p>Este documento formaliza as diretrizes, planejamento e escopo executivo dos serviços prestados através da plataforma tecnológica <strong>Meu Kota IA</strong>.</p>
+                  
+                  <h2 style="color:#1E293B;font-size:16px;margin:24px 0 8px 0;font-weight:700;">1. Objeto & Escopo dos Trabalhos</h2>
+                  <p>Implementação de arquitetura inteligente em nuvem com alta disponibilidade, segurança de dados corporativos e sincronização em tempo real multi-dispositivo.</p>
+                  
+                  <h2 style="color:#1E293B;font-size:16px;margin:24px 0 8px 0;font-weight:700;">2. Entregáveis & Cronograma</h2>
+                  <p>Todas as etapas acordadas são validadas de forma contínua, com relatórios de progresso periódicos e suporte técnico especializado.</p>
+                  
+                  <h2 style="color:#1E293B;font-size:16px;margin:24px 0 8px 0;font-weight:700;">3. Termos & Validação</h2>
+                  <p>As partes ratificam o teor deste instrumento e firmam o compromisso nas disposições abaixo especificadas.</p>
+                </div>
+
+                <!-- Rodapé com Seção Formal de Assinaturas -->
+                <div class="a4-signatures-section" contenteditable="false">
+                  <div class="a4-signature-box">
+                    <div class="a4-signature-line"></div>
+                    <div class="a4-signee-name" contenteditable="true">Bruno Souza</div>
+                    <div class="a4-signee-role">Diretoria Executiva / Gestor de Projeto</div>
+                    <div class="a4-auth-seal">MEU KOTA IA • AUTENTICADO DIGITALMENTE</div>
+                  </div>
+                  <div class="a4-signature-box">
+                    <div class="a4-signature-line"></div>
+                    <div class="a4-signee-name" contenteditable="true">Assinatura do Cliente / Representante</div>
+                    <div class="a4-signee-role">Aprovação & Validação Formal</div>
+                    <div class="a4-auth-seal">DOCUMENTO HOMOLOGADO</div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -1624,11 +1759,24 @@
           <!-- 3. MODO CÓDIGO & WEB APP (SANDBOX) -->
           <div id="canvas-view-code" class="canvas-subview">
             <div class="canvas-code-tabs">
-              <button type="button" class="code-tab-btn active" id="tab-code-editor">Código Fonte</button>
-              <button type="button" class="code-tab-btn" id="tab-code-preview">Visualização ao Vivo</button>
+              <button type="button" class="code-tab-btn active" id="tab-code-editor">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>Código Fonte</span>
+              </button>
+              <button type="button" class="code-tab-btn" id="tab-code-preview">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Pré-visualização ao Vivo</span>
+              </button>
+              <div class="code-tabs-right">
+                <button type="button" class="btn-code-run-refresh" id="btn-code-refresh" title="Atualizar Pré-visualização ao Vivo">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  <span>Atualizar</span>
+                </button>
+              </div>
             </div>
             <div class="canvas-code-editor-wrap" id="canvas-code-editor-wrap">
-              <textarea id="canvas-code-textarea" class="canvas-code-textarea" spellcheck="false"></textarea>
+              <div class="canvas-code-gutter" id="canvas-code-gutter"></div>
+              <textarea id="canvas-code-textarea" class="canvas-code-textarea" spellcheck="false" placeholder="Digite ou cole código HTML, CSS e JavaScript aqui..."></textarea>
             </div>
             <div class="canvas-code-preview-wrap" id="canvas-code-preview-wrap" style="display: none;">
               <iframe id="canvas-preview-iframe" class="canvas-preview-iframe" sandbox="allow-scripts allow-modals"></iframe>
@@ -2472,6 +2620,6 @@
   <script src="libs/xlsx.full.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260928_v38_canvas_artifacts"></script>
+  <script src="app.js?v=20260928_v39_canvas_complete"></script>
 </body>
 </html>

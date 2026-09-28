@@ -8872,6 +8872,495 @@ html.is-offline #kota-offline-screen {
 }
 
 /* ============================================================ */
+/* LAUNCHER DO CANVAS NO HEADER DO CHAT                        */
+/* ============================================================ */
+
+.gpt-canvas-launcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 209, 0, 0.1);
+  border: 1px solid rgba(255, 209, 0, 0.35);
+  color: #FFD100;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.gpt-canvas-launcher-btn:hover {
+  background: rgba(255, 209, 0, 0.2);
+  border-color: rgba(255, 209, 0, 0.6);
+  box-shadow: 0 0 14px rgba(255, 209, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.canvas-launcher-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 290px;
+  background: #141720;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: fadeInDown 0.18s ease-out;
+}
+
+.canvas-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #E2E8F0;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.canvas-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(2px);
+}
+
+.canvas-menu-item .c-menu-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.canvas-menu-item .c-menu-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.canvas-menu-item .c-menu-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.canvas-menu-item .c-menu-desc {
+  font-size: 11px;
+  color: #94A3B8;
+  margin-top: 1px;
+}
+
+/* ============================================================ */
+/* CARTÕES DE INÍCIO RÁPIDO DO CANVAS NA TELA INICIAL           */
+/* ============================================================ */
+
+.canvas-quick-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+  width: 100%;
+  max-width: 760px;
+}
+
+.canvas-quick-card {
+  background: rgba(17, 21, 29, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.canvas-quick-card:hover {
+  border-color: #FFD100;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 16px rgba(255, 209, 0, 0.15);
+  background: rgba(23, 29, 41, 0.95);
+}
+
+.canvas-quick-card .quick-card-icon {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.canvas-quick-card .quick-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.canvas-quick-card .quick-card-desc {
+  font-size: 11.5px;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .canvas-quick-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 18px;
+  }
+}
+
+/* ============================================================ */
+/* HIGHLIGHTS DE KPI & CORES CONDICIONAIS                       */
+/* ============================================================ */
+
+.canvas-kpi-card.highlight-amber .kpi-number {
+  color: #FBBF24;
+}
+
+.canvas-kpi-card.highlight-red .kpi-number {
+  color: #F87171;
+}
+
+/* Pílulas de Status Condicional na Planilha */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.status-pill.done {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34D399;
+}
+
+.status-pill.progress {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #FBBF24;
+}
+
+.status-pill.overdue {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #F87171;
+}
+
+.status-pill.active {
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #60A5FA;
+}
+
+/* Contêiner de Abas Tracker / Resumo */
+.canvas-spreadsheet-content-wrap {
+  display: flex;
+  flex: 1 1 0%;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.canvas-spreadsheet-summary-scroll {
+  flex: 1 1 0%;
+  overflow-y: auto;
+  padding: 20px;
+  background: #0E1015;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.canvas-summary-dashboard {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-card-metric {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.summary-metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.summary-metric-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+.summary-metric-pct {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFD100;
+}
+
+.summary-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.summary-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981, #FFD100);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.summary-stats-breakdown {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.summary-stat-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.summary-stat-box .stat-box-val {
+  font-size: 18px;
+  font-weight: 800;
+  display: block;
+}
+
+.summary-stat-box .stat-box-lbl {
+  font-size: 10px;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+/* ============================================================ */
+/* CABEÇALHO TIMBRADO E ASSINATURAS DO DOCUMENTO A4             */
+/* ============================================================ */
+
+.a4-header-timbrado {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #FFD100;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.a4-timbrado-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.a4-timbrado-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #0F172A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #FFD100;
+  flex-shrink: 0;
+}
+
+.a4-timbrado-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: 0.5px;
+}
+
+.a4-timbrado-sub {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.a4-timbrado-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: #334155;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.a4-badge-confidencial {
+  display: inline-block;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.a4-signatures-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px dashed #CBD5E1;
+  page-break-inside: avoid;
+}
+
+.a4-signature-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.a4-signature-line {
+  width: 80%;
+  border-bottom: 1.5px solid #0F172A;
+  margin-bottom: 8px;
+}
+
+.a4-signee-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.a4-signee-role {
+  font-size: 10.5px;
+  color: #64748B;
+}
+
+.a4-auth-seal {
+  margin-top: 6px;
+  font-size: 9px;
+  color: #059669;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================ */
+/* EDITOR DE CÓDIGO COM NUMERAÇÃO DE LINHAS (GUTTER)            */
+/* ============================================================ */
+
+.canvas-code-gutter {
+  width: 44px;
+  background: #0E1015;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  color: #475569;
+  font-family: var(--font-geist-mono, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 12px 6px 12px 0;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.canvas-code-textarea {
+  flex: 1 1 0%;
+  width: 100%;
+  background: #12151D;
+  border: none;
+  color: #E2E8F0;
+  font-family: var(--font-geist-mono, monospace);
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 12px 14px;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.code-tabs-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-code-run-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #CBD5E1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-code-run-refresh:hover {
+  background: #10B981;
+  border-color: #10B981;
+  color: #000000;
+}
+
+/* Botão nos Blocos de Código do Chat para Abrir no Canvas */
+.btn-open-code-canvas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 209, 0, 0.12);
+  border: 1px solid rgba(255, 209, 0, 0.3);
+  color: #FFD100;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-open-code-canvas:hover {
+  background: #FFD100;
+  color: #000000;
+  box-shadow: 0 0 10px rgba(255, 209, 0, 0.35);
+}
+
+/* ============================================================ */
 /* RESPONSIVIDADE DO CANVAS (MOBILE E TABLET)                    */
 /* ============================================================ */
 

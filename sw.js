@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v38-canvas-artifacts';
+const CACHE_NAME = 'meu-kota-cache-v39-canvas-complete';
 
 const PRECACHE_ASSETS = [
   './',

@@ -4381,15 +4381,26 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       formatted = formatted.replace(`___KAMBA_TABLE_BLOCK_${index}___`, formattedTable);
     });
 
-    // Restaurar blocos de código com containers profissionais e botões de cópia
+    // Restaurar blocos de código com containers profissionais e botões de cópia & teste no Canvas
     codeBlocks.forEach((item, index) => {
+      const isWebCode = ['html', 'js', 'javascript', 'css', 'xml', 'svg'].includes(item.lang);
+      const testBtnHtml = isWebCode 
+        ? `<button type="button" class="btn-open-code-canvas" title="Abrir no Canvas e Testar ao Vivo">` +
+            `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>` +
+            `<span>Testar no Canvas</span>` +
+          `</button>`
+        : '';
+
       const codeHtml = `<div class="code-block-wrapper" data-lang="${item.lang}">` +
         `<div class="code-block-header">` +
           `<span class="code-lang-tag">${item.lang}</span>` +
-          `<button type="button" class="btn-copy-code" title="Copiar código para a área de transferência">` +
-            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>` +
-            `<span>Copiar código</span>` +
-          `</button>` +
+          `<div style="display:flex;align-items:center;gap:6px;">` +
+            testBtnHtml +
+            `<button type="button" class="btn-copy-code" title="Copiar código para a área de transferência">` +
+              `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>` +
+              `<span>Copiar código</span>` +
+            `</button>` +
+          `</div>` +
         `</div>` +
         `<pre><code class="hljs language-${item.lang}">${item.code}</code></pre>` +
       `</div>`;
@@ -5771,9 +5782,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     const excelTable = document.getElementById('canvas-excel-table');
     const fileNameInput = document.getElementById('canvas-file-name');
     const activeTabTitle = document.getElementById('canvas-active-tab-title');
+    const modeStatus = document.getElementById('canvas-mode-status');
+    const canvasTypeIcon = document.getElementById('canvas-type-icon');
 
-    // Botões do cabeçalho
+    // Botões do cabeçalho & exportações
     const btnExportPrimary = document.getElementById('btn-canvas-export-primary');
+    const canvasExportLabel = document.getElementById('canvas-export-label');
     const btnMoreExports = document.getElementById('btn-canvas-more-exports');
     const exportDropdown = document.getElementById('canvas-export-dropdown');
     const btnDlXlsx = document.getElementById('btn-canvas-dl-xlsx');
@@ -5784,11 +5798,34 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     const btnClose = document.getElementById('btn-canvas-close');
     const btnMobileBack = document.getElementById('btn-canvas-back-chat');
 
-    // Barra de ferramentas da grelha
+    // Launcher do topo do chat
+    const btnOpenLauncher = document.getElementById('btn-open-canvas-launcher');
+    const launcherMenu = document.getElementById('canvas-launcher-menu');
+
+    // Barra de ferramentas e abas da grelha
     const btnAddRow = document.getElementById('btn-grid-add-row');
     const btnAddCol = document.getElementById('btn-grid-add-col');
     const btnGridClear = document.getElementById('btn-grid-clear');
     const btnAddSheetTab = document.getElementById('btn-add-sheet-tab');
+    const tabSheetTracker = document.getElementById('tab-sheet-tracker');
+    const tabSheetResumo = document.getElementById('tab-sheet-resumo');
+    const viewTracker = document.getElementById('canvas-tab-view-tracker');
+    const viewResumo = document.getElementById('canvas-tab-view-resumo');
+
+    // Elementos do Sandbox de Código
+    const tabCodeEditor = document.getElementById('tab-code-editor');
+    const tabCodePreview = document.getElementById('tab-code-preview');
+    const codeEditorWrap = document.getElementById('canvas-code-editor-wrap');
+    const codePreviewWrap = document.getElementById('canvas-code-preview-wrap');
+    const codeTextarea = document.getElementById('canvas-code-textarea');
+    const codeGutter = document.getElementById('canvas-code-gutter');
+    const previewIframe = document.getElementById('canvas-preview-iframe');
+    const btnCodeRefresh = document.getElementById('btn-code-refresh');
+
+    // Elementos do Documento A4
+    const a4Sheet = document.getElementById('canvas-a4-sheet');
+    const a4MetaDate = document.getElementById('a4-meta-date');
+    const btnDocTodayDate = document.getElementById('btn-doc-today-date');
 
     // Barra de contexto ativo do chat
     const contextBar = document.getElementById('canvas-active-context-bar');
@@ -5819,7 +5856,197 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     }
 
-    // Exportação Real Microsoft Excel (.xlsx) via SheetJS
+    // Classificação de status para cores condicionais
+    function getStatusClass(val) {
+      if (!val) return '';
+      const text = String(val).trim().toLowerCase();
+      if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(text)) return 'done';
+      if (/^(in progress|em andamento|pendente|ativo|doing|execu[cç][aã]o)$/.test(text)) return 'progress';
+      if (/^(overdue|atrasad[oa]|urgente|bloqueado|cr[ií]tica|cancelado)$/.test(text)) return 'overdue';
+      if (/^(alta|m[eé]dia|normal|baixa)$/.test(text)) return 'active';
+      return '';
+    }
+
+    // 1. RECALCULAR KPIS: TOTAL TASKS, IN PROGRESS, DONE, OVERDUE + SOMA TOTAL
+    function recalculateSpreadsheetKpis(artifact) {
+      if (!artifact) return;
+      const tasksEl = document.getElementById('kpi-val-tasks');
+      const progressEl = document.getElementById('kpi-val-progress');
+      const doneEl = document.getElementById('kpi-val-done');
+      const overdueEl = document.getElementById('kpi-val-overdue');
+      const sumEl = document.getElementById('kpi-val-sum');
+
+      const totalTasks = artifact.rows.length;
+      let inProgressCount = 0;
+      let doneCount = 0;
+      let overdueCount = 0;
+
+      const numCols = artifact.headers.length;
+      const colNumericSums = new Array(numCols).fill(0);
+      const colNumericCounts = new Array(numCols).fill(0);
+
+      artifact.rows.forEach(r => {
+        r.forEach((val, cIdx) => {
+          const text = (val || '').toString().trim().toLowerCase();
+          if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(text) || text.includes('conclu')) {
+            doneCount++;
+          } else if (/^(in progress|em andamento|pendente|ativo|doing|execu[cç][aã]o)$/.test(text) || text.includes('andamento') || text.includes('progr')) {
+            inProgressCount++;
+          } else if (/^(overdue|atrasad[oa]|urgente|bloqueado|cancelado)$/.test(text) || text.includes('atras') || text.includes('overdue')) {
+            overdueCount++;
+          }
+
+          // Analisar números / moeda
+          const cleanNumStr = (val || '').toString().replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+          const parts = cleanNumStr.split('.');
+          let numVal = NaN;
+          if (parts.length > 2) {
+            numVal = parseFloat(parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]);
+          } else {
+            numVal = parseFloat(cleanNumStr);
+          }
+
+          if (!isNaN(numVal) && isFinite(numVal) && (val || '').toString().trim().length > 0) {
+            colNumericSums[cIdx] += numVal;
+            colNumericCounts[cIdx]++;
+          }
+        });
+      });
+
+      if (tasksEl) tasksEl.textContent = totalTasks;
+      if (progressEl) progressEl.textContent = inProgressCount;
+      if (doneEl) doneEl.textContent = doneCount;
+      if (overdueEl) overdueEl.textContent = overdueCount;
+
+      // Melhor coluna numérica para soma
+      let bestNumericCol = -1;
+      let maxNumCount = 0;
+      colNumericCounts.forEach((count, cIdx) => {
+        if (count > maxNumCount) {
+          maxNumCount = count;
+          bestNumericCol = cIdx;
+        }
+      });
+
+      if (sumEl) {
+        if (bestNumericCol >= 0 && maxNumCount > 0) {
+          const sum = colNumericSums[bestNumericCol];
+          const headerName = artifact.headers[bestNumericCol] || 'Total';
+          let formattedSum = sum.toLocaleString('pt-AO', { maximumFractionDigits: 2 });
+          if (headerName.toLowerCase().includes('kz') || headerName.toLowerCase().includes('preço') || headerName.toLowerCase().includes('custo') || headerName.toLowerCase().includes('valor')) {
+            formattedSum += ' Kz';
+          }
+          sumEl.textContent = formattedSum;
+          sumEl.title = `Soma acumulada da coluna "${headerName}"`;
+        } else {
+          sumEl.textContent = '-';
+        }
+      }
+    }
+
+    // 2. RENDERIZAR GRELHA DA PLANILHA COM CORES CONDICIONAIS
+    function renderSpreadsheetGrid(artifact) {
+      if (!excelTable || !artifact) return;
+      const numCols = Math.max(artifact.headers.length, 1);
+
+      // Linha 0: Letras das Colunas (A, B, C...)
+      let html = '<thead><tr><th class="corner-cell"></th>';
+      for (let c = 0; c < numCols; c++) {
+        html += `<th data-col="${c}">${getExcelColumnLetter(c)}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      // Linha 1: Cabeçalhos com número de linha "1"
+      html += '<tr class="header-row"><td class="row-num-cell">1</td>';
+      for (let c = 0; c < numCols; c++) {
+        const val = artifact.headers[c] !== undefined ? artifact.headers[c] : '';
+        html += `<td contenteditable="true" spellcheck="false" data-type="header" data-col="${c}">${escapeHtml(val)}</td>`;
+      }
+      html += '</tr>';
+
+      // Linhas 2..N: Dados com cores condicionais por status
+      artifact.rows.forEach((row, rIdx) => {
+        const rowNum = rIdx + 2;
+        html += `<tr><td class="row-num-cell">${rowNum}</td>`;
+        for (let c = 0; c < numCols; c++) {
+          const val = row[c] !== undefined ? row[c] : '';
+          const statusClass = getStatusClass(val);
+          const cellContent = statusClass 
+            ? `<span class="status-pill ${statusClass}">${escapeHtml(val)}</span>` 
+            : escapeHtml(val);
+          html += `<td contenteditable="true" spellcheck="false" data-type="cell" data-row="${rIdx}" data-col="${c}">${cellContent}</td>`;
+        }
+        html += '</tr>';
+      });
+
+      html += '</tbody>';
+      excelTable.innerHTML = html;
+    }
+
+    // 3. RENDERIZAR RESUMO EXECUTIVO (ABA RESUMO)
+    function renderSpreadsheetSummary(artifact) {
+      const container = document.getElementById('canvas-summary-dashboard');
+      if (!container || !artifact) return;
+
+      const total = artifact.rows.length;
+      let done = 0;
+      let inProgress = 0;
+      let overdue = 0;
+
+      artifact.rows.forEach(r => {
+        r.forEach(cell => {
+          const txt = (cell || '').toString().toLowerCase();
+          if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(txt) || txt.includes('conclu')) done++;
+          else if (/^(in progress|em andamento|pendente|ativo|doing|execu[cç][aã]o)$/.test(txt) || txt.includes('andamento') || txt.includes('progr')) inProgress++;
+          else if (/^(overdue|atrasad[oa]|urgente|bloqueado|cancelado)$/.test(txt) || txt.includes('atras') || txt.includes('overdue')) overdue++;
+        });
+      });
+
+      const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      container.innerHTML = `
+        <div class="summary-card-metric">
+          <div class="summary-metric-header">
+            <span class="summary-metric-title">Progresso Geral das Entregas</span>
+            <span class="summary-metric-pct">${completionRate}% Concluído</span>
+          </div>
+          <div class="summary-progress-bar-bg">
+            <div class="summary-progress-bar-fill" style="width: ${completionRate}%;"></div>
+          </div>
+          <div class="summary-stats-breakdown">
+            <div class="summary-stat-box">
+              <span class="stat-box-val" style="color:#FFFFFF;">${total}</span>
+              <span class="stat-box-lbl">Total Tasks</span>
+            </div>
+            <div class="summary-stat-box">
+              <span class="stat-box-val" style="color:#FBBF24;">${inProgress}</span>
+              <span class="stat-box-lbl">In Progress</span>
+            </div>
+            <div class="summary-stat-box">
+              <span class="stat-box-val" style="color:#34D399;">${done}</span>
+              <span class="stat-box-lbl">Done</span>
+            </div>
+            <div class="summary-stat-box">
+              <span class="stat-box-val" style="color:#F87171;">${overdue}</span>
+              <span class="stat-box-lbl">Overdue</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-card-metric">
+          <div class="summary-metric-header">
+            <span class="summary-metric-title">Estrutura & Metadados do Arquivo</span>
+          </div>
+          <div style="font-size:12.5px;color:#CBD5E1;line-height:1.6;margin-top:6px;">
+            • <strong>Colunas Ativas:</strong> ${artifact.headers.join(', ')}<br>
+            • <strong>Total de Registros:</strong> ${total} tarefas estruturadas.<br>
+            • <strong>Compatibilidade:</strong> Pronto para exportação real em Microsoft Excel (.xlsx nativo) e Google Planilhas.
+          </div>
+        </div>
+      `;
+    }
+
+    // 4. EXPORTAÇÃO EXCEL (.XLSX) COM AMBAS AS ABAS (TRACKER + RESUMO)
     function exportSpreadsheetToXlsx(artifact) {
       if (!artifact) return;
       if (typeof XLSX === 'undefined') {
@@ -5829,7 +6056,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
       try {
         const fullMatrix = [artifact.headers, ...artifact.rows];
-        const ws = XLSX.utils.aoa_to_sheet(fullMatrix);
+        const wsTracker = XLSX.utils.aoa_to_sheet(fullMatrix);
 
         // Auto-dimensionamento proporcional das colunas
         const colWidths = artifact.headers.map((h, colIdx) => {
@@ -5840,31 +6067,39 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           });
           return { wch: Math.min(Math.max(maxLen + 4, 12), 45) };
         });
-        ws['!cols'] = colWidths;
+        wsTracker['!cols'] = colWidths;
+
+        // Criar Segunda Aba: Resumo Executivo
+        const summaryData = [
+          ['MÉTRICA EXECUTIVA', 'VALOR'],
+          ['Total de Tarefas / Registros', artifact.rows.length],
+          ['Campos Estruturados', artifact.headers.join(', ')],
+          ['Data de Emissão', new Date().toLocaleString('pt-AO')]
+        ];
+        const wsResumo = XLSX.utils.aoa_to_sheet(summaryData);
+        wsResumo['!cols'] = [{ wch: 30 }, { wch: 35 }];
 
         const wb = XLSX.utils.book_new();
-        const sheetTitleClean = (artifact.title || 'Planilha')
-          .slice(0, 31)
-          .replace(/[:\\/?*\[\]]/g, ' ');
-        XLSX.utils.book_append_sheet(wb, ws, sheetTitleClean);
+        XLSX.utils.book_append_sheet(wb, wsTracker, 'Tracker');
+        XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo Executivo');
 
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         const blob = new Blob([wbout], {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         });
 
-        let targetName = (artifact.fileName || 'planilha-meu-kota.xlsx').trim();
+        let targetName = (artifact.fileName || 'tracker-de-tarefas.xlsx').trim();
         if (!targetName.toLowerCase().endsWith('.xlsx')) targetName += '.xlsx';
 
         triggerBlobDownload(blob, targetName);
-        showToast('Planilha Excel (.xlsx) baixada com sucesso!');
+        showToast('Planilha Excel (.xlsx) baixada com sucesso (com abas Tracker e Resumo)!');
       } catch (err) {
         console.error('[Meu Kota Canvas] Erro ao exportar XLSX:', err);
         showToast('Erro ao exportar arquivo .xlsx: ' + err.message);
       }
     }
 
-    // Exportação CSV com UTF-8 BOM
+    // 5. EXPORTAÇÃO CSV COM UTF-8 BOM
     function exportSpreadsheetToCsv(artifact) {
       if (!artifact) return;
       try {
@@ -5886,7 +6121,46 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    // Copiar dados em TSV para colar direto em qualquer software de planilhas
+    // 6. EXPORTAÇÃO PDF DO DOCUMENTO A4 (HTML2PDF)
+    function exportDocumentToPdf() {
+      const sheet = document.getElementById('canvas-a4-sheet');
+      if (!sheet) return;
+
+      showToast('Gerando documento comercial em PDF...');
+      let targetName = (fileNameInput ? fileNameInput.value : 'documento-comercial.pdf') || 'documento-comercial.pdf';
+      if (!targetName.toLowerCase().endsWith('.pdf')) targetName += '.pdf';
+
+      if (typeof html2pdf !== 'undefined') {
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: targetName,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(sheet).save().then(() => {
+          showToast('Documento comercial em PDF baixado com sucesso!');
+        }).catch(err => {
+          console.warn('[PDF] Fallback para impressão:', err);
+          window.print();
+        });
+      } else {
+        window.print();
+      }
+    }
+
+    // 7. EXPORTAÇÃO DE CÓDIGO
+    function exportCodeToFile() {
+      if (!codeTextarea) return;
+      const code = codeTextarea.value || '';
+      const blob = new Blob([code], { type: 'text/html;charset=utf-8;' });
+      let targetName = (fileNameInput ? fileNameInput.value : 'index.html') || 'index.html';
+      if (!targetName.includes('.')) targetName += '.html';
+      triggerBlobDownload(blob, targetName);
+      showToast('Arquivo de código baixado com sucesso!');
+    }
+
+    // 8. COPIAR DADOS
     function copySpreadsheetToClipboard(artifact) {
       if (!artifact) return;
       const fullMatrix = [artifact.headers, ...artifact.rows];
@@ -5894,166 +6168,155 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(tsv).then(() => {
           showToast('Dados copiados! Pode colar no Excel, Sheets ou Bloco de Notas.');
-        }).catch(() => {
-          showToast('Conteúdo copiado.');
         });
       }
     }
 
-    // Recalcular métricas do KPI Strip em tempo real
-    function recalculateSpreadsheetKpis(artifact) {
-      if (!artifact) return;
-      const rowsEl = document.getElementById('kpi-val-rows');
-      const colsEl = document.getElementById('kpi-val-cols');
-      const statusEl = document.getElementById('kpi-val-status');
-      const sumEl = document.getElementById('kpi-val-sum');
-
-      const numRows = artifact.rows.length;
-      const numCols = artifact.headers.length;
-
-      if (rowsEl) rowsEl.textContent = numRows;
-      if (colsEl) colsEl.textContent = numCols;
-
-      let completedCount = 0;
-      const statusKeywords = /^(conclu[ií]d[oa]|done|ok|ativo|pago|finalizado|aprovado|feito|sim|yes|true)$/i;
-
-      const numericSums = new Array(numCols).fill(0);
-      const numericCounts = new Array(numCols).fill(0);
-
-      artifact.rows.forEach(r => {
-        r.forEach((val, cIdx) => {
-          const text = (val || '').toString().trim();
-          if (statusKeywords.test(text) || text.toLowerCase().includes('conclu')) {
-            completedCount++;
-          }
-
-          // Extrair valor numérico
-          const cleanNumStr = text.replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-          const parts = cleanNumStr.split('.');
-          let numVal = NaN;
-          if (parts.length > 2) {
-            numVal = parseFloat(parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]);
-          } else {
-            numVal = parseFloat(cleanNumStr);
-          }
-
-          if (!isNaN(numVal) && isFinite(numVal) && text.length > 0) {
-            numericSums[cIdx] += numVal;
-            numericCounts[cIdx]++;
-          }
-        });
-      });
-
-      if (statusEl) {
-        statusEl.textContent = completedCount > 0 ? `${completedCount} OK` : `${numRows} Ativos`;
+    // 9. ATUALIZAR GUTTER DO EDITOR DE CÓDIGO
+    function updateCodeGutter() {
+      if (!codeGutter || !codeTextarea) return;
+      const linesCount = (codeTextarea.value || '').split('\n').length;
+      let numbersHtml = '';
+      for (let i = 1; i <= linesCount; i++) {
+        numbersHtml += `<div>${i}</div>`;
       }
-
-      // Descobrir a melhor coluna numérica para apresentar a soma
-      let bestNumericCol = -1;
-      let maxNumCount = 0;
-      numericCounts.forEach((count, cIdx) => {
-        if (count > maxNumCount) {
-          maxNumCount = count;
-          bestNumericCol = cIdx;
-        }
-      });
-
-      if (sumEl) {
-        if (bestNumericCol >= 0 && maxNumCount > 0) {
-          const sum = numericSums[bestNumericCol];
-          const headerName = artifact.headers[bestNumericCol] || 'Total';
-          let formattedSum = sum.toLocaleString('pt-AO', { maximumFractionDigits: 2 });
-          if (headerName.toLowerCase().includes('kz') || headerName.toLowerCase().includes('preço') || headerName.toLowerCase().includes('valor')) {
-            formattedSum += ' Kz';
-          }
-          sumEl.textContent = formattedSum;
-          sumEl.title = `Soma acumulada da coluna "${headerName}"`;
-        } else {
-          sumEl.textContent = '-';
-          sumEl.title = 'Nenhuma coluna numérica detectada';
-        }
-      }
+      codeGutter.innerHTML = numbersHtml;
     }
 
-    // Renderizar grelha da planilha no DOM com células contenteditable
-    function renderSpreadsheetGrid(artifact) {
-      if (!excelTable || !artifact) return;
-      const numCols = Math.max(artifact.headers.length, 1);
-
-      // Linha 0: Letras das Colunas (A, B, C...)
-      let html = '<thead><tr><th class="corner-cell"></th>';
-      for (let c = 0; c < numCols; c++) {
-        html += `<th data-col="${c}">${getExcelColumnLetter(c)}</th>`;
-      }
-      html += '</tr></thead><tbody>';
-
-      // Linha 1: Cabeçalhos com número de linha "1"
-      html += '<tr class="header-row"><td class="row-num-cell">1</td>';
-      for (let c = 0; c < numCols; c++) {
-        const val = artifact.headers[c] !== undefined ? artifact.headers[c] : '';
-        html += `<td contenteditable="true" spellcheck="false" data-type="header" data-col="${c}">${escapeHtml(val)}</td>`;
-      }
-      html += '</tr>';
-
-      // Linhas 2..N: Dados com número de linha
-      artifact.rows.forEach((row, rIdx) => {
-        const rowNum = rIdx + 2;
-        html += `<tr><td class="row-num-cell">${rowNum}</td>`;
-        for (let c = 0; c < numCols; c++) {
-          const val = row[c] !== undefined ? row[c] : '';
-          html += `<td contenteditable="true" spellcheck="false" data-type="cell" data-row="${rIdx}" data-col="${c}">${escapeHtml(val)}</td>`;
-        }
-        html += '</tr>';
-      });
-
-      html += '</tbody>';
-      excelTable.innerHTML = html;
+    // 10. ATUALIZAR PREVIEW AO VIVO NO IFRAME
+    function updateCodeLivePreview() {
+      if (!previewIframe || !codeTextarea) return;
+      previewIframe.srcdoc = codeTextarea.value || '';
     }
 
-    // Abrir o Canvas com uma planilha carregada
+    // --- MÉTODOS DE ABERTURA DO CANVAS ---
+
     function openSpreadsheetInCanvas(artifact) {
       if (!artifact) return;
       window.activeCanvasArtifact = artifact;
+      artifact.type = 'spreadsheet';
 
       if (layout) layout.classList.add('canvas-open');
       if (canvasPanel) canvasPanel.style.display = 'flex';
 
-      // Alternar para a subview de planilha
+      // Ativar subview de planilha
       document.querySelectorAll('.canvas-subview').forEach(v => v.classList.remove('active'));
       const spreadView = document.getElementById('canvas-view-spreadsheet');
       if (spreadView) spreadView.classList.add('active');
 
-      // Atualizar título do arquivo
+      // Atualizar cabeçalho
+      if (canvasTypeIcon) canvasTypeIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>`;
+      if (modeStatus) modeStatus.textContent = 'Planilha Excel';
+      if (canvasExportLabel) canvasExportLabel.textContent = 'Exportar (.xlsx)';
       if (fileNameInput) {
-        let name = artifact.fileName || 'planilha-meu-kota.xlsx';
+        let name = artifact.fileName || 'tracker-de-tarefas.xlsx';
         if (!name.endsWith('.xlsx')) name += '.xlsx';
         fileNameInput.value = name;
         artifact.fileName = name;
       }
 
-      // Atualizar aba ativa
-      if (activeTabTitle) {
-        activeTabTitle.textContent = (artifact.title || 'Planilha').slice(0, 24);
-      }
-
-      // Renderizar grelha e calcular KPIs
+      // Renderizar grelha, KPIs e resumo
       renderSpreadsheetGrid(artifact);
       recalculateSpreadsheetKpis(artifact);
+      renderSpreadsheetSummary(artifact);
 
-      // Atualizar barra de contexto acima do input do chat
+      // Alternar para aba Tracker
+      if (tabSheetTracker) tabSheetTracker.classList.add('active');
+      if (tabSheetResumo) tabSheetResumo.classList.remove('active');
+      if (viewTracker) viewTracker.style.display = 'block';
+      if (viewResumo) viewResumo.style.display = 'none';
+
+      // Atualizar barra de contexto no chat
       if (contextBar) contextBar.style.display = 'flex';
       if (contextDocName) contextDocName.textContent = artifact.fileName || artifact.title || 'planilha.xlsx';
-      if (contextIcon) contextIcon.textContent = '📊';
+      if (contextIcon) contextIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>';
 
-      // No mobile, rolar suavemente para o canvas
       if (window.innerWidth <= 860 && canvasPanel) {
         canvasPanel.scrollIntoView({ behavior: 'smooth' });
       }
-
       showToast('Planilha aberta no Canvas! Modo de Edição em Dupla ativo.');
     }
 
-    // Fechar o Canvas
+    function openDocumentInCanvas(docData) {
+      window.activeCanvasArtifact = {
+        type: 'document',
+        title: (docData && docData.title) || 'Documento Comercial',
+        fileName: (docData && docData.fileName) || 'documento-comercial.pdf'
+      };
+
+      if (layout) layout.classList.add('canvas-open');
+      if (canvasPanel) canvasPanel.style.display = 'flex';
+
+      // Ativar subview de documento
+      document.querySelectorAll('.canvas-subview').forEach(v => v.classList.remove('active'));
+      const docView = document.getElementById('canvas-view-document');
+      if (docView) docView.classList.add('active');
+
+      // Atualizar cabeçalho
+      if (canvasTypeIcon) canvasTypeIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+      if (modeStatus) modeStatus.textContent = 'Folha A4 Executiva';
+      if (canvasExportLabel) canvasExportLabel.textContent = 'Baixar PDF (.pdf)';
+      if (fileNameInput) fileNameInput.value = 'documento-comercial.pdf';
+
+      // Atualizar data de emissão
+      if (a4MetaDate) a4MetaDate.textContent = new Date().toLocaleDateString('pt-AO');
+
+      // Barra de contexto
+      if (contextBar) contextBar.style.display = 'flex';
+      if (contextDocName) contextDocName.textContent = 'documento-comercial.pdf';
+      if (contextIcon) contextIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+
+      if (window.innerWidth <= 860 && canvasPanel) {
+        canvasPanel.scrollIntoView({ behavior: 'smooth' });
+      }
+      showToast('Documento Comercial A4 aberto no Canvas!');
+    }
+
+    function openCodeInCanvas(codeData) {
+      window.activeCanvasArtifact = {
+        type: 'code',
+        title: (codeData && codeData.title) || 'Código Fonte',
+        fileName: (codeData && codeData.fileName) || 'index.html'
+      };
+
+      if (layout) layout.classList.add('canvas-open');
+      if (canvasPanel) canvasPanel.style.display = 'flex';
+
+      // Ativar subview de código
+      document.querySelectorAll('.canvas-subview').forEach(v => v.classList.remove('active'));
+      const codeView = document.getElementById('canvas-view-code');
+      if (codeView) codeView.classList.add('active');
+
+      // Atualizar cabeçalho
+      if (canvasTypeIcon) canvasTypeIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`;
+      if (modeStatus) modeStatus.textContent = 'Sandbox Interativo';
+      if (canvasExportLabel) canvasExportLabel.textContent = 'Baixar Código (.html)';
+      if (fileNameInput) fileNameInput.value = (codeData && codeData.fileName) || 'index.html';
+
+      // Injetar código
+      if (codeTextarea && codeData && codeData.code) {
+        codeTextarea.value = codeData.code;
+        updateCodeGutter();
+        updateCodeLivePreview();
+      }
+
+      // Ativar aba Código ou Preview
+      if (tabCodeEditor) tabCodeEditor.classList.add('active');
+      if (tabCodePreview) tabCodePreview.classList.remove('active');
+      if (codeEditorWrap) codeEditorWrap.style.display = 'flex';
+      if (codePreviewWrap) codePreviewWrap.style.display = 'none';
+
+      // Barra de contexto
+      if (contextBar) contextBar.style.display = 'flex';
+      if (contextDocName) contextDocName.textContent = fileNameInput ? fileNameInput.value : 'index.html';
+      if (contextIcon) contextIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
+
+      if (window.innerWidth <= 860 && canvasPanel) {
+        canvasPanel.scrollIntoView({ behavior: 'smooth' });
+      }
+      showToast('Editor de Código aberto no Canvas!');
+    }
+
     function closeCanvas() {
       if (layout) layout.classList.remove('canvas-open');
       if (canvasPanel) {
@@ -6061,6 +6324,106 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         canvasPanel.classList.remove('is-fullscreen');
       }
       if (exportDropdown) exportDropdown.style.display = 'none';
+      if (launcherMenu) launcherMenu.style.display = 'none';
+    }
+
+    // Templates padrão pré-configurados
+    function createDefaultSpreadsheetTemplate() {
+      return {
+        id: 'default-tracker-' + Date.now(),
+        type: 'spreadsheet',
+        title: 'Planejamento e Tracker de Tarefas 2026',
+        fileName: 'tracker-de-tarefas.xlsx',
+        headers: ['Tarefa / Atividade', 'Responsável', 'Prioridade', 'Status', 'Prazo', 'Custo Previsto (Kz)'],
+        rows: [
+          ['Configuração Servidor Google Firebase', 'Equipa DevOps', 'Alta', 'Done', '29/09/2026', '50.000 Kz'],
+          ['Desenvolvimento Canvas Interativo', 'Bruno Souza', 'Crítica', 'In Progress', '30/09/2026', '120.000 Kz'],
+          ['Auditoria de Segurança & Chaves', 'Segurança', 'Média', 'In Progress', '02/10/2026', '35.000 Kz'],
+          ['Validação do Sistema com Cliente', 'Gestão', 'Alta', 'Overdue', '26/09/2026', '25.000 Kz'],
+          ['Homologação & Treinamento da Equipa', 'Operações', 'Normal', 'Done', '05/10/2026', '40.000 Kz']
+        ]
+      };
+    }
+
+    function createDefaultCodeTemplate() {
+      return {
+        title: 'Página Web Interativa',
+        fileName: 'index.html',
+        code: `<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demonstração Meu Kota IA</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0B0E14;
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .card {
+      background: #151923;
+      border: 1.5px solid #FFD100;
+      border-radius: 14px;
+      padding: 32px;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+    }
+    h1 { color: #FFD100; font-size: 22px; margin-top: 0; }
+    p { color: #94A3B8; font-size: 14px; line-height: 1.5; }
+    .btn {
+      background: #FFD100;
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #FFE033; transform: scale(1.04); }
+    .counter {
+      font-size: 36px;
+      font-weight: 800;
+      color: #34D399;
+      margin: 18px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Meu Kota IA Sandbox</h1>
+    <p>Esta interface está rodando ao vivo diretamente no navegador!</p>
+    <div class="counter" id="count">0</div>
+    <button class="btn" onclick="inc()">Clique para Interagir</button>
+  </div>
+  <script>
+    let c = 0;
+    function inc() {
+      c++;
+      document.getElementById('count').textContent = c;
+    }
+  <\/script>
+</body>
+</html>`
+      };
+    }
+
+    function createDefaultDocumentTemplate() {
+      return {
+        title: 'Relatório & Proposta Comercial Executiva',
+        fileName: 'documento-comercial.pdf'
+      };
     }
 
     // --- EVENT LISTENERS DO CANVAS ---
@@ -6079,10 +6442,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         if (cellType === 'header' && !isNaN(colIdx)) {
           window.activeCanvasArtifact.headers[colIdx] = newText;
           recalculateSpreadsheetKpis(window.activeCanvasArtifact);
+          renderSpreadsheetSummary(window.activeCanvasArtifact);
         } else if (cellType === 'cell' && !isNaN(rowIdx) && !isNaN(colIdx)) {
           if (window.activeCanvasArtifact.rows[rowIdx]) {
             window.activeCanvasArtifact.rows[rowIdx][colIdx] = newText;
             recalculateSpreadsheetKpis(window.activeCanvasArtifact);
+            renderSpreadsheetSummary(window.activeCanvasArtifact);
           }
         }
       });
@@ -6097,6 +6462,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         art.rows.push(emptyRow);
         renderSpreadsheetGrid(art);
         recalculateSpreadsheetKpis(art);
+        renderSpreadsheetSummary(art);
         showToast('Nova linha adicionada!');
       });
     }
@@ -6112,6 +6478,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         art.rows.forEach(r => r.push(''));
         renderSpreadsheetGrid(art);
         recalculateSpreadsheetKpis(art);
+        renderSpreadsheetSummary(art);
         showToast(`Coluna "${newColName}" adicionada!`);
       });
     }
@@ -6127,41 +6494,109 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           });
           renderSpreadsheetGrid(window.activeCanvasArtifact);
           recalculateSpreadsheetKpis(window.activeCanvasArtifact);
+          renderSpreadsheetSummary(window.activeCanvasArtifact);
           showToast('Células da planilha limpas.');
         }
       });
     }
 
-    // 5. Botão de Adicionar Aba
+    // 5. Abas da Planilha (Tracker / Resumo)
+    if (tabSheetTracker && tabSheetResumo) {
+      tabSheetTracker.addEventListener('click', () => {
+        tabSheetTracker.classList.add('active');
+        tabSheetResumo.classList.remove('active');
+        if (viewTracker) viewTracker.style.display = 'block';
+        if (viewResumo) viewResumo.style.display = 'none';
+      });
+
+      tabSheetResumo.addEventListener('click', () => {
+        tabSheetResumo.classList.add('active');
+        tabSheetTracker.classList.remove('active');
+        if (viewTracker) viewTracker.style.display = 'none';
+        if (viewResumo) {
+          viewResumo.style.display = 'block';
+          if (window.activeCanvasArtifact) {
+            renderSpreadsheetSummary(window.activeCanvasArtifact);
+          }
+        }
+      });
+    }
+
     if (btnAddSheetTab) {
       btnAddSheetTab.addEventListener('click', () => {
         showToast('Nova aba criada com sucesso.');
       });
     }
 
-    // 6. Renomear Arquivo no Cabeçalho
+    // 6. Abas do Sandbox de Código (Código / Preview)
+    if (tabCodeEditor && tabCodePreview) {
+      tabCodeEditor.addEventListener('click', () => {
+        tabCodeEditor.classList.add('active');
+        tabCodePreview.classList.remove('active');
+        if (codeEditorWrap) codeEditorWrap.style.display = 'flex';
+        if (codePreviewWrap) codePreviewWrap.style.display = 'none';
+      });
+
+      tabCodePreview.addEventListener('click', () => {
+        tabCodePreview.classList.add('active');
+        tabCodeEditor.classList.remove('active');
+        if (codeEditorWrap) codeEditorWrap.style.display = 'none';
+        if (codePreviewWrap) {
+          codePreviewWrap.style.display = 'block';
+          updateCodeLivePreview();
+        }
+      });
+    }
+
+    if (btnCodeRefresh) {
+      btnCodeRefresh.addEventListener('click', () => {
+        updateCodeLivePreview();
+        showToast('Pré-visualização ao vivo atualizada!');
+      });
+    }
+
+    if (codeTextarea) {
+      codeTextarea.addEventListener('input', () => {
+        updateCodeGutter();
+      });
+      codeTextarea.addEventListener('scroll', () => {
+        if (codeGutter) codeGutter.scrollTop = codeTextarea.scrollTop;
+      });
+    }
+
+    // 7. Renomear Arquivo no Cabeçalho
     if (fileNameInput) {
       fileNameInput.addEventListener('change', () => {
         if (window.activeCanvasArtifact) {
-          let val = fileNameInput.value.trim() || 'planilha-meu-kota.xlsx';
-          if (!val.toLowerCase().endsWith('.xlsx')) val += '.xlsx';
-          fileNameInput.value = val;
+          let val = fileNameInput.value.trim() || 'arquivo';
           window.activeCanvasArtifact.fileName = val;
           if (contextDocName) contextDocName.textContent = val;
         }
       });
     }
 
-    // 7. Botão Principal de Exportação (.xlsx)
+    // 8. Botão Principal de Exportação Dinâmico
     if (btnExportPrimary) {
       btnExportPrimary.addEventListener('click', () => {
-        if (window.activeCanvasArtifact) {
+        if (!window.activeCanvasArtifact) {
+          showToast('Nenhum arquivo ativo no Canvas.');
+          return;
+        }
+
+        const type = window.activeCanvasArtifact.type;
+        if (type === 'spreadsheet') {
           exportSpreadsheetToXlsx(window.activeCanvasArtifact);
+        } else if (type === 'document') {
+          exportDocumentToPdf();
+        } else if (type === 'code') {
+          exportCodeToFile();
+        } else {
+          showToast('Formato exportado com sucesso.');
         }
       });
     }
 
-    // 8. Menu Dropdown de Mais Opções
+    // 9. Menu Dropdown de Mais Opções
     if (btnMoreExports && exportDropdown) {
       btnMoreExports.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -6193,10 +6628,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     if (btnDlPdf) {
       btnDlPdf.addEventListener('click', () => {
         if (exportDropdown) exportDropdown.style.display = 'none';
-        showToast('Gerando visualização em PDF da planilha...');
-        if (typeof window.print === 'function') {
-          window.print();
-        }
+        exportDocumentToPdf();
       });
     }
 
@@ -6207,7 +6639,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 9. Alternar Tela Cheia
+    // 10. Alternar Tela Cheia
     if (btnFullscreen) {
       btnFullscreen.addEventListener('click', () => {
         if (canvasPanel) {
@@ -6218,11 +6650,11 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 10. Fechar Canvas
+    // 11. Fechar Canvas
     if (btnClose) btnClose.addEventListener('click', closeCanvas);
     if (btnMobileBack) btnMobileBack.addEventListener('click', closeCanvas);
 
-    // 11. Desvincular Contexto Ativo do Chat
+    // 12. Desvincular Contexto Ativo do Chat
     if (btnDetach) {
       btnDetach.addEventListener('click', () => {
         window.activeCanvasArtifact = null;
@@ -6231,22 +6663,72 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 12. Ferramentas do Modo Documento (A4 Paper Sheet)
+    // 13. Launcher de Novo Arquivo no Topo do Chat
+    if (btnOpenLauncher && launcherMenu) {
+      btnOpenLauncher.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isShown = launcherMenu.style.display === 'flex';
+        launcherMenu.style.display = isShown ? 'none' : 'flex';
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!launcherMenu.contains(e.target) && e.target !== btnOpenLauncher) {
+          launcherMenu.style.display = 'none';
+        }
+      });
+    }
+
+    // 14. Ferramentas do Modo Documento (A4 Paper Sheet)
     document.querySelectorAll('.canvas-doc-tool').forEach(toolBtn => {
       toolBtn.addEventListener('click', () => {
         const cmd = toolBtn.getAttribute('data-cmd');
         const val = toolBtn.getAttribute('data-val') || null;
         if (cmd) {
           document.execCommand(cmd, false, val);
-          const a4 = document.getElementById('canvas-a4-sheet');
-          if (a4) a4.focus();
+          if (a4Sheet) a4Sheet.focus();
         }
       });
     });
 
-    // 13. Delegação de Eventos no Chat (Cartões de Artefato: Abrir no Canvas & Download Direto)
+    if (btnDocTodayDate) {
+      btnDocTodayDate.addEventListener('click', () => {
+        if (a4MetaDate) a4MetaDate.textContent = new Date().toLocaleDateString('pt-AO');
+        showToast('Data do documento atualizada para hoje.');
+      });
+    }
+
+    // 15. Delegação de Eventos Global (Launchers, Cartões Rápidos, Chat Clicks)
     document.addEventListener('click', (e) => {
-      // Botão "Abrir no Canvas"
+      // Itens do menu launcher no header
+      const menuItem = e.target.closest('.canvas-menu-item');
+      if (menuItem) {
+        if (launcherMenu) launcherMenu.style.display = 'none';
+        const action = menuItem.getAttribute('data-action');
+        if (action === 'new-spreadsheet') {
+          openSpreadsheetInCanvas(createDefaultSpreadsheetTemplate());
+        } else if (action === 'new-document') {
+          openDocumentInCanvas(createDefaultDocumentTemplate());
+        } else if (action === 'new-code') {
+          openCodeInCanvas(createDefaultCodeTemplate());
+        }
+        return;
+      }
+
+      // Cartões rápidos da tela inicial de boas-vindas
+      const quickCard = e.target.closest('.canvas-quick-card');
+      if (quickCard) {
+        const action = quickCard.getAttribute('data-action');
+        if (action === 'new-spreadsheet') {
+          openSpreadsheetInCanvas(createDefaultSpreadsheetTemplate());
+        } else if (action === 'new-document') {
+          openDocumentInCanvas(createDefaultDocumentTemplate());
+        } else if (action === 'new-code') {
+          openCodeInCanvas(createDefaultCodeTemplate());
+        }
+        return;
+      }
+
+      // Botão "Abrir no Canvas" na tabela do chat
       const btnOpen = e.target.closest('.btn-open-canvas-pill, .btn-open-canvas-artifact');
       if (btnOpen) {
         const artId = btnOpen.getAttribute('data-artifact-id');
@@ -6256,7 +6738,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         return;
       }
 
-      // Botão "Excel (.xlsx)" Direto no Chat
+      // Botão "Excel (.xlsx)" Direto na tabela do chat
       const btnQuickDl = e.target.closest('.btn-artifact-quick-dl, .btn-direct-download-xlsx');
       if (btnQuickDl) {
         const artId = btnQuickDl.getAttribute('data-artifact-id');
@@ -6265,11 +6747,34 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         }
         return;
       }
+
+      // Botão "Testar no Canvas" em qualquer bloco de código do chat
+      const btnTestCode = e.target.closest('.btn-open-code-canvas');
+      if (btnTestCode) {
+        const wrapper = btnTestCode.closest('.code-block-wrapper');
+        if (wrapper) {
+          const lang = wrapper.getAttribute('data-lang') || 'html';
+          const codeEl = wrapper.querySelector('code');
+          const rawCode = codeEl ? codeEl.innerText : '';
+          openCodeInCanvas({
+            title: `Código ${lang.toUpperCase()}`,
+            fileName: lang === 'javascript' || lang === 'js' ? 'script.js' : 'index.html',
+            code: rawCode
+          });
+          // Alternar automaticamente para a visualização ao vivo
+          if (tabCodePreview) tabCodePreview.click();
+        }
+        return;
+      }
     });
 
     // Expor globalmente para depuração e testes
     window.openSpreadsheetInCanvas = openSpreadsheetInCanvas;
+    window.openDocumentInCanvas = openDocumentInCanvas;
+    window.openCodeInCanvas = openCodeInCanvas;
     window.exportSpreadsheetToXlsx = exportSpreadsheetToXlsx;
+    window.exportDocumentToPdf = exportDocumentToPdf;
+    window.exportCodeToFile = exportCodeToFile;
   }
 
   // Configurações e Inicializações Globais
