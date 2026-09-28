@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v35-smart-pdf';
+const CACHE_NAME = 'meu-kota-cache-v36-commercial-pdf';
 
 const PRECACHE_ASSETS = [
   './',
