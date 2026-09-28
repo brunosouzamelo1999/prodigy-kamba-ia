@@ -5139,51 +5139,174 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     }
   }
 
-  // --- MOTOR DE EXPORTAÇÃO DE RELATÓRIOS PDF EXECUTIVOS (PADRÃO GOOGLE DOCS) ---
+  // --- MOTOR INTELIGENTE DE EXPORTAÇÃO DE DOCUMENTOS E RELATÓRIOS PDF (PADRÃO GOOGLE DOCS) ---
+  function analyzeDocumentContent(text, userPrompt) {
+    let docType = 'RELATÓRIO';
+    let badge = 'Relatório Executivo Corporativo';
+    let formalTitle = '';
+    let preface = '';
+    let mainBody = text ? text.trim() : '';
+    let postscript = '';
+
+    // 1. Detectar título formal no corpo do documento (ex: **CONTRATO DE...**, # RELATÓRIO..., etc.)
+    const titlePatterns = [
+      /(?:^|\n)\s*(?:\*{2}|#{1,4})\s*(CONTRATO[^\n*#]+|RELATÓRIO[^\n*#]+|PROPOSTA[^\n*#]+|TERMO[^\n*#]+|ESTATUTO[^\n*#]+|ACORDO[^\n*#]+|DECLARAÇÃO[^\n*#]+|PLANO[^\n*#]+|PARECER[^\n*#]+)\s*(?:\*{2}|#{1,4})?/i,
+      /(?:^|\n)\s*(CONTRATO DE [^\n]+|RELATÓRIO DE [^\n]+|PROPOSTA COMERCIAL[^\n]*|TERMO DE [^\n]+|PARECER TÉCNICO[^\n]*)/i
+    ];
+
+    for (const pat of titlePatterns) {
+      const match = mainBody.match(pat);
+      if (match) {
+        formalTitle = match[1].replace(/[*#]/g, '').trim();
+        break;
+      }
+    }
+
+    // 2. Classificação do tipo de documento e Badge oficial
+    const upperCombined = `${formalTitle} ${userPrompt || ''}`.toUpperCase();
+    if (upperCombined.includes('CONTRATO') || upperCombined.includes('ACORDO') || upperCombined.includes('TERMO DE')) {
+      docType = 'CONTRATO';
+      badge = 'Instrumento Jurídico & Contratual';
+    } else if (upperCombined.includes('PROPOSTA') || upperCombined.includes('ORÇAMENTO') || upperCombined.includes('PLANO DE NEGÓCIO')) {
+      docType = 'PROPOSTA';
+      badge = 'Proposta Comercial Estratégica';
+    } else if (upperCombined.includes('RELATÓRIO') || upperCombined.includes('AUDITORIA') || upperCombined.includes('PARECER') || upperCombined.includes('DIAGNÓSTICO')) {
+      docType = 'RELATÓRIO';
+      badge = 'Relatório & Parecer Executivo';
+    } else if (upperCombined.includes('CÓDIGO') || upperCombined.includes('ARQUITETURA') || upperCombined.includes('API') || upperCombined.includes('ENGENHARIA')) {
+      docType = 'TÉCNICO';
+      badge = 'Especificação Técnica de Engenharia';
+    } else {
+      docType = 'CONSULTORIA';
+      badge = 'Parecer Consultivo Especializado';
+    }
+
+    // 3. Fallback inteligente de título caso não conste expressamente
+    if (!formalTitle) {
+      if (userPrompt) {
+        let cleanPrompt = userPrompt
+          .replace(/^(meu kota|kota|por favor|elabore|faça|crie|gere|monte)\s*,?\s*/i, '')
+          .trim();
+        formalTitle = cleanPrompt.charAt(0).toUpperCase() + cleanPrompt.slice(1);
+        if (formalTitle.length > 55) {
+          formalTitle = formalTitle.slice(0, 52) + '...';
+        }
+      } else {
+        formalTitle = 'Relatório Executivo Inteligente';
+      }
+    }
+
+    // 4. Separação inteligente de introduções/despedidas conversacionais do Kota
+    const dividerParts = mainBody.split(/(?:^|\n)\s*---\s*(?:\n|$)/);
+    if (dividerParts.length >= 3) {
+      const firstPart = dividerParts[0].trim();
+      const lastPart = dividerParts[dividerParts.length - 1].trim();
+
+      // Identifica introdução conversacional ("Meu caro, com a sabedoria...", etc.)
+      if (firstPart.length < 800 && /meu caro|saudações|olá|bom dia|com a sabedoria|preparei para si|com base|conforme solicitado|aqui está/i.test(firstPart)) {
+        preface = firstPart;
+        dividerParts.shift();
+      }
+
+      // Identifica encerramento conversacional ("Meu caro, este é um ponto de partida...", etc.)
+      if (lastPart.length < 600 && /meu caro|espero ter ajudado|estou aqui|ponto de partida|qualquer dúvida|à disposição|sucesso/i.test(lastPart)) {
+        postscript = lastPart;
+        dividerParts.pop();
+      }
+
+      mainBody = dividerParts.join('\n\n---\n\n');
+    }
+
+    // 5. Remover título duplicado no topo do corpo se já será exibido com destaque no cabeçalho
+    if (formalTitle) {
+      const titleEscaped = formalTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const dupeRegex = new RegExp(`^(?:\\s*(?:\\*{2}|#{1,4})?\\s*${titleEscaped}\\s*(?:\\*{2}|#{1,4})?\\s*)+`, 'i');
+      mainBody = mainBody.replace(dupeRegex, '').trim();
+    }
+
+    // 6. Geração de nome de arquivo limpo, profissional e sem poluição
+    let cleanName = formalTitle
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const words = cleanName.split('-').filter(Boolean);
+    if (words.length > 7) {
+      cleanName = words.slice(0, 7).join('-');
+    }
+    const filename = `${cleanName || 'documento-executivo'}.pdf`;
+
+    return { docType, badge, formalTitle, preface, mainBody, postscript, filename };
+  }
+
   function formatMarkdownForExecutivePdf(text) {
     if (!text) return '';
     let html = escapeHtml(text);
 
-    // 1. Extrair e formatar blocos de código
+    // 1. Blocos de Código (Code blocks com tema dark limpo e cabeçalho da linguagem)
     html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const cleanLang = (lang || 'código').toUpperCase();
       return `
-        <div style="margin: 12px 0; background: #0F172A; border-radius: 6px; overflow: hidden; page-break-inside: avoid;">
-          <div style="background: #1E293B; color: #94A3B8; font-size: 10px; font-weight: 700; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px;">${cleanLang}</div>
-          <pre style="margin: 0; padding: 10px 14px; color: #F8FAFC; font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-all;"><code>${code.trim()}</code></pre>
+        <div style="margin: 14px 0; background: #0F172A; border-radius: 6px; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
+          <div style="background: #1E293B; color: #94A3B8; font-size: 10px; font-weight: 700; padding: 5px 12px; text-transform: uppercase; letter-spacing: 0.5px;">${cleanLang}</div>
+          <pre style="margin: 0; padding: 12px 14px; color: #F8FAFC; font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; line-height: 1.55; white-space: pre-wrap; word-break: break-all;"><code>${code.trim()}</code></pre>
         </div>
       `;
     });
 
     // 2. Código inline
-    html = html.replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #BE123C; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-size: 11.5px; border: 1px solid #E2E8F0;">$1</code>');
+    html = html.replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #BE123C; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #E2E8F0;">$1</code>');
 
-    // 3. Títulos Markdown (Google Docs Style)
-    html = html.replace(/^#### (.*$)/gm, '<h4 style="color: #1E293B; font-size: 13.5px; font-weight: 700; margin: 14px 0 4px 0; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px;">$1</h4>');
-    html = html.replace(/^### (.*$)/gm, '<h3 style="color: #0F172A; font-size: 15px; font-weight: 700; margin: 16px 0 6px 0; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">$1</h3>');
-    html = html.replace(/^## (.*$)/gm, '<h2 style="color: #0F172A; font-size: 17px; font-weight: 800; margin: 18px 0 8px 0; border-bottom: 2px solid #D81A2D; padding-bottom: 4px;">$1</h2>');
-    html = html.replace(/^# (.*$)/gm, '<h1 style="color: #0F172A; font-size: 19px; font-weight: 800; margin: 20px 0 10px 0; border-bottom: 2px solid #0F172A; padding-bottom: 6px;">$1</h1>');
+    // 3. Cláusulas, Anexos e Artigos Formais (com quebra protegida e traço executivo)
+    html = html.replace(/(?:^|\n)\s*(?:\*{2}|#{1,4})\s*(CLÁUSULA\s+[^\n*]+|ANEXO\s+[^\n*]+|CAPÍTULO\s+[^\n*]+|SEÇÃO\s+[^\n*]+|ARTIGO\s+[^\n*]+)\s*(?:\*{2}|#{1,4})?/gi, (m, clause) => {
+      return `\n\n<div class="pdf-clause-header" style="margin-top: 20px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #0F172A; page-break-inside: avoid; break-inside: avoid;"><span style="font-size: 12.5px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px;">${clause.trim()}</span></div>\n\n`;
+    });
 
-    // 4. Negrito e Itálico
+    // 4. Marcadores de Assinatura formal ([Assinatura]) formatados como linha oficial para caneta
+    html = html.replace(/\[Assinatura\]/gi, `
+      <div style="margin: 20px 0 6px 0; page-break-inside: avoid; break-inside: avoid;">
+        <div style="width: 240px; border-bottom: 1.5px solid #0F172A; margin-bottom: 4px;"></div>
+        <span style="font-size: 9px; color: #64748B; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">(Assinatura Autorizada)</span>
+      </div>
+    `);
+
+    // 5. Placeholders editáveis entre colchetes [Exemplo] (estilo formulário a preencher)
+    html = html.replace(/\[([^\]<\n]{2,80})\]/g, '<span style="background: #F8FAFC; border: 1px dashed #94A3B8; color: #334155; padding: 1px 5px; border-radius: 3px; font-size: 11.5px; font-family: monospace;">[$1]</span>');
+
+    // 6. Títulos e Subtítulos Markdown (Padrão Google Docs)
+    html = html.replace(/^#### (.*$)/gm, '<h4 style="color: #1E293B; font-size: 13px; font-weight: 700; margin: 14px 0 4px 0; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; page-break-inside: avoid; break-inside: avoid;">$1</h4>');
+    html = html.replace(/^### (.*$)/gm, '<h3 style="color: #0F172A; font-size: 14px; font-weight: 700; margin: 16px 0 6px 0; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px; page-break-inside: avoid; break-inside: avoid;">$1</h3>');
+    html = html.replace(/^## (.*$)/gm, '<h2 style="color: #0F172A; font-size: 15.5px; font-weight: 800; margin: 18px 0 8px 0; border-bottom: 2px solid #D81A2D; padding-bottom: 4px; page-break-inside: avoid; break-inside: avoid;">$1</h2>');
+    html = html.replace(/^# (.*$)/gm, '<h1 style="color: #0F172A; font-size: 17.5px; font-weight: 800; margin: 20px 0 10px 0; border-bottom: 2px solid #0F172A; padding-bottom: 6px; page-break-inside: avoid; break-inside: avoid;">$1</h1>');
+
+    // 7. Divisores Horizontais
+    html = html.replace(/(?:^|\n)\s*---+\s*(?:\n|$)/g, '<hr style="border: none; border-top: 1px solid #E2E8F0; margin: 16px 0;">');
+
+    // 8. Negrito e Itálico
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #0F172A; font-weight: 700;">$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em style="color: #334155;">$1</em>');
 
-    // 5. Citações / Blockquotes
-    html = html.replace(/^> (.*$)/gm, '<blockquote style="border-left: 3px solid #D81A2D; background: #FFF5F5; padding: 8px 12px; margin: 10px 0; color: #475569; font-style: italic; border-radius: 0 4px 4px 0;">$1</blockquote>');
+    // 9. Citações / Pareceres em Destaque
+    html = html.replace(/^> (.*$)/gm, '<blockquote style="border-left: 3px solid #D81A2D; background: #FFF5F5; padding: 8px 12px; margin: 10px 0; color: #475569; font-style: italic; border-radius: 0 4px 4px 0; page-break-inside: avoid; break-inside: avoid;">$1</blockquote>');
 
-    // 6. Itens de Lista com Marcadores
-    html = html.replace(/^[•\-\*] (.*$)/gm, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0;"><span style="color: #D81A2D; font-size: 12px;">•</span><span style="color: #1E293B; line-height: 1.55;">$1</span></div>');
+    // 10. Sub-itens alfabéticos contratuais: a), b), c)
+    html = html.replace(/^(\s*)([a-z]\))\s*(.*$)/gim, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px 22px;"><span style="color: #D81A2D; font-weight: 700; font-size: 12px;">$2</span><span style="color: #1E293B; line-height: 1.55;">$3</span></div>');
 
-    // 7. Quebras de parágrafo normais
-    html = html.replace(/\n\n+/g, '</p><p style="margin: 8px 0; line-height: 1.6; color: #1E293B;">');
-    html = `<p style="margin: 8px 0; line-height: 1.6; color: #1E293B;">${html}</p>`;
+    // 11. Itens com Marcadores
+    html = html.replace(/^[•\-\*] (.*$)/gm, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px 10px;"><span style="color: #D81A2D; font-size: 12px;">•</span><span style="color: #1E293B; line-height: 1.55;">$1</span></div>');
+
+    // 12. Parágrafos normais com alinhamento justificado elegante
+    html = html.replace(/\n\n+/g, '</p><p style="margin: 8px 0; line-height: 1.6; color: #1E293B; text-align: justify;">');
+    html = `<p style="margin: 8px 0; line-height: 1.6; color: #1E293B; text-align: justify;">${html}</p>`;
 
     return html;
   }
 
-  async function generateExecutivePdfDoc({ title, subtitle, items, filename }) {
+  async function generateExecutivePdfDoc({ title, badge, subtitle, preface, bodyHtml, postscript, filename, userPrompt }) {
     if (typeof html2pdf === 'undefined') {
-      showToast('Aguarde: carregando biblioteca de PDF...');
+      showToast('Aguarde: carregando módulo de PDF...');
       try {
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
@@ -5198,7 +5321,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    showToast('Gerando Relatório Executivo em PDF no padrão Docs...');
+    showToast('Processando documento inteligente em padrão executivo...');
 
     const activeUser = getActiveUser();
     const userName = (activeUser && activeUser.name) ? activeUser.name : 'Bruno Souza';
@@ -5207,101 +5330,117 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     const formattedTime = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
     const docId = `MK-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    let bodyHtml = '';
-    items.forEach((item) => {
-      if (item.role === 'user') {
-        bodyHtml += `
-          <div style="margin-top: 18px; margin-bottom: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #2563EB; padding: 12px 16px; border-radius: 6px; page-break-inside: avoid;">
-            <div style="font-size: 11px; font-weight: 800; color: #1D4ED8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Demanda / Pergunta do Requisitante</div>
-            <div style="font-size: 13.5px; color: #0F172A; font-weight: 500; line-height: 1.5;">${escapeHtml(item.content)}</div>
-          </div>
-        `;
-      } else {
-        bodyHtml += `
-          <div style="margin-bottom: 22px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 4px;">
-              <span style="font-size: 11px; font-weight: 800; color: #D81A2D; text-transform: uppercase; letter-spacing: 0.5px;">Parecer Oficial • Meu Kota IA</span>
-              <span style="font-size: 10px; color: #94A3B8;">| Motor Conversacional Inteligente</span>
-            </div>
-            <div style="font-size: 13.5px; color: #1E293B; line-height: 1.65;">
-              ${formatMarkdownForExecutivePdf(item.content)}
-            </div>
-          </div>
-        `;
-      }
-    });
-
+    // Criamos o elemento do relatório no fluxo normal (sem offsets negativos para não corromper o canvas)
     const reportElement = document.createElement('div');
-    reportElement.style.position = 'fixed';
-    reportElement.style.top = '-9999px';
-    reportElement.style.left = '-9999px';
-    reportElement.style.width = '794px'; // Largura A4 padrão a 96 DPI
+    reportElement.className = 'executive-pdf-document';
+    reportElement.style.width = '100%';
+    reportElement.style.maxWidth = '794px';
+    reportElement.style.margin = '0 auto';
     reportElement.style.background = '#FFFFFF';
     reportElement.style.color = '#1E293B';
-    reportElement.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-    reportElement.style.padding = '36px 42px';
+    reportElement.style.padding = '30px 36px';
     reportElement.style.boxSizing = 'border-box';
+    reportElement.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    reportElement.style.lineHeight = '1.6';
+
+    const safeBadge = badge || 'Relatório Executivo Corporativo';
+    const safeTitle = title || 'Documento Oficial Meu Kota IA';
+    const safeSubtitle = subtitle || 'Documento Estruturado • Minuta Formal A4';
 
     reportElement.innerHTML = `
-      <!-- Cabeçalho Oficial Corporativo -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 2px solid #E2E8F0;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <svg width="44" height="44" viewBox="0 0 100 100" style="flex-shrink: 0;">
+      <!-- Cabeçalho Oficial Corporativo (Identidade Meu Kota com Palanca Negra) -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #E2E8F0; page-break-inside: avoid; break-inside: avoid;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <svg width="42" height="42" viewBox="0 0 100 100" style="flex-shrink: 0;">
             <circle cx="50" cy="50" r="48" fill="#111827" stroke="#FFD100" stroke-width="4"/>
             <path d="M50 2 A48 48 0 0 1 50 98 Z" fill="#D81A2D"/>
             <circle cx="50" cy="50" r="28" fill="none" stroke="#FFD100" stroke-width="4" stroke-dasharray="8 4"/>
             <polygon points="50,28 55,42 70,43 58,52 62,66 50,57 38,66 42,52 30,43 45,42" fill="#FFD100"/>
           </svg>
           <div>
-            <div style="font-size: 19px; font-weight: 900; color: #0F172A; letter-spacing: -0.4px;">MEU KOTA IA</div>
-            <div style="font-size: 10.5px; font-weight: 700; color: #D81A2D; text-transform: uppercase; letter-spacing: 0.8px;">Relatório Executivo Inteligente</div>
+            <div style="font-size: 18px; font-weight: 900; color: #0F172A; letter-spacing: -0.3px;">MEU KOTA IA</div>
+            <div style="font-size: 10px; font-weight: 800; color: #D81A2D; text-transform: uppercase; letter-spacing: 0.8px;">Inteligência Artificial Executiva & Estratégica</div>
           </div>
         </div>
 
-        <div style="text-align: right; font-size: 11px; color: #475569; line-height: 1.45;">
+        <div style="text-align: right; font-size: 10.5px; color: #475569; line-height: 1.45;">
           <div><strong>Emissão:</strong> ${formattedDate}, ${formattedTime}</div>
           <div><strong>Requisitante:</strong> ${escapeHtml(userName)}</div>
-          <div><strong>Protocolo:</strong> <code style="font-family: monospace; color: #0F172A;">${docId}</code></div>
+          <div><strong>Autenticação:</strong> <code style="font-family: monospace; color: #0F172A; font-weight: 700;">${docId}</code></div>
         </div>
       </div>
 
       <!-- Barra Gradiente Angola (Vermelho Carmim e Amarelo Dourado) -->
-      <div style="height: 3px; background: linear-gradient(90deg, #D81A2D 0%, #FFD100 100%); margin-bottom: 22px;"></div>
+      <div style="height: 3px; background: linear-gradient(90deg, #D81A2D 0%, #FFD100 100%); margin-bottom: 20px;"></div>
 
-      <!-- Caixa de Título do Relatório (Estilo Google Docs) -->
-      <div style="margin-bottom: 20px;">
-        <h1 style="font-size: 23px; font-weight: 800; color: #0F172A; margin: 0 0 6px 0; letter-spacing: -0.4px;">${escapeHtml(title)}</h1>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="background: #F1F5F9; border: 1px solid #E2E8F0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #475569; font-weight: 600;">
-            ${escapeHtml(subtitle || 'Documento Oficial')}
-          </span>
-          <span style="font-size: 11px; color: #94A3B8;">•</span>
-          <span style="font-size: 11px; color: #16A34A; font-weight: 600;">Verificado e Autenticado Digitalmente</span>
+      <!-- Hero Section do Documento Formal (Padrão Google Docs / Minuta Oficial) -->
+      <div style="text-align: center; margin: 18px 0 22px 0; padding: 14px 18px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; page-break-inside: avoid; break-inside: avoid;">
+        <div style="display: inline-block; background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;">
+          ${escapeHtml(safeBadge)}
+        </div>
+        <h1 style="font-size: 19px; font-weight: 900; color: #0F172A; margin: 4px 0 6px 0; text-transform: uppercase; letter-spacing: -0.2px; line-height: 1.35;">
+          ${escapeHtml(safeTitle)}
+        </h1>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 11px; color: #64748B;">
+          <span>${escapeHtml(safeSubtitle)}</span>
+          <span>•</span>
+          <span style="color: #16A34A; font-weight: 600;">Verificado Digitalmente</span>
+          <span>•</span>
+          <span>Padrão A4</span>
         </div>
       </div>
 
-      <!-- Corpo do Documento -->
-      <div class="pdf-report-body" style="font-size: 13.5px;">
+      <!-- Demanda do Requisitante (quando aplicável) -->
+      ${userPrompt ? `
+        <div style="margin-bottom: 18px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #2563EB; padding: 10px 14px; border-radius: 6px; page-break-inside: avoid; break-inside: avoid;">
+          <div style="font-size: 10px; font-weight: 800; color: #1D4ED8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">Demanda do Requisitante</div>
+          <div style="font-size: 12px; color: #0F172A; font-weight: 500; line-height: 1.5;">${escapeHtml(userPrompt)}</div>
+        </div>
+      ` : ''}
+
+      <!-- Parecer / Orientações Preliminares do Consultor (se houver introdução do Kota) -->
+      ${preface ? `
+        <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-left: 4px solid #F59E0B; padding: 12px 16px; border-radius: 6px; margin-bottom: 22px; page-break-inside: avoid; break-inside: avoid;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <span style="font-size: 10.5px; font-weight: 800; color: #B45309; text-transform: uppercase; letter-spacing: 0.6px;">Orientações do Especialista • Meu Kota IA</span>
+            <span style="font-size: 9.5px; color: #D97706; font-weight: 600;">Nota Preliminar</span>
+          </div>
+          <div style="font-size: 12px; color: #78350F; line-height: 1.55; font-style: italic;">
+            ${escapeHtml(preface).replace(/\n\n+/g, '<br><br>')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Corpo Principal do Documento -->
+      <div class="pdf-report-body" style="font-size: 13px; color: #1E293B; line-height: 1.65;">
         ${bodyHtml}
       </div>
 
-      <!-- Rodapé Oficial de Encerramento -->
-      <div style="margin-top: 40px; padding-top: 14px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94A3B8; page-break-inside: avoid;">
-        <span><strong>Meu Kota IA</strong> — Assistente Conversacional de Alta Inteligência</span>
-        <span>Página gerada pelo dispositivo • Documento Privado e Oficial</span>
+      <!-- Considerações Finais do Meu Kota (se houver conclusão conversacional) -->
+      ${postscript ? `
+        <div style="margin-top: 24px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #D81A2D; padding: 12px 16px; border-radius: 6px; font-size: 12px; color: #475569; font-style: italic; line-height: 1.55; page-break-inside: avoid; break-inside: avoid;">
+          <div style="font-size: 10px; font-weight: 800; color: #D81A2D; text-transform: uppercase; margin-bottom: 4px; font-style: normal; letter-spacing: 0.5px;">Considerações Finais do Consultor</div>
+          ${escapeHtml(postscript).replace(/\n\n+/g, '<br><br>')}
+        </div>
+      ` : ''}
+
+      <!-- Rodapé Institucional de Encerramento -->
+      <div style="margin-top: 36px; padding-top: 12px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #94A3B8; page-break-inside: avoid; break-inside: avoid;">
+        <span><strong>Meu Kota IA</strong> — Motor Conversacional & Elaborador de Documentos Executivos</span>
+        <span>Documento Privado • Emissão Digital Certificada</span>
       </div>
     `;
 
-    document.body.appendChild(reportElement);
-
     const opt = {
-      margin: [12, 12, 12, 12],
-      filename: filename,
+      margin: [10, 10, 10, 10],
+      filename: filename || 'documento-executivo-meu-kota.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
         logging: false,
+        scrollX: 0,
+        scrollY: 0,
         backgroundColor: '#ffffff'
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -5310,12 +5449,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
     try {
       await html2pdf().set(opt).from(reportElement).save();
-      showToast('Relatório PDF baixado com sucesso!');
+      showToast('Documento executivo em PDF baixado com sucesso!');
     } catch (err) {
       console.error('[PDF Generation Error]', err);
       showToast('Erro ao compilar o PDF. Tente novamente.');
-    } finally {
-      reportElement.remove();
     }
   }
 
@@ -5324,7 +5461,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       showToast('Nenhuma conversa disponível para exportar.');
       return;
     }
-    const title = chat.title || 'Relatório de Conversa';
+    const title = chat.title || 'Dossiê de Interações';
     const sanitizedTitle = title
       .toLowerCase()
       .normalize('NFD')
@@ -5332,38 +5469,65 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       .replace(/[^a-z0-9]+/g, '-')
       .slice(0, 35);
 
+    let chatHtml = '';
+    chat.messages.forEach((msg, idx) => {
+      if (msg.role === 'user') {
+        chatHtml += `
+          <div style="margin-top: 20px; margin-bottom: 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #2563EB; padding: 10px 14px; border-radius: 6px; page-break-inside: avoid; break-inside: avoid;">
+            <div style="font-size: 10px; font-weight: 800; color: #1D4ED8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">
+              Interação #${idx + 1} • Requisitante
+            </div>
+            <div style="font-size: 12.5px; color: #0F172A; font-weight: 500; line-height: 1.5;">${escapeHtml(msg.content)}</div>
+          </div>
+        `;
+      } else {
+        chatHtml += `
+          <div style="margin-bottom: 22px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 4px;">
+              <span style="font-size: 10.5px; font-weight: 800; color: #D81A2D; text-transform: uppercase; letter-spacing: 0.5px;">Parecer Meu Kota IA</span>
+              <span style="font-size: 9.5px; color: #94A3B8;">| Resposta Inteligente</span>
+            </div>
+            <div style="font-size: 13px; color: #1E293B; line-height: 1.65;">
+              ${formatMarkdownForExecutivePdf(msg.content)}
+            </div>
+          </div>
+        `;
+      }
+    });
+
     await generateExecutivePdfDoc({
       title: title,
-      subtitle: `Transcrição Completa • ${chat.messages.length} Interações`,
-      items: chat.messages,
-      filename: `meu-kota-${sanitizedTitle}.pdf`
+      badge: 'Dossiê Executivo de Conversa',
+      subtitle: `Transcrição Integral • ${chat.messages.length} Mensagens Registradas`,
+      bodyHtml: chatHtml,
+      filename: `dossie-${sanitizedTitle}.pdf`
     });
   }
 
   async function exportSingleMessageToExecutivePdf(aiText, userPrompt) {
     if (!aiText) return;
-    const cleanSubject = userPrompt 
-      ? userPrompt.slice(0, 50) + (userPrompt.length > 50 ? '...' : '') 
-      : 'Relatório Executivo';
 
-    const sanitizedTitle = cleanSubject
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .slice(0, 30);
+    // Análise inteligente do conteúdo (detecta contratos, propostas, relatórios, códigos, etc.)
+    const analysis = analyzeDocumentContent(aiText, userPrompt);
+    const formattedBody = formatMarkdownForExecutivePdf(analysis.mainBody);
 
-    const items = [];
-    if (userPrompt) {
-      items.push({ role: 'user', content: userPrompt });
-    }
-    items.push({ role: 'ai', content: aiText });
+    // Se o documento for um contrato ou instrumento formal, a pergunta do usuário já inspirou o título
+    // Não precisamos poluir o contrato com a pergunta original, a menos que seja um parecer consultivo geral
+    const promptToInclude = (analysis.docType === 'CONTRATO' || analysis.docType === 'PROPOSTA')
+      ? null
+      : userPrompt;
 
     await generateExecutivePdfDoc({
-      title: cleanSubject,
-      subtitle: 'Parecer Executivo & Síntese da Inteligência Artificial',
-      items: items,
-      filename: `meu-kota-relatorio-${sanitizedTitle}.pdf`
+      title: analysis.formalTitle,
+      badge: analysis.badge,
+      subtitle: analysis.docType === 'CONTRATO' 
+        ? 'Minuta Contratual Particular • Padrão A4' 
+        : 'Parecer Executivo & Síntese da Inteligência Artificial',
+      preface: analysis.preface,
+      bodyHtml: formattedBody,
+      postscript: analysis.postscript,
+      filename: analysis.filename,
+      userPrompt: promptToInclude
     });
   }
 
