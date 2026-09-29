@@ -7149,7 +7149,8 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     // Helper: Exportar gráfico SVG ativo como imagem PNG executiva em alta resolução (1600x900)
     function exportChartAsPng(artifact) {
       const stageCard = document.querySelector('.excel-chart-stage-card');
-      const svgEl = document.querySelector('.excel-chart-stage-card svg');
+      // Selecionar rigorosamente o SVG do gráfico real (e nunca o ícone de 16x16 do cabeçalho)
+      const svgEl = document.querySelector('#chart-svg-container svg') || document.querySelector('.chart-svg-container svg');
       if (!svgEl) {
         showToast('Nenhum gráfico visível para exportar.');
         return;
@@ -7212,11 +7213,11 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
             // Cabeçalho: Título da Métrica
             ctx.fillStyle = '#FFD100';
-            ctx.font = 'bold 30px sans-serif';
+            ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
             ctx.fillText(activeMetricName.toUpperCase() + ' — ANÁLISE GRÁFICA', 70, 95);
 
             ctx.fillStyle = '#94A3B8';
-            ctx.font = '500 16px sans-serif';
+            ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
             const fileTitle = (artifact.fileName || 'Planilha').replace(/\.[^.]+$/, '');
             ctx.fillText(fileTitle + ' • ' + currentChartCategory.toUpperCase() + ' (' + currentChartVariation.toUpperCase() + ')', 70, 130);
 
@@ -7225,10 +7226,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             if (totalValEl) {
               ctx.textAlign = 'right';
               ctx.fillStyle = '#FFD100';
-              ctx.font = 'bold 28px monospace';
+              ctx.font = 'bold 28px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
               ctx.fillText(totalValEl.textContent.trim(), W - 70, 95);
               ctx.fillStyle = '#94A3B8';
-              ctx.font = '600 13px sans-serif';
+              ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
               ctx.fillText('SOMA ACUMULADA', W - 70, 125);
               ctx.textAlign = 'left';
             }
@@ -7240,12 +7241,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             ctx.lineTo(W - 70, 155);
             ctx.stroke();
 
-            // Desenhar o SVG do Gráfico
+            // Desenhar o SVG do Gráfico Real
             ctx.drawImage(img, 70, 185, W - 140, H - 290);
 
             // Rodapé informativo
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.font = '500 13px sans-serif';
+            ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
             ctx.fillText('Gerado pelo Meu Kota IA — Análise e Inteligência de Negócios', 70, H - 55);
 
             // Exportar Blob ou DataURL
@@ -7288,26 +7289,70 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    // Helper: Exportar gráfico ativo como Vetor SVG puro editável
+    // Helper: Exportar gráfico ativo como Vetor SVG puro editável em padrão infográfico executivo
     function exportChartAsSvg(artifact) {
-      const svgEl = document.querySelector('.excel-chart-stage-card svg');
+      const stageCard = document.querySelector('.excel-chart-stage-card');
+      // Selecionar rigorosamente o SVG do gráfico real (e nunca o ícone de 16x16 do cabeçalho)
+      const svgEl = document.querySelector('#chart-svg-container svg') || document.querySelector('.chart-svg-container svg');
       if (!svgEl) {
         showToast('Nenhum gráfico visível para exportar.');
         return;
       }
       try {
-        let svgData = new XMLSerializer().serializeToString(svgEl);
-        if (!svgData.includes('xmlns="http://www.w3.org/2000/svg"')) {
-          svgData = svgData.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
-        }
-        if (!svgData.includes('width=')) {
-          svgData = svgData.replace('<svg ', '<svg width="' + (svgEl.clientWidth || 760) + '" height="' + (svgEl.clientHeight || 340) + '" ');
-        }
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const activeMetricName = cleanMarkdownText(artifact.headers[currentChartMetricCol] || 'Valores');
+        const fileTitle = (artifact.fileName || 'Planilha').replace(/\.[^.]+$/, '');
+        const totalValEl = stageCard ? stageCard.querySelector('.chart-stage-stat-val') : null;
+        const totalValText = totalValEl ? totalValEl.textContent.trim() : '';
+
+        const cardW = 1000;
+        const cardH = 580;
+        const padX = 70;
+        const chartY = 150;
+
+        // Pegar o conteúdo gráfico real
+        const chartInner = svgEl.innerHTML;
+
+        const fullSvg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cardW} ${cardH}" width="${cardW}" height="${cardH}">
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+
+  <!-- Fundo escuro premium -->
+  <rect width="100%" height="100%" fill="#0F1117" />
+  
+  <!-- Card interno -->
+  <rect x="25" y="25" width="${cardW - 50}" height="${cardH - 50}" rx="16" fill="#141721" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
+
+  <!-- Cabeçalho -->
+  <text x="${padX}" y="78" fill="#FFD100" font-size="22" font-weight="800" letter-spacing="0.5">${escapeHtml(activeMetricName.toUpperCase())} — ANÁLISE GRÁFICA</text>
+  <text x="${padX}" y="106" fill="#94A3B8" font-size="13" font-weight="500">${escapeHtml(fileTitle)} • ${escapeHtml(currentChartCategory.toUpperCase())} (${escapeHtml(currentChartVariation.toUpperCase())})</text>
+
+  <!-- Total acumulado -->
+  ${totalValText ? `
+    <text x="${cardW - padX}" y="78" fill="#FFD100" font-size="22" font-weight="700" text-anchor="end" class="mono">${escapeHtml(totalValText)}</text>
+    <text x="${cardW - padX}" y="104" fill="#94A3B8" font-size="11" font-weight="600" text-anchor="end">SOMA ACUMULADA</text>
+  ` : ''}
+
+  <!-- Linha divisória fina -->
+  <line x1="${padX}" y1="126" x2="${cardW - padX}" y2="126" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+
+  <!-- Gráfico centralizado -->
+  <g transform="translate(120, ${chartY})">
+    ${chartInner}
+  </g>
+
+  <!-- Rodapé informativo -->
+  <text x="${padX}" y="${cardH - 45}" fill="rgba(255,255,255,0.35)" font-size="11.5" font-weight="500">Gerado pelo Meu Kota IA — Análise e Inteligência de Negócios</text>
+</svg>`;
+
+        const svgBlob = new Blob([fullSvg], { type: 'image/svg+xml;charset=utf-8' });
         const fileName = (artifact.fileName || 'grafico-excel').replace(/\.[^.]+$/, '') + '-' + currentChartCategory + '-' + currentChartVariation + '.svg';
         triggerBlobDownload(svgBlob, fileName);
-        showToast('Vetor SVG exportado com sucesso!');
+        showToast('Gráfico vetorial SVG exportado em alta fidelidade!');
       } catch (err) {
+        console.error('Erro ao exportar SVG:', err);
         showToast('Erro ao exportar SVG: ' + err.message);
       }
     }
