@@ -8419,8 +8419,8 @@ html.is-offline #kota-offline-screen {
   background: #171B24;
   color: #94A3B8;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 8px 12px;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -8438,12 +8438,12 @@ html.is-offline #kota-offline-screen {
   background: #171B24;
   width: 44px;
   min-width: 44px;
-  border-right: 1.5px solid rgba(255, 255, 255, 0.14);
+  border-right: 1.5px solid rgba(255, 255, 255, 0.22);
 }
 
 .canvas-excel-table td {
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 8px 12px;
   color: #E2E8F0;
   background: #11141C;
   outline: none;
@@ -8869,6 +8869,29 @@ html.is-offline #kota-offline-screen {
 .btn-artifact-quick-dl:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #FFFFFF;
+}
+
+.btn-artifact-quick-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #F87171;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5.5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-artifact-quick-pdf:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  border-color: #EF4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
 /* ============================================================ */
@@ -9391,4 +9414,111 @@ html.is-offline #kota-offline-screen {
     display: none;
   }
 }
+
+/* ============================================================ */
+/* FOLHA DE ESTILOS DE IMPRESSÃO LIMPA (@media print)            */
+/* Garante que nenhum controle da aplicação saia no PDF impresso */
+/* ============================================================ */
+
+@media print {
+  /* Ocultar toda a interface de aplicação do Meu Kota IA */
+  .gpt-sidebar,
+  .gpt-header,
+  .gpt-input-area,
+  .gpt-scroll-area,
+  .canvas-header,
+  .canvas-grid-toolbar,
+  .canvas-sheet-tabs-bar,
+  .canvas-code-tabs,
+  .canvas-code-gutter,
+  .canvas-doc-toolbar,
+  .canvas-export-menu-wrap,
+  .executive-modal-overlay,
+  .toast,
+  .btn-detach-canvas,
+  .corner-cell,
+  th[data-col],
+  td.row-num-cell,
+  .canvas-editing-hint,
+  .kamba-artifact-card .artifact-card-actions,
+  .canvas-launcher-dropdown-wrap {
+    display: none !important;
+  }
+
+  body {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .gpt-layout {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .kota-canvas-panel {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #FFFFFF !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .canvas-body {
+    overflow: visible !important;
+    background: #FFFFFF !important;
+  }
+
+  /* Forçar que todas as cores de fundo e bordas sejam impressas com fidelidade */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Linhas e bordas da tabela ultra-nítidas no papel/PDF */
+  .canvas-excel-table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    border: 1.5px solid #0F172A !important;
+  }
+
+  .canvas-excel-table th,
+  .canvas-excel-table td {
+    border: 1px solid #CBD5E1 !important;
+    color: #0F172A !important;
+    background: #FFFFFF !important;
+  }
+
+  .canvas-excel-table tr.header-row td {
+    background: #0F172A !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    border: 1px solid #0F172A !important;
+  }
+
+  .status-pill.done {
+    background: #DEF7EC !important;
+    color: #03543F !important;
+    border: 1px solid #31C48D !important;
+  }
+
+  .status-pill.progress {
+    background: #FEF08A !important;
+    color: #713F12 !important;
+    border: 1px solid #FACC15 !important;
+  }
+
+  .status-pill.overdue {
+    background: #FEE2E2 !important;
+    color: #991B1B !important;
+    border: 1px solid #F87171 !important;
+  }
+}
+
 

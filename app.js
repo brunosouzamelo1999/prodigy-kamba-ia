@@ -4228,7 +4228,8 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         return trimmed.split('|').map(c => c.trim());
       };
 
-      const headerCells = parseCells(rawLines[0]);
+      const rawHeaderCells = parseCells(rawLines[0]);
+      const headerCells = rawHeaderCells.map(h => h.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').trim());
       const alignLine = parseCells(rawLines[1]);
       const aligns = alignLine.map(col => {
         const trimmed = col.trim();
@@ -4247,10 +4248,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         const rowArr = [];
         tableRowsHtml += '<tr>';
         headerCells.forEach((_, i) => {
-          const cell = rowCells[i] !== undefined ? rowCells[i] : '';
-          rowArr.push(cell);
+          const rawCell = rowCells[i] !== undefined ? rowCells[i] : '';
+          const cleanText = rawCell.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').trim();
+          rowArr.push(cleanText);
+          const formattedHtml = rawCell.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
           const align = aligns[i] || 'left';
-          tableRowsHtml += `<td style="text-align:${align}">${cell}</td>`;
+          tableRowsHtml += `<td style="text-align:${align}">${formattedHtml}</td>`;
         });
         tableRowsHtml += '</tr>';
         rowsData.push(rowArr);
@@ -4304,6 +4307,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           `<button type="button" class="btn-artifact-quick-dl" data-artifact-id="${artifactId}" title="Baixar planilha nativa em Microsoft Excel (.xlsx)">` +
             `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>` +
             `<span>Excel (.xlsx)</span>` +
+          `</button>` +
+          `<button type="button" class="btn-artifact-quick-pdf" data-artifact-id="${artifactId}" title="Baixar Relatório Limpo em PDF pronto para compartilhar">` +
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>` +
+            `<span>PDF Limpo</span>` +
           `</button>` +
         `</div>` +
       `</div>` +
@@ -5856,10 +5863,20 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     }
 
+    // Helper: Limpar asteriscos de markdown para exibição limpa em tabelas e PDFs
+    function cleanMarkdownText(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/__(.*?)__/g, '$1')
+        .trim();
+    }
+
     // Classificação de status para cores condicionais
     function getStatusClass(val) {
       if (!val) return '';
-      const text = String(val).trim().toLowerCase();
+      const text = cleanMarkdownText(val).toLowerCase();
       if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(text)) return 'done';
       if (/^(in progress|em andamento|pendente|ativo|doing|execu[cç][aã]o)$/.test(text)) return 'progress';
       if (/^(overdue|atrasad[oa]|urgente|bloqueado|cr[ií]tica|cancelado)$/.test(text)) return 'overdue';
@@ -5887,7 +5904,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
       artifact.rows.forEach(r => {
         r.forEach((val, cIdx) => {
-          const text = (val || '').toString().trim().toLowerCase();
+          const text = cleanMarkdownText(val || '').toLowerCase();
           if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(text) || text.includes('conclu')) {
             doneCount++;
           } else if (/^(in progress|em andamento|pendente|ativo|doing|execu[cç][aã]o)$/.test(text) || text.includes('andamento') || text.includes('progr')) {
@@ -5897,7 +5914,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           }
 
           // Analisar números / moeda
-          const cleanNumStr = (val || '').toString().replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+          const cleanNumStr = text.replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
           const parts = cleanNumStr.split('.');
           let numVal = NaN;
           if (parts.length > 2) {
@@ -5906,7 +5923,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             numVal = parseFloat(cleanNumStr);
           }
 
-          if (!isNaN(numVal) && isFinite(numVal) && (val || '').toString().trim().length > 0) {
+          if (!isNaN(numVal) && isFinite(numVal) && text.length > 0) {
             colNumericSums[cIdx] += numVal;
             colNumericCounts[cIdx]++;
           }
@@ -5959,8 +5976,9 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       // Linha 1: Cabeçalhos com número de linha "1"
       html += '<tr class="header-row"><td class="row-num-cell">1</td>';
       for (let c = 0; c < numCols; c++) {
-        const val = artifact.headers[c] !== undefined ? artifact.headers[c] : '';
-        html += `<td contenteditable="true" spellcheck="false" data-type="header" data-col="${c}">${escapeHtml(val)}</td>`;
+        const rawVal = artifact.headers[c] !== undefined ? artifact.headers[c] : '';
+        const cleanVal = cleanMarkdownText(rawVal);
+        html += `<td contenteditable="true" spellcheck="false" data-type="header" data-col="${c}">${escapeHtml(cleanVal)}</td>`;
       }
       html += '</tr>';
 
@@ -5969,11 +5987,12 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         const rowNum = rIdx + 2;
         html += `<tr><td class="row-num-cell">${rowNum}</td>`;
         for (let c = 0; c < numCols; c++) {
-          const val = row[c] !== undefined ? row[c] : '';
-          const statusClass = getStatusClass(val);
+          const rawVal = row[c] !== undefined ? row[c] : '';
+          const cleanVal = cleanMarkdownText(rawVal);
+          const statusClass = getStatusClass(cleanVal);
           const cellContent = statusClass 
-            ? `<span class="status-pill ${statusClass}">${escapeHtml(val)}</span>` 
-            : escapeHtml(val);
+            ? `<span class="status-pill ${statusClass}">${escapeHtml(cleanVal)}</span>` 
+            : escapeHtml(cleanVal);
           html += `<td contenteditable="true" spellcheck="false" data-type="cell" data-row="${rIdx}" data-col="${c}">${cellContent}</td>`;
         }
         html += '</tr>';
@@ -6121,31 +6140,309 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    // 6. EXPORTAÇÃO PDF DO DOCUMENTO A4 (HTML2PDF)
-    function exportDocumentToPdf() {
+    // Helper para garantir carregamento seguro do html2pdf.js
+    async function ensureHtml2Pdf() {
+      if (typeof html2pdf !== 'undefined') return true;
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'libs/html2pdf.bundle.min.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        return typeof html2pdf !== 'undefined';
+      } catch (e) {
+        console.error('[Meu Kota] Erro ao carregar html2pdf:', e);
+        return false;
+      }
+    }
+
+    // 6A. EXPORTAÇÃO LIMPA DE PLANILHA PARA PDF EXECUTIVO (SEM CHROME DA APLICAÇÃO)
+    async function exportSpreadsheetToPdf(artifact) {
+      if (!artifact) return;
+      showToast('Compilando relatório executivo em PDF limpo...');
+
+      const hasPdf = await ensureHtml2Pdf();
+      if (!hasPdf) {
+        showToast('Biblioteca de PDF indisponível no momento.');
+        return;
+      }
+
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('pt-AO');
+      const docRef = `MK-REL-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const cleanTitle = (artifact.title || artifact.fileName || 'Relatório de Tarefas').replace(/\.xlsx$/i, '').trim();
+
+      // Recalcular métricas
+      const totalTasks = artifact.rows.length;
+      let inProgressCount = 0;
+      let doneCount = 0;
+      let overdueCount = 0;
+
+      const numCols = artifact.headers.length;
+      const colNumericSums = new Array(numCols).fill(0);
+      const colNumericCounts = new Array(numCols).fill(0);
+
+      artifact.rows.forEach(r => {
+        r.forEach((val, cIdx) => {
+          const text = cleanMarkdownText(val || '').toLowerCase();
+          if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(text) || text.includes('conclu')) {
+            doneCount++;
+          } else if (/^(in progress|em andamento|pendente|ativo|doing|execu[cç][aã]o)$/.test(text) || text.includes('andamento') || text.includes('progr')) {
+            inProgressCount++;
+          } else if (/^(overdue|atrasad[oa]|urgente|bloqueado|cancelado)$/.test(text) || text.includes('atras') || text.includes('overdue')) {
+            overdueCount++;
+          }
+
+          const cleanNumStr = text.replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+          const parts = cleanNumStr.split('.');
+          let numVal = NaN;
+          if (parts.length > 2) {
+            numVal = parseFloat(parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]);
+          } else {
+            numVal = parseFloat(cleanNumStr);
+          }
+          if (!isNaN(numVal) && isFinite(numVal) && text.length > 0) {
+            colNumericSums[cIdx] += numVal;
+            colNumericCounts[cIdx]++;
+          }
+        });
+      });
+
+      let bestNumericCol = -1;
+      let maxNumCount = 0;
+      colNumericCounts.forEach((count, cIdx) => {
+        if (count > maxNumCount) {
+          maxNumCount = count;
+          bestNumericCol = cIdx;
+        }
+      });
+
+      let formattedSum = '-';
+      if (bestNumericCol >= 0 && maxNumCount > 0) {
+        const sum = colNumericSums[bestNumericCol];
+        const headerName = artifact.headers[bestNumericCol] || 'Total';
+        formattedSum = sum.toLocaleString('pt-AO', { maximumFractionDigits: 2 });
+        if (headerName.toLowerCase().includes('kz') || headerName.toLowerCase().includes('preço') || headerName.toLowerCase().includes('custo') || headerName.toLowerCase().includes('valor')) {
+          formattedSum += ' Kz';
+        }
+      }
+
+      // Container fora da tela com largura A4 padronizada (794px)
+      const printContainer = document.createElement('div');
+      printContainer.style.position = 'fixed';
+      printContainer.style.left = '-9999px';
+      printContainer.style.top = '0';
+      printContainer.style.width = '794px';
+      printContainer.style.background = '#FFFFFF';
+      printContainer.style.color = '#0F172A';
+      printContainer.style.padding = '36px 40px';
+      printContainer.style.boxSizing = 'border-box';
+      printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+      printContainer.style.lineHeight = '1.5';
+      printContainer.style.zIndex = '-9999';
+
+      printContainer.innerHTML = `
+        <!-- CABEÇALHO EXECUTIVO LIMPO (SEM BOTÕES OU CHROME DO SISTEMA) -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 14px; border-bottom: 2px solid #0F172A; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 38px; height: 38px; border-radius: 8px; background: #0F172A; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFD100; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 800; color: #0F172A; letter-spacing: 0.5px;">MEU KOTA IA — SISTEMAS INTELIGENTES</div>
+              <div style="font-size: 10.5px; color: #64748B; font-weight: 500;">Relatório de Acompanhamento Executivo & Gestão de Entregas</div>
+            </div>
+          </div>
+          <div style="text-align: right; font-size: 10px; color: #475569; line-height: 1.5;">
+            <div><strong>Data:</strong> ${formattedDate}</div>
+            <div><strong>Ref.:</strong> ${docRef}</div>
+            <div><span style="display: inline-block; background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; padding: 1px 7px; border-radius: 4px; font-weight: 700; font-size: 9px; margin-top: 3px;">CONFIDENCIAL • HOMOLOGADO</span></div>
+          </div>
+        </div>
+
+        <!-- TÍTULO OFICIAL DO ARQUIVO -->
+        <div style="margin-bottom: 20px;">
+          <h1 style="font-size: 19px; font-weight: 800; color: #0F172A; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px;">
+            ${escapeHtml(cleanTitle)}
+          </h1>
+          <div style="font-size: 11px; color: #64748B;">
+            Tabela estruturada contendo ${totalTasks} itens registrados para acompanhamento e auditoria comercial.
+          </div>
+        </div>
+
+        <!-- CARTÕES DE RESUMO EXECUTIVO (MÉTRICAS CLARAS COM BORDAS DEFINIDAS) -->
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px;">
+          <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; padding: 9px 10px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Tasks</div>
+            <div style="font-size: 17px; font-weight: 800; color: #0F172A; margin-top: 2px;">${totalTasks}</div>
+          </div>
+          <div style="background: #FEFCE8; border: 1px solid #FDE047; border-radius: 6px; padding: 9px 10px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 700; color: #854D0E; text-transform: uppercase;">In Progress</div>
+            <div style="font-size: 17px; font-weight: 800; color: #A16207; margin-top: 2px;">${inProgressCount}</div>
+          </div>
+          <div style="background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 6px; padding: 9px 10px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 700; color: #166534; text-transform: uppercase;">Done</div>
+            <div style="font-size: 17px; font-weight: 800; color: #15803D; margin-top: 2px;">${doneCount}</div>
+          </div>
+          <div style="background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 6px; padding: 9px 10px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 700; color: #991B1B; text-transform: uppercase;">Overdue</div>
+            <div style="font-size: 17px; font-weight: 800; color: #DC2626; margin-top: 2px;">${overdueCount}</div>
+          </div>
+          <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 6px; padding: 9px 10px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 700; color: #78350F; text-transform: uppercase;">Soma Total</div>
+            <div style="font-size: 15px; font-weight: 800; color: #B45309; margin-top: 3px;">${formattedSum}</div>
+          </div>
+        </div>
+
+        <!-- TABELA DE DADOS ULTRA-NÍTIDA (SEM COLUNAS A, B, C, SEM NÚMEROS 1, 2, 3, COM BORDAS DEFINIDAS) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 10.5px; border: 1.5px solid #0F172A;">
+          <thead>
+            <tr style="background: #0F172A; color: #FFFFFF;">
+              ${artifact.headers.map(h => `<th style="padding: 9px 10px; text-align: left; font-weight: 700; font-size: 10px; letter-spacing: 0.3px; border: 1px solid #0F172A; color: #FFFFFF;">${escapeHtml(cleanMarkdownText(h))}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${artifact.rows.map((row, idx) => `
+              <tr style="background: ${idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC'};">
+                ${row.map(cell => {
+                  const raw = cleanMarkdownText(cell);
+                  const statusClass = getStatusClass(raw);
+                  let content = escapeHtml(raw);
+                  if (statusClass === 'done') {
+                    content = `<span style="display:inline-block;background:#DEF7EC;color:#03543F;border:1px solid #31C48D;padding:2px 7px;border-radius:4px;font-weight:700;font-size:9.5px;">${content}</span>`;
+                  } else if (statusClass === 'progress') {
+                    content = `<span style="display:inline-block;background:#FEF08A;color:#713F12;border:1px solid #FACC15;padding:2px 7px;border-radius:4px;font-weight:700;font-size:9.5px;">${content}</span>`;
+                  } else if (statusClass === 'overdue') {
+                    content = `<span style="display:inline-block;background:#FEE2E2;color:#991B1B;border:1px solid #F87171;padding:2px 7px;border-radius:4px;font-weight:700;font-size:9.5px;">${content}</span>`;
+                  }
+                  return `<td style="padding: 8px 10px; border: 1px solid #CBD5E1; color: #1E293B; vertical-align: top; line-height: 1.45;">${content}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <!-- SEÇÃO FORMAL DE HOMOLOGAÇÃO E ASSINATURAS -->
+        <div style="margin-top: 36px; padding-top: 18px; border-top: 1.5px dashed #CBD5E1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; page-break-inside: avoid; break-inside: avoid;">
+          <div style="text-align: center;">
+            <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
+            <div style="font-size: 11.5px; font-weight: 700; color: #0F172A;">Bruno Souza</div>
+            <div style="font-size: 9.5px; color: #64748B;">Diretoria Executiva / Gestor de Projeto</div>
+            <div style="font-size: 8px; color: #10B981; font-weight: 700; margin-top: 3px;">ASSINADO ELETRONICAMENTE</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
+            <div style="font-size: 11.5px; font-weight: 700; color: #0F172A;">Cliente / Responsável Técnico</div>
+            <div style="font-size: 9.5px; color: #64748B;">Homologação & Aprovação Formal</div>
+            <div style="font-size: 8px; color: #64748B; font-weight: 600; margin-top: 3px;">VALIDAÇÃO COMERCIAL</div>
+          </div>
+        </div>
+
+        <!-- RODAPÉ FINAL DISCRETO -->
+        <div style="margin-top: 26px; padding-top: 8px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; color: #94A3B8;">
+          <span>Meu Kota IA • Sistema de Inteligência Conversacional Corporativa</span>
+          <span>https://meu-kota-ia.web.app • Documento Homologado</span>
+        </div>
+      `;
+
+      document.body.appendChild(printContainer);
+
+      let targetName = (cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'relatorio-executivo') + '.pdf';
+
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: targetName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          scrollY: 0,
+          scrollX: 0,
+          backgroundColor: '#FFFFFF'
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      try {
+        await html2pdf().set(opt).from(printContainer).save();
+        showToast('Relatório executivo em PDF limpo baixado com sucesso!');
+      } catch (err) {
+        console.error('[PDF Generation Error]', err);
+        showToast('Erro ao exportar PDF: ' + err.message);
+      } finally {
+        if (printContainer.parentNode) {
+          printContainer.parentNode.removeChild(printContainer);
+        }
+      }
+    }
+
+    // 6B. EXPORTAÇÃO LIMPA DO DOCUMENTO A4 PARA PDF
+    async function exportDocumentToPdf() {
       const sheet = document.getElementById('canvas-a4-sheet');
       if (!sheet) return;
 
-      showToast('Gerando documento comercial em PDF...');
+      const hasPdf = await ensureHtml2Pdf();
+      if (!hasPdf) {
+        showToast('Biblioteca de PDF indisponível no momento.');
+        return;
+      }
+
+      showToast('Compilando documento comercial em PDF limpo...');
       let targetName = (fileNameInput ? fileNameInput.value : 'documento-comercial.pdf') || 'documento-comercial.pdf';
       if (!targetName.toLowerCase().endsWith('.pdf')) targetName += '.pdf';
 
-      if (typeof html2pdf !== 'undefined') {
-        const opt = {
-          margin: [8, 8, 8, 8],
-          filename: targetName,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(sheet).save().then(() => {
-          showToast('Documento comercial em PDF baixado com sucesso!');
-        }).catch(err => {
-          console.warn('[PDF] Fallback para impressão:', err);
-          window.print();
-        });
-      } else {
-        window.print();
+      // Criar clone limpo destacado fora da tela
+      const printContainer = document.createElement('div');
+      printContainer.style.position = 'fixed';
+      printContainer.style.left = '-9999px';
+      printContainer.style.top = '0';
+      printContainer.style.width = '794px';
+      printContainer.style.background = '#FFFFFF';
+      printContainer.style.color = '#1E293B';
+      printContainer.style.padding = '36px 40px';
+      printContainer.style.boxSizing = 'border-box';
+      printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+      printContainer.style.zIndex = '-9999';
+
+      printContainer.innerHTML = sheet.innerHTML;
+
+      // Remover contenteditable dos elementos clonados para evitar artefatos visuais
+      printContainer.querySelectorAll('[contenteditable]').forEach(el => {
+        el.removeAttribute('contenteditable');
+      });
+
+      document.body.appendChild(printContainer);
+
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: targetName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          scrollY: 0,
+          scrollX: 0,
+          backgroundColor: '#FFFFFF'
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      try {
+        await html2pdf().set(opt).from(printContainer).save();
+        showToast('Documento comercial em PDF baixado com sucesso!');
+      } catch (err) {
+        console.error('[PDF Generation Error]', err);
+        showToast('Erro ao exportar PDF: ' + err.message);
+      } finally {
+        if (printContainer.parentNode) {
+          printContainer.parentNode.removeChild(printContainer);
+        }
       }
     }
 
@@ -6628,7 +6925,15 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     if (btnDlPdf) {
       btnDlPdf.addEventListener('click', () => {
         if (exportDropdown) exportDropdown.style.display = 'none';
-        exportDocumentToPdf();
+        if (!window.activeCanvasArtifact) {
+          showToast('Nenhum arquivo ativo no Canvas.');
+          return;
+        }
+        if (window.activeCanvasArtifact.type === 'spreadsheet') {
+          exportSpreadsheetToPdf(window.activeCanvasArtifact);
+        } else {
+          exportDocumentToPdf();
+        }
       });
     }
 
@@ -6748,6 +7053,16 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         return;
       }
 
+      // Botão "PDF Limpo" Direto na tabela do chat
+      const btnQuickPdf = e.target.closest('.btn-artifact-quick-pdf');
+      if (btnQuickPdf) {
+        const artId = btnQuickPdf.getAttribute('data-artifact-id');
+        if (artId && window.meuKotaArtifactRegistry && window.meuKotaArtifactRegistry[artId]) {
+          exportSpreadsheetToPdf(window.meuKotaArtifactRegistry[artId]);
+        }
+        return;
+      }
+
       // Botão "Testar no Canvas" em qualquer bloco de código do chat
       const btnTestCode = e.target.closest('.btn-open-code-canvas');
       if (btnTestCode) {
@@ -6773,6 +7088,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     window.openDocumentInCanvas = openDocumentInCanvas;
     window.openCodeInCanvas = openCodeInCanvas;
     window.exportSpreadsheetToXlsx = exportSpreadsheetToXlsx;
+    window.exportSpreadsheetToPdf = exportSpreadsheetToPdf;
     window.exportDocumentToPdf = exportDocumentToPdf;
     window.exportCodeToFile = exportCodeToFile;
   }
