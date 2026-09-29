@@ -9397,6 +9397,89 @@ html.is-offline #kota-offline-screen {
   text-transform: uppercase;
 }
 
+/* Efeito de atualização em tempo real nas células recalculadas */
+@keyframes cellRecalcFlash {
+  0% { background: rgba(255, 209, 0, 0.35); color: #FFD100; }
+  100% { background: transparent; }
+}
+
+.canvas-excel-table td.cell-flash-updated {
+  animation: cellRecalcFlash 0.7s ease-out;
+}
+
+/* Gráficos Executivos na Aba Resumo */
+.summary-chart-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 14px;
+}
+
+.summary-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.summary-chart-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #CBD5E1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chart-bar-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #E2E8F0;
+}
+
+.chart-bar-label {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+.chart-bar-val {
+  font-weight: 700;
+  color: #FFD100;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+.chart-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.chart-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ============================================================ */
 /* CABEÇALHO TIMBRADO E ASSINATURAS DO DOCUMENTO A4             */
 /* ============================================================ */

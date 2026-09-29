@@ -5917,6 +5917,254 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       return '';
     }
 
+    // ============================================================
+    // MOTOR DE CÁLCULO CIENTÍFICO E FÓRMULAS DA PLANILHA (EXCEL REAL)
+    // ============================================================
+
+    function parseSpreadsheetNumber(str) {
+      if (str === null || str === undefined) return NaN;
+      if (typeof str === 'number') return str;
+      const clean = str.toString().trim();
+      if (!clean) return NaN;
+
+      let numStr = clean.replace(/[^0-9.,-]/g, '').trim();
+      if (!numStr) return NaN;
+
+      if (numStr.includes(',') && numStr.includes('.')) {
+        if (numStr.lastIndexOf(',') > numStr.lastIndexOf('.')) {
+          numStr = numStr.replace(/\./g, '').replace(',', '.');
+        } else {
+          numStr = numStr.replace(/,/g, '');
+        }
+      } else if (numStr.includes(',')) {
+        numStr = numStr.replace(',', '.');
+      }
+      const val = parseFloat(numStr);
+      return isNaN(val) ? NaN : val;
+    }
+
+    function formatSpreadsheetNumber(num, templateStr = '') {
+      if (isNaN(num)) return '';
+      const template = (templateStr || '').toString();
+      const hasR$ = /R\$/i.test(template);
+      const hasKz = /Kz/i.test(template);
+      const hasDollar = /\$/i.test(template) && !hasR$;
+      const hasEuro = /€/i.test(template);
+
+      const hasDecimals = template.includes(',') || template.includes('.') || (num % 1 !== 0);
+      const decimals = hasDecimals ? 2 : 0;
+
+      const formattedNum = num.toLocaleString('pt-BR', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+
+      if (hasR$) return `R$ ${formattedNum}`;
+      if (hasKz) return `${formattedNum} Kz`;
+      if (hasDollar) return `$ ${formattedNum}`;
+      if (hasEuro) return `${formattedNum} €`;
+      return formattedNum;
+    }
+
+    function getExcelColIndexFromLetter(colLetter) {
+      let col = 0;
+      const upper = (colLetter || '').toUpperCase();
+      for (let i = 0; i < upper.length; i++) {
+        col = col * 26 + (upper.charCodeAt(i) - 64);
+      }
+      return col - 1;
+    }
+
+    // Avaliar fórmulas manuais (=SOMA, =SUM, =MEDIA, =A2*B2, etc.)
+    function evaluateSpreadsheetFormula(formulaStr, artifact) {
+      if (!formulaStr || !formulaStr.startsWith('=')) return null;
+      const expr = formulaStr.slice(1).trim().toUpperCase();
+
+      // =SOMA(B2:B5) ou =SUM(B2:B5)
+      const sumMatch = expr.match(/^(?:SOMA|SUM)\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$/);
+      if (sumMatch) {
+        const col1 = getExcelColIndexFromLetter(sumMatch[1]);
+        const r1 = parseInt(sumMatch[2], 10) - 2;
+        const col2 = getExcelColIndexFromLetter(sumMatch[3]);
+        const r2 = parseInt(sumMatch[4], 10) - 2;
+        let sum = 0;
+        for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r++) {
+          for (let c = Math.min(col1, col2); c <= Math.max(col1, col2); c++) {
+            if (artifact.rows[r] && artifact.rows[r][c] !== undefined) {
+              const val = parseSpreadsheetNumber(artifact.rows[r][c]);
+              if (!isNaN(val)) sum += val;
+            }
+          }
+        }
+        return sum;
+      }
+
+      // =MEDIA(B2:B5) ou =AVERAGE(B2:B5)
+      const avgMatch = expr.match(/^(?:MEDIA|AVERAGE)\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$/);
+      if (avgMatch) {
+        const col1 = getExcelColIndexFromLetter(avgMatch[1]);
+        const r1 = parseInt(avgMatch[2], 10) - 2;
+        const col2 = getExcelColIndexFromLetter(avgMatch[3]);
+        const r2 = parseInt(avgMatch[4], 10) - 2;
+        let sum = 0, count = 0;
+        for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r++) {
+          for (let c = Math.min(col1, col2); c <= Math.max(col1, col2); c++) {
+            if (artifact.rows[r] && artifact.rows[r][c] !== undefined) {
+              const val = parseSpreadsheetNumber(artifact.rows[r][c]);
+              if (!isNaN(val)) { sum += val; count++; }
+            }
+          }
+        }
+        return count > 0 ? sum / count : 0;
+      }
+
+      // Operações diretas entre células ex: B2*C2, B2+C2, B2-C2, B2/C2
+      const opMatch = expr.match(/^([A-Z]+)(\d+)\s*([\+\-\*\/])\s*([A-Z]+)(\d+)$/);
+      if (opMatch) {
+        const c1 = getExcelColIndexFromLetter(opMatch[1]);
+        const r1 = parseInt(opMatch[2], 10) - 2;
+        const op = opMatch[3];
+        const c2 = getExcelColIndexFromLetter(opMatch[4]);
+        const r2 = parseInt(opMatch[5], 10) - 2;
+        const v1 = (artifact.rows[r1] && artifact.rows[r1][c1] !== undefined) ? parseSpreadsheetNumber(artifact.rows[r1][c1]) : 0;
+        const v2 = (artifact.rows[r2] && artifact.rows[r2][c2] !== undefined) ? parseSpreadsheetNumber(artifact.rows[r2][c2]) : 0;
+        if (op === '+') return v1 + v2;
+        if (op === '-') return v1 - v2;
+        if (op === '*') return v1 * v2;
+        if (op === '/') return v2 !== 0 ? v1 / v2 : 0;
+      }
+
+      return null;
+    }
+
+    // Recálculo Automático Dinâmico (Totais de Linha e Totais Globais)
+    function autoRecalculateSpreadsheet(artifact) {
+      if (!artifact || !artifact.headers || !artifact.rows) return false;
+      const headers = artifact.headers.map(h => cleanMarkdownText(h || '').toLowerCase());
+
+      let qtyCol = -1;
+      let priceCol = -1;
+      let totalCol = -1;
+
+      headers.forEach((h, idx) => {
+        if (/^(quant|qtd|quantidade|unidades|volume|horas|hours|qty)\b/i.test(h) || h.includes('quant') || h.includes('qtd')) {
+          if (qtyCol === -1) qtyCol = idx;
+        } else if (/^(pre[çc]o unit|valor unit|custo unit|unit[aá]rio|pre[çc]o\/unid)/i.test(h) || (h.includes('unit') && (h.includes('pre') || h.includes('val')))) {
+          if (priceCol === -1) priceCol = idx;
+        } else if (/^(pre[çc]o total|valor total|total|subtotal|custo total|montante)/i.test(h) || h.includes('total') || h.includes('subtotal')) {
+          if (totalCol === -1) totalCol = idx;
+        }
+      });
+
+      const isTotalRow = (row) => {
+        const firstCell = cleanMarkdownText(row[0] || '').toLowerCase();
+        return /^(total|valor global|valor acumulado|soma|subtotal|total geral|balan[çc]o)/i.test(firstCell) ||
+               firstCell.includes('total') || firstCell.includes('acumulado') || firstCell.includes('soma');
+      };
+
+      let changed = false;
+
+      // 1. Recalcular cada linha de dados: Fórmulas manuais ou Qtd * Preço Unitário
+      artifact.rows.forEach((row, rIdx) => {
+        if (isTotalRow(row)) return;
+
+        // Se a planilha tem colunas de Qtd, Preço Unitário e Total
+        if (qtyCol !== -1 && priceCol !== -1 && totalCol !== -1) {
+          const qtyVal = parseSpreadsheetNumber(row[qtyCol]);
+          const priceVal = parseSpreadsheetNumber(row[priceCol]);
+          if (!isNaN(qtyVal) && !isNaN(priceVal)) {
+            const calculatedTotal = qtyVal * priceVal;
+            const currentTotalStr = row[totalCol] || '';
+            const newTotalFormatted = formatSpreadsheetNumber(calculatedTotal, currentTotalStr || row[priceCol] || '');
+            if (row[totalCol] !== newTotalFormatted) {
+              row[totalCol] = newTotalFormatted;
+              changed = true;
+            }
+          }
+        }
+
+        // Fórmulas manuais que começam com =
+        row.forEach((cellVal, cIdx) => {
+          if (typeof cellVal === 'string' && cellVal.startsWith('=')) {
+            const res = evaluateSpreadsheetFormula(cellVal, artifact);
+            if (res !== null) {
+              const resFormatted = formatSpreadsheetNumber(res, cellVal);
+              row[cIdx] = resFormatted;
+              changed = true;
+            }
+          }
+        });
+      });
+
+      // 2. Recalcular Linha(s) de Total / Valor Global Acumulado
+      artifact.rows.forEach((row, rIdx) => {
+        if (isTotalRow(row)) {
+          const targetCols = [];
+          if (totalCol !== -1) targetCols.push(totalCol);
+          else {
+            headers.forEach((_, cIdx) => {
+              let hasNums = false;
+              for (let r = 0; r < rIdx; r++) {
+                if (!isNaN(parseSpreadsheetNumber(artifact.rows[r][cIdx]))) hasNums = true;
+              }
+              if (hasNums && cIdx !== 0 && cIdx !== qtyCol) targetCols.push(cIdx);
+            });
+          }
+
+          targetCols.forEach(colToSum => {
+            let colSum = 0;
+            let sampleTemplate = '';
+            for (let r = 0; r < rIdx; r++) {
+              if (!isTotalRow(artifact.rows[r])) {
+                const val = parseSpreadsheetNumber(artifact.rows[r][colToSum]);
+                if (!isNaN(val)) {
+                  colSum += val;
+                  if (!sampleTemplate && artifact.rows[r][colToSum]) {
+                    sampleTemplate = artifact.rows[r][colToSum];
+                  }
+                }
+              }
+            }
+            const currentTotalVal = row[colToSum] || '';
+            const newSumFormatted = formatSpreadsheetNumber(colSum, currentTotalVal || sampleTemplate);
+            if (row[colToSum] !== newSumFormatted) {
+              row[colToSum] = newSumFormatted;
+              changed = true;
+            }
+          });
+        }
+      });
+
+      return changed;
+    }
+
+    // Sincronizar células visuais no DOM sem roubar o foco da célula em digitação
+    function syncSpreadsheetDomFromData(artifact) {
+      if (!excelTable || !artifact || !artifact.rows) return;
+      const activeEl = document.activeElement;
+      const activeRow = activeEl ? parseInt(activeEl.getAttribute('data-row'), 10) : null;
+      const activeCol = activeEl ? parseInt(activeEl.getAttribute('data-col'), 10) : null;
+
+      artifact.rows.forEach((row, rIdx) => {
+        row.forEach((val, cIdx) => {
+          if (activeRow === rIdx && activeCol === cIdx) return;
+          const cell = excelTable.querySelector(`td[data-type="cell"][data-row="${rIdx}"][data-col="${cIdx}"]`);
+          if (cell) {
+            const cleanVal = cleanMarkdownText(val || '');
+            const statusClass = getStatusClass(cleanVal);
+            const cellContent = statusClass 
+              ? `<span class="status-pill ${statusClass}">${escapeHtml(cleanVal)}</span>` 
+              : escapeHtml(cleanVal);
+            if (cell.innerHTML !== cellContent) {
+              cell.innerHTML = cellContent;
+              cell.classList.add('cell-flash-updated');
+              setTimeout(() => cell.classList.remove('cell-flash-updated'), 700);
+            }
+          }
+        });
+      });
+    }
+
     // 1. RECALCULAR KPIS: TOTAL TASKS, IN PROGRESS, DONE, OVERDUE + SOMA TOTAL
     function recalculateSpreadsheetKpis(artifact) {
       if (!artifact) return;
@@ -5946,16 +6194,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             overdueCount++;
           }
 
-          // Analisar números / moeda
-          const cleanNumStr = text.replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-          const parts = cleanNumStr.split('.');
-          let numVal = NaN;
-          if (parts.length > 2) {
-            numVal = parseFloat(parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]);
-          } else {
-            numVal = parseFloat(cleanNumStr);
-          }
-
+          const numVal = parseSpreadsheetNumber(val);
           if (!isNaN(numVal) && isFinite(numVal) && text.length > 0) {
             colNumericSums[cIdx] += numVal;
             colNumericCounts[cIdx]++;
@@ -5982,11 +6221,9 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         if (bestNumericCol >= 0 && maxNumCount > 0) {
           const sum = colNumericSums[bestNumericCol];
           const headerName = artifact.headers[bestNumericCol] || 'Total';
-          let formattedSum = sum.toLocaleString('pt-AO', { maximumFractionDigits: 2 });
-          if (headerName.toLowerCase().includes('kz') || headerName.toLowerCase().includes('preço') || headerName.toLowerCase().includes('custo') || headerName.toLowerCase().includes('valor')) {
-            formattedSum += ' Kz';
-          }
-          sumEl.textContent = formattedSum;
+          let sampleStr = '';
+          artifact.rows.forEach(r => { if (!sampleStr && r[bestNumericCol]) sampleStr = r[bestNumericCol]; });
+          sumEl.textContent = formatSpreadsheetNumber(sum, sampleStr || headerName);
           sumEl.title = `Soma acumulada da coluna "${headerName}"`;
         } else {
           sumEl.textContent = '-';
@@ -6035,7 +6272,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       excelTable.innerHTML = html;
     }
 
-    // 3. RENDERIZAR RESUMO EXECUTIVO (ABA RESUMO)
+    // 3. RENDERIZAR RESUMO EXECUTIVO COM GRÁFICOS VISUAIS DE EXCEL
     function renderSpreadsheetSummary(artifact) {
       const container = document.getElementById('canvas-summary-dashboard');
       if (!container || !artifact) return;
@@ -6055,8 +6292,88 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
 
       const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+      const isTaskTracker = (done + inProgress + overdue) > 0;
 
-      container.innerHTML = `
+      // Identificar coluna de texto principal e coluna de valores para gráficos
+      const numCols = artifact.headers.length;
+      let valCol = -1;
+      let maxNumCount = 0;
+
+      for (let c = 0; c < numCols; c++) {
+        let nCnt = 0;
+        artifact.rows.forEach(r => {
+          if (!isNaN(parseSpreadsheetNumber(r[c]))) nCnt++;
+        });
+        const hName = cleanMarkdownText(artifact.headers[c] || '').toLowerCase();
+        if (hName.includes('total') || hName.includes('preço') || hName.includes('valor') || hName.includes('custo') || hName.includes('quant')) {
+          if (nCnt > 0) valCol = c;
+        } else if (nCnt > maxNumCount && c > 0) {
+          maxNumCount = nCnt;
+          if (valCol === -1) valCol = c;
+        }
+      }
+
+      // Montar dados do gráfico comparativo
+      let chartHtml = '';
+      if (valCol !== -1) {
+        const valHeader = cleanMarkdownText(artifact.headers[valCol] || 'Valores');
+        const chartItems = [];
+        let maxVal = 0;
+        let sumTotal = 0;
+
+        artifact.rows.forEach((r, idx) => {
+          const firstCell = cleanMarkdownText(r[0] || '');
+          const isTotal = /^(total|valor global|soma|acumulado)/i.test(firstCell);
+          if (isTotal) return;
+
+          const label = firstCell || `Linha ${idx + 2}`;
+          const num = parseSpreadsheetNumber(r[valCol]);
+          if (!isNaN(num) && num > 0) {
+            if (num > maxVal) maxVal = num;
+            sumTotal += num;
+            chartItems.push({ label, val: num, formatted: r[valCol] || num.toString() });
+          }
+        });
+
+        if (chartItems.length > 0 && maxVal > 0) {
+          const barGradients = [
+            'linear-gradient(90deg, #F59E0B, #FFD100)',
+            'linear-gradient(90deg, #10B981, #34D399)',
+            'linear-gradient(90deg, #3B82F6, #60A5FA)',
+            'linear-gradient(90deg, #8B5CF6, #A78BFA)',
+            'linear-gradient(90deg, #EC4899, #F472B6)'
+          ];
+
+          chartHtml = `
+            <div class="summary-chart-card">
+              <div class="summary-chart-header">
+                <span class="summary-chart-title">Gráfico Comparativo • ${escapeHtml(valHeader)}</span>
+                <span style="font-size:11px;color:#94A3B8;">${chartItems.length} item(ns)</span>
+              </div>
+              <div class="summary-chart-bars">
+                ${chartItems.map((item, i) => {
+                  const pct = Math.max(Math.round((item.val / maxVal) * 100), 5);
+                  const sharePct = sumTotal > 0 ? Math.round((item.val / sumTotal) * 100) : 0;
+                  const grad = barGradients[i % barGradients.length];
+                  return `
+                    <div class="chart-bar-item">
+                      <div class="chart-bar-info">
+                        <span class="chart-bar-label">${escapeHtml(item.label)} <small style="color:#94A3B8;font-weight:400;">(${sharePct}%)</small></span>
+                        <span class="chart-bar-val">${escapeHtml(item.formatted)}</span>
+                      </div>
+                      <div class="chart-bar-track">
+                        <div class="chart-bar-fill" style="width: ${pct}%; background: ${grad};"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      const taskSectionHtml = isTaskTracker ? `
         <div class="summary-card-metric">
           <div class="summary-metric-header">
             <span class="summary-metric-title">Progresso Geral das Entregas</span>
@@ -6084,15 +6401,20 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             </div>
           </div>
         </div>
+      ` : '';
 
+      container.innerHTML = `
+        ${taskSectionHtml}
+        ${chartHtml}
         <div class="summary-card-metric">
           <div class="summary-metric-header">
             <span class="summary-metric-title">Estrutura & Metadados do Arquivo</span>
           </div>
           <div style="font-size:12.5px;color:#CBD5E1;line-height:1.6;margin-top:6px;">
             • <strong>Colunas Ativas:</strong> ${artifact.headers.join(', ')}<br>
-            • <strong>Total de Registros:</strong> ${total} tarefas estruturadas.<br>
-            • <strong>Compatibilidade:</strong> Pronto para exportação real em Microsoft Excel (.xlsx nativo) e Google Planilhas.
+            • <strong>Total de Registros:</strong> ${total} linha(s) processada(s).<br>
+            • <strong>Cálculos em Tempo Real:</strong> Suporte nativo a fórmulas automáticas (Qtd × Preço, Totais acumulados e fórmulas com <code>=</code>).<br>
+            • <strong>Compatibilidade:</strong> Exportação nativa em Microsoft Excel (.xlsx) e Google Planilhas.
           </div>
         </div>
       `;
@@ -6521,8 +6843,9 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         artifact.fileName = name;
       }
 
-      // Renderizar grelha, KPIs e resumo com histórico resetado
+      // Renderizar grelha, KPIs e resumo com histórico resetado e recálculo dinâmico
       resetSpreadsheetUndo();
+      autoRecalculateSpreadsheet(artifact);
       renderSpreadsheetGrid(artifact);
       recalculateSpreadsheetKpis(artifact);
       renderSpreadsheetSummary(artifact);
@@ -6778,6 +7101,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       art.headers = prev.headers;
       art.rows = prev.rows;
       if (prev.aligns) art.aligns = prev.aligns;
+      autoRecalculateSpreadsheet(art);
       renderSpreadsheetGrid(art);
       recalculateSpreadsheetKpis(art);
       renderSpreadsheetSummary(art);
@@ -6830,6 +7154,14 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         }
       });
 
+      excelTable.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const target = e.target.closest('[contenteditable="true"]');
+          if (target) target.blur();
+        }
+      });
+
       excelTable.addEventListener('input', (e) => {
         const target = e.target;
         if (!target || !window.activeCanvasArtifact) return;
@@ -6848,15 +7180,27 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
         if (cellType === 'header' && !isNaN(colIdx)) {
           window.activeCanvasArtifact.headers[colIdx] = newText;
+          autoRecalculateSpreadsheet(window.activeCanvasArtifact);
+          syncSpreadsheetDomFromData(window.activeCanvasArtifact);
           recalculateSpreadsheetKpis(window.activeCanvasArtifact);
           renderSpreadsheetSummary(window.activeCanvasArtifact);
         } else if (cellType === 'cell' && !isNaN(rowIdx) && !isNaN(colIdx)) {
           if (window.activeCanvasArtifact.rows[rowIdx]) {
             window.activeCanvasArtifact.rows[rowIdx][colIdx] = newText;
+            autoRecalculateSpreadsheet(window.activeCanvasArtifact);
+            syncSpreadsheetDomFromData(window.activeCanvasArtifact);
             recalculateSpreadsheetKpis(window.activeCanvasArtifact);
             renderSpreadsheetSummary(window.activeCanvasArtifact);
           }
         }
+      });
+
+      excelTable.addEventListener('focusout', () => {
+        if (!window.activeCanvasArtifact || window.activeCanvasArtifact.type !== 'spreadsheet') return;
+        autoRecalculateSpreadsheet(window.activeCanvasArtifact);
+        syncSpreadsheetDomFromData(window.activeCanvasArtifact);
+        recalculateSpreadsheetKpis(window.activeCanvasArtifact);
+        renderSpreadsheetSummary(window.activeCanvasArtifact);
       });
     }
 

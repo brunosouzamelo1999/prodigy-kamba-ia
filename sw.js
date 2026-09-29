@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v54-compact-table-card';
+const CACHE_NAME = 'meu-kota-cache-v55-dynamic-formulas-charts';
 
 const PRECACHE_ASSETS = [
   './',
