@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v60-dynamic-smart-kpi-strip';
+const CACHE_NAME = 'meu-kota-cache-v61-exclude-summary-row-from-kpis';
 
 const PRECACHE_ASSETS = [
   './',

@@ -6181,7 +6181,18 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       const kpiStrip = document.getElementById('canvas-kpi-strip');
       if (!kpiStrip) return;
 
-      const totalRows = artifact.rows.length;
+      // Filtrar linhas de dados reais (ignorando linhas de rodapé/total para não duplicar somas)
+      const isSummaryRow = (r) => {
+        if (!r || !r.length) return false;
+        const cell0 = cleanMarkdownText(r[0] || '').toLowerCase();
+        const cell1 = cleanMarkdownText(r[1] || '').toLowerCase();
+        return /^(total|soma|acumulado|subtotal|m[eé]dia|resumo|saldo)/i.test(cell0) ||
+               /^(total|soma|acumulado|subtotal|m[eé]dia|resumo|saldo)/i.test(cell1) ||
+               cell0.includes('total acumulado') || cell1.includes('todos os registos');
+      };
+
+      const dataRows = artifact.rows.filter(r => !isSummaryRow(r));
+      const totalRows = dataRows.length;
       let inProgressCount = 0;
       let doneCount = 0;
       let overdueCount = 0;
@@ -6202,7 +6213,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         });
       }
 
-      artifact.rows.forEach(r => {
+      dataRows.forEach(r => {
         r.forEach((val, cIdx) => {
           if (cIdx >= numCols) return;
           const text = cleanMarkdownText(val || '').toLowerCase();
@@ -6395,12 +6406,22 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       const container = document.getElementById('canvas-summary-dashboard');
       if (!container || !artifact) return;
 
-      const total = artifact.rows.length;
+      const isSummaryRow = (r) => {
+        if (!r || !r.length) return false;
+        const cell0 = cleanMarkdownText(r[0] || '').toLowerCase();
+        const cell1 = cleanMarkdownText(r[1] || '').toLowerCase();
+        return /^(total|soma|acumulado|subtotal|m[eé]dia|resumo|saldo)/i.test(cell0) ||
+               /^(total|soma|acumulado|subtotal|m[eé]dia|resumo|saldo)/i.test(cell1) ||
+               cell0.includes('total acumulado') || cell1.includes('todos os registos');
+      };
+
+      const dataRows = artifact.rows.filter(r => !isSummaryRow(r));
+      const total = dataRows.length;
       let done = 0;
       let inProgress = 0;
       let overdue = 0;
 
-      artifact.rows.forEach(r => {
+      dataRows.forEach(r => {
         r.forEach(cell => {
           const txt = (cell || '').toString().toLowerCase();
           if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(txt) || txt.includes('conclu')) done++;
