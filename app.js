@@ -5434,21 +5434,21 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         return 'left';
       });
 
-      let tableHtml = '<div style="margin: 16px 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid;"><table style="width: 100%; border-collapse: collapse; font-size: 11px; line-height: 1.45; border: 1px solid #CBD5E1;"><thead><tr style="background: #F1F5F9;">';
+      // 1. Tabelas com formatação acadêmica e profissional limpa (Padrão Livro / Gemini)
+      let tableHtml = '<div style="margin: 14px 0; page-break-inside: avoid; break-inside: avoid;"><table style="width: auto; min-width: 50%; max-width: 100%; margin: 10px auto; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; border-top: 1.5px solid #000000; border-bottom: 1.5px solid #000000;"><thead><tr style="border-bottom: 1px solid #000000;">';
       headerCells.forEach((th, i) => {
-        const align = aligns[i] || 'left';
-        tableHtml += `<th style="padding: 7px 10px; font-weight: 700; color: #0F172A; border: 1px solid #CBD5E1; text-align: ${align};">${th}</th>`;
+        const align = aligns[i] || 'center';
+        tableHtml += `<th style="padding: 6px 14px; font-weight: 700; color: #000000; border: none; text-align: ${align};">${th}</th>`;
       });
       tableHtml += '</tr></thead><tbody>';
 
       for (let r = 2; r < rawLines.length; r++) {
         const rowCells = parseCells(rawLines[r]);
-        const bg = (r % 2 === 0) ? '#FFFFFF' : '#F8FAFC';
-        tableHtml += `<tr style="background: ${bg};">`;
+        tableHtml += '<tr>';
         headerCells.forEach((_, i) => {
           const cell = rowCells[i] !== undefined ? rowCells[i] : '';
-          const align = aligns[i] || 'left';
-          tableHtml += `<td style="padding: 6px 10px; color: #1E293B; border: 1px solid #E2E8F0; text-align: ${align};">${cell}</td>`;
+          const align = aligns[i] || 'center';
+          tableHtml += `<td style="padding: 5px 14px; color: #111827; border: none; text-align: ${align};">${cell}</td>`;
         });
         tableHtml += '</tr>';
       }
@@ -5459,67 +5459,67 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       return id;
     });
 
-    // 2. Blocos de Código (Code blocks)
+    // 2. Blocos de Código, Fórmulas e Matrizes (Clean Paper Styling)
     html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
-      const cleanLang = (lang || 'código').toUpperCase();
+      const cleanLang = (lang || '').toUpperCase();
       return `
-        <div style="margin: 14px 0; background: #0F172A; border-radius: 6px; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
-          <div style="background: #1E293B; color: #94A3B8; font-size: 10px; font-weight: 700; padding: 4px 10px; text-transform: uppercase;">${cleanLang}</div>
-          <pre style="margin: 0; padding: 10px 14px; color: #F8FAFC; font-family: 'Consolas', monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap;"><code>${code.trim()}</code></pre>
+        <div style="margin: 12px 0; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 4px; padding: 10px 14px; page-break-inside: avoid; break-inside: avoid;">
+          ${cleanLang ? `<div style="color: #64748B; font-size: 9.5px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;">${cleanLang}</div>` : ''}
+          <pre style="margin: 0; padding: 0; color: #0F172A; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap;"><code>${code.trim()}</code></pre>
         </div>
       `;
     });
 
     // 3. Código inline
-    html = html.replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #BE123C; padding: 1px 4px; border-radius: 3px; font-family: monospace; font-size: 11px;">$1</code>');
+    html = html.replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #0F172A; padding: 1px 4px; border-radius: 3px; font-family: ui-monospace, monospace; font-size: 11px;">$1</code>');
 
-    // 4. Seções Principais (I. AS DELÍCIAS..., CLÁUSULA PRIMEIRA..., ANEXO I..., etc.)
+    // 4. Seções Principais (I. ..., CLÁUSULA ..., CAPÍTULO ..., etc.)
     html = html.replace(/(?:^|\n)\s*(?:\*{2}|#{1,4})\s*(CLÁUSULA\s+[^\n*]+|ANEXO\s+[^\n*]+|CAPÍTULO\s+[^\n*]+|SEÇÃO\s+[^\n*]+|ARTIGO\s+[^\n*]+|[I|V|X]+\.\s+[^\n*]+)\s*(?:\*{2}|#{1,4})?/gi, (m, clause) => {
-      return `\n\n<div style="margin-top: 22px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #0F172A; page-break-inside: avoid; break-inside: avoid;"><span style="font-size: 13px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px;">${clause.trim()}</span></div>\n\n`;
+      return `\n\n<div style="margin-top: 20px; margin-bottom: 8px; page-break-inside: avoid; break-inside: avoid;"><span style="font-size: 13.5px; font-weight: 700; color: #000000; text-transform: uppercase;">${clause.trim()}</span></div>\n\n`;
     });
 
-    // 5. Marcadores de Assinatura formal ([Assinatura]) - Linha limpa e autêntica para caneta
+    // 5. Marcadores de Assinatura formal ([Assinatura]) - Linha limpa para caneta se solicitado
     html = html.replace(/\[Assinatura\]/gi, `
-      <div style="margin: 30px 0 6px 0; page-break-inside: avoid; break-inside: avoid;">
-        <div style="width: 240px; border-bottom: 1px solid #0F172A; margin-bottom: 4px;"></div>
+      <div style="margin: 28px 0 6px 0; page-break-inside: avoid; break-inside: avoid;">
+        <div style="width: 220px; border-bottom: 1px solid #000000; margin-bottom: 4px;"></div>
       </div>
     `);
 
-    // 6. Placeholders editáveis entre colchetes [Exemplo] (texto fluído, sem caixas quebradas ou espaçamentos deformados)
-    html = html.replace(/\[([^\]<\n]{2,80})\]/g, '<span style="color: #1D4ED8; font-weight: 600;">[$1]</span>');
+    // 6. Placeholders editáveis entre colchetes [Exemplo]
+    html = html.replace(/\[([^\]<\n]{2,80})\]/g, '<span style="color: #1E293B; font-weight: 600;">[$1]</span>');
 
-    // 7. Títulos e Subtítulos Markdown
-    html = html.replace(/^#### (.*$)/gm, '<h4 style="color: #1E293B; font-size: 12.5px; font-weight: 700; margin: 14px 0 4px 0; page-break-inside: avoid; break-inside: avoid;">$1</h4>');
-    html = html.replace(/^### (.*$)/gm, '<h3 style="color: #0F172A; font-size: 13.5px; font-weight: 700; margin: 16px 0 6px 0; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; page-break-inside: avoid; break-inside: avoid;">$1</h3>');
-    html = html.replace(/^## (.*$)/gm, '<h2 style="color: #0F172A; font-size: 15px; font-weight: 800; margin: 18px 0 8px 0; border-bottom: 1.5px solid #0F172A; padding-bottom: 4px; page-break-inside: avoid; break-inside: avoid;">$1</h2>');
-    html = html.replace(/^# (.*$)/gm, '<h1 style="color: #0F172A; font-size: 17px; font-weight: 800; margin: 20px 0 10px 0; border-bottom: 2px solid #0F172A; padding-bottom: 6px; page-break-inside: avoid; break-inside: avoid;">$1</h1>');
+    // 7. Títulos e Subtítulos Markdown (Padrão Acadêmico e Google Docs)
+    html = html.replace(/^#### (.*$)/gm, '<h4 style="color: #111827; font-size: 12.5px; font-weight: 700; margin: 12px 0 4px 0; page-break-inside: avoid; break-inside: avoid;">$1</h4>');
+    html = html.replace(/^### (.*$)/gm, '<h3 style="color: #000000; font-size: 13.5px; font-weight: 700; margin: 16px 0 6px 0; page-break-inside: avoid; break-inside: avoid;">$1</h3>');
+    html = html.replace(/^## (.*$)/gm, '<h2 style="color: #000000; font-size: 15.5px; font-weight: 700; margin: 22px 0 8px 0; page-break-inside: avoid; break-inside: avoid;">$1</h2>');
+    html = html.replace(/^# (.*$)/gm, '<h1 style="color: #000000; font-size: 19px; font-weight: 800; text-align: center; margin: 14px 0 18px 0; page-break-inside: avoid; break-inside: avoid;">$1</h1>');
 
     // 8. Divisores
     html = html.replace(/(?:^|\n)\s*---+\s*(?:\n|$)/g, '<hr style="border: none; border-top: 1px solid #E2E8F0; margin: 16px 0;">');
 
     // 9. Negrito e Itálico
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #0F172A; font-weight: 700;">$1</strong>');
-    html = html.replace(/\*([^*]+)\*/g, '<em style="color: #334155;">$1</em>');
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #000000; font-weight: 700;">$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em style="color: #1E293B;">$1</em>');
 
     // 10. Citações
-    html = html.replace(/^> (.*$)/gm, '<blockquote style="border-left: 3px solid #D81A2D; background: #F8FAFC; padding: 6px 12px; margin: 10px 0; color: #475569; font-style: italic; page-break-inside: avoid; break-inside: avoid;">$1</blockquote>');
+    html = html.replace(/^> (.*$)/gm, '<blockquote style="border-left: 3px solid #94A3B8; background: #F8FAFC; padding: 6px 12px; margin: 10px 0; color: #334155; font-style: italic; page-break-inside: avoid; break-inside: avoid;">$1</blockquote>');
 
-    // 11. Sub-itens: a), b), c)
-    html = html.replace(/^(\s*)([a-z]\))\s*(.*$)/gim, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px 18px;"><span style="color: #0F172A; font-weight: 700; font-size: 12px;">$2</span><span style="color: #1E293B; line-height: 1.5;">$3</span></div>');
+    // 11. Sub-itens: a), b), c) (Padrão Questões / Gemini)
+    html = html.replace(/^(\s*)([a-z]\))\s*(.*$)/gim, '<div style="margin: 6px 0 4px 0; page-break-inside: avoid; break-inside: avoid;"><strong style="color: #000000; font-size: 12.5px;">$2</strong> <span style="color: #111827; line-height: 1.55;">$3</span></div>');
 
     // 12. Itens com Marcadores
-    html = html.replace(/^[•\-\*] (.*$)/gm, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px 8px;"><span style="color: #D81A2D; font-size: 11px;">•</span><span style="color: #1E293B; line-height: 1.5;">$1</span></div>');
+    html = html.replace(/^[•\-\*] (.*$)/gm, '<div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px 6px;"><span style="color: #000000; font-size: 10px;">•</span><span style="color: #111827; line-height: 1.55;">$1</span></div>');
 
-    // 13. Parágrafos normais (alinhamento limpo à esquerda para não distorcer itens de cardápio, preços e cláusulas)
-    html = html.replace(/\n\n+/g, '</p><p style="margin: 8px 0; line-height: 1.6; color: #1E293B; text-align: left;">');
-    html = `<p style="margin: 8px 0; line-height: 1.6; color: #1E293B; text-align: left;">${html}</p>`;
+    // 13. Parágrafos normais (alinhamento limpo à esquerda)
+    html = html.replace(/\n\n+/g, '</p><p style="margin: 8px 0; line-height: 1.6; color: #111827; text-align: left;">');
+    html = `<p style="margin: 8px 0; line-height: 1.6; color: #111827; text-align: left;">${html}</p>`;
 
     // Restaurar tabelas do PDF com formatação interna
     pdfTables.forEach((tableHtml, index) => {
       const formattedTable = tableHtml
-        .replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #0F172A; font-weight: 700;">$1</strong>')
-        .replace(/\*([^*]+)\*/g, '<em style="color: #334155;">$1</em>')
-        .replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; color: #BE123C; padding: 1px 4px; border-radius: 3px; font-family: monospace; font-size: 11px;">$1</code>');
+        .replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #000000; font-weight: 700;">$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em style="color: #1E293B;">$1</em>')
+        .replace(/`([^`]+)`/g, '<code style="font-family: ui-monospace, monospace; font-size: 11px;">$1</code>');
       html = html.replace(`___PDF_TABLE_BLOCK_${index}___`, formattedTable);
     });
 
@@ -5543,68 +5543,42 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    showToast('Gerando documento comercial em padrão executivo...');
-
-    const activeUser = getActiveUser();
-    const userName = (activeUser && activeUser.name) ? activeUser.name : 'Bruno Souza';
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
-    const docId = `MK-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    showToast('Gerando documento em PDF...');
 
     const reportElement = document.createElement('div');
-    reportElement.className = 'executive-pdf-document';
+    reportElement.className = 'clean-academic-pdf-document';
     reportElement.style.width = '100%';
     reportElement.style.maxWidth = '794px';
     reportElement.style.margin = '0 auto';
     reportElement.style.background = '#FFFFFF';
-    reportElement.style.color = '#1E293B';
-    reportElement.style.padding = '32px 40px';
+    reportElement.style.color = '#111827';
+    reportElement.style.padding = '16px 20px';
     reportElement.style.boxSizing = 'border-box';
-    reportElement.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    reportElement.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
     reportElement.style.lineHeight = '1.6';
 
-    const safeTitle = title || 'Documento Comercial';
+    const safeTitle = (title || '').trim();
+    // Se o corpo já começar com um h1 correspondente ao título, não duplicar
+    const hasHeaderAlready = safeTitle && bodyHtml && bodyHtml.includes('<h1') && bodyHtml.toLowerCase().includes(safeTitle.toLowerCase().slice(0, 15));
 
     reportElement.innerHTML = `
-      <!-- Cabeçalho Comercial Discreto e Elegante (Padrão Google Docs / Word) -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1.5px solid #0F172A; margin-bottom: 22px; page-break-inside: avoid; break-inside: avoid;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <svg width="22" height="22" viewBox="0 0 100 100" style="flex-shrink: 0;">
-            <circle cx="50" cy="50" r="48" fill="#111827" stroke="#FFD100" stroke-width="4"/>
-            <path d="M50 2 A48 48 0 0 1 50 98 Z" fill="#D81A2D"/>
-            <circle cx="50" cy="50" r="28" fill="none" stroke="#FFD100" stroke-width="4" stroke-dasharray="8 4"/>
-            <polygon points="50,28 55,42 70,43 58,52 62,66 50,57 38,66 42,52 30,43 45,42" fill="#FFD100"/>
-          </svg>
-          <span style="font-size: 11px; font-weight: 800; color: #0F172A; letter-spacing: 0.5px;">MEU KOTA IA</span>
+      ${(!hasHeaderAlready && safeTitle) ? `
+        <div style="text-align: center; margin: 10px 0 24px 0; page-break-inside: avoid; break-inside: avoid;">
+          <h1 style="font-size: 21px; font-weight: 800; color: #000000; margin: 0; line-height: 1.35; letter-spacing: -0.2px;">
+            ${escapeHtml(safeTitle)}
+          </h1>
         </div>
-        <div style="font-size: 9.5px; color: #64748B;">
-          <span>Documento Comercial Oficial • ${formattedDate} • Ref: ${docId}</span>
-        </div>
-      </div>
+      ` : ''}
 
-      <!-- Título Oficial Centralizado do Documento -->
-      <div style="text-align: center; margin: 12px 0 24px 0; page-break-inside: avoid; break-inside: avoid;">
-        <h1 style="font-size: 18.5px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0; line-height: 1.35;">
-          ${escapeHtml(safeTitle)}
-        </h1>
-        <div style="width: 44px; height: 2.5px; background: #D81A2D; margin: 0 auto;"></div>
-      </div>
-
-      <!-- Corpo Limpo do Documento (Sem prompt, sem caixas de aviso, 100% comercial) -->
-      <div class="pdf-report-body" style="font-size: 12.5px; color: #1E293B; line-height: 1.6;">
+      <!-- Corpo Limpo e Puro do Documento (Apenas o conteúdo solicitado, sem carimbos ou marcas de empresa) -->
+      <div class="pdf-document-body" style="font-size: 12px; color: #111827; line-height: 1.6;">
         ${bodyHtml}
-      </div>
-
-      <!-- Rodapé Comercial Discreto -->
-      <div style="margin-top: 36px; padding-top: 10px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; color: #94A3B8; page-break-inside: avoid; break-inside: avoid;">
-        <span>Documento elaborado eletronicamente via Meu Kota IA</span>
-        <span>Padrão Comercial A4 • Pronto para Apresentação</span>
       </div>
     `;
 
     const opt = {
-      margin: [10, 10, 10, 10],
-      filename: filename || 'documento-comercial.pdf',
+      margin: [16, 16, 20, 16], // mm: [top, left, bottom, right]
+      filename: filename || 'documento.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
@@ -5619,8 +5593,24 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     };
 
     try {
-      await html2pdf().set(opt).from(reportElement).save();
-      showToast('Documento comercial em PDF baixado com sucesso!');
+      await html2pdf()
+        .set(opt)
+        .from(reportElement)
+        .toPdf()
+        .get('pdf')
+        .then(function(pdf) {
+          const totalPages = pdf.internal.getNumberOfPages();
+          for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(60, 60, 60);
+            // Numeração de página centralizada no rodapé (A4: 210mm x 297mm)
+            pdf.text(String(i), 105, 287, { align: 'center' });
+          }
+        })
+        .save();
+      showToast('Documento PDF exportado com sucesso!');
     } catch (err) {
       console.error('[PDF Generation Error]', err);
       showToast('Erro ao compilar o PDF. Tente novamente.');
@@ -7715,21 +7705,21 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     }
 
     // 6B. EXPORTAÇÃO LIMPA DO DOCUMENTO A4 PARA PDF (ABRE A JANELA DE IMPRESSÃO COM PRÉ-VISUALIZAÇÃO)
-    function exportDocumentToPdf() {
+    async function exportDocumentToPdf() {
       const sheet = document.getElementById('canvas-a4-sheet');
       if (!sheet) return;
-      showToast('Abrindo pré-visualização de impressão em PDF...');
+
+      const titleInput = document.getElementById('canvas-file-name');
+      const filename = (titleInput && titleInput.value ? titleInput.value : 'documento.pdf').replace(/\.[^.]+$/, '') + '.pdf';
 
       const clone = sheet.cloneNode(true);
       clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
 
-      const html = `
-        <div class="clean-print-report" style="width: 100%; max-width: 100%; background: #FFFFFF; color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 10px;">
-          ${clone.innerHTML}
-        </div>
-      `;
-
-      triggerCleanPrintPreview(html);
+      await generateExecutivePdfDoc({
+        title: '',
+        bodyHtml: clone.innerHTML,
+        filename: filename
+      });
     }
 
     // 7. EXPORTAÇÃO DE CÓDIGO

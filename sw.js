@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v61-exclude-summary-row-from-kpis';
+const CACHE_NAME = 'meu-kota-cache-v62-clean-academic-pdf-gemini-standard';
 
 const PRECACHE_ASSETS = [
   './',
