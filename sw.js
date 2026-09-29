@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v59-real-chart-export-targeted';
+const CACHE_NAME = 'meu-kota-cache-v60-dynamic-smart-kpi-strip';
 
 const PRECACHE_ASSETS = [
   './',

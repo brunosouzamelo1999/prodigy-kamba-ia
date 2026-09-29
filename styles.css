@@ -8463,6 +8463,10 @@ html.is-offline #kota-offline-screen {
   color: #FCD34D;
 }
 
+.canvas-kpi-card.highlight-blue .kpi-number {
+  color: #38BDF8;
+}
+
 .canvas-grid-toolbar {
   display: flex;
   justify-content: space-between;

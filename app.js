@@ -6175,27 +6175,39 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    // 1. RECALCULAR KPIS: TOTAL TASKS, IN PROGRESS, DONE, OVERDUE + SOMA TOTAL
+    // 1. RECALCULAR KPIS INTELIGENTES E CONTEXTUAIS DA PLANILHA
     function recalculateSpreadsheetKpis(artifact) {
       if (!artifact) return;
-      const tasksEl = document.getElementById('kpi-val-tasks');
-      const progressEl = document.getElementById('kpi-val-progress');
-      const doneEl = document.getElementById('kpi-val-done');
-      const overdueEl = document.getElementById('kpi-val-overdue');
-      const sumEl = document.getElementById('kpi-val-sum');
+      const kpiStrip = document.getElementById('canvas-kpi-strip');
+      if (!kpiStrip) return;
 
-      const totalTasks = artifact.rows.length;
+      const totalRows = artifact.rows.length;
       let inProgressCount = 0;
       let doneCount = 0;
       let overdueCount = 0;
 
       const numCols = artifact.headers.length;
-      const colNumericSums = new Array(numCols).fill(0);
-      const colNumericCounts = new Array(numCols).fill(0);
+      const colStats = [];
+
+      for (let c = 0; c < numCols; c++) {
+        colStats.push({
+          colIndex: c,
+          header: cleanMarkdownText(artifact.headers[c] || `Coluna ${c + 1}`),
+          count: 0,
+          sum: 0,
+          min: Infinity,
+          max: -Infinity,
+          sampleFormatted: '',
+          priorityScore: 0
+        });
+      }
 
       artifact.rows.forEach(r => {
         r.forEach((val, cIdx) => {
+          if (cIdx >= numCols) return;
           const text = cleanMarkdownText(val || '').toLowerCase();
+
+          // Contagem de status de tarefas
           if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(text) || text.includes('conclu')) {
             doneCount++;
           } else if (/^(in progress|em andamento|pendente|ativo|doing|execu[cç][aã]o)$/.test(text) || text.includes('andamento') || text.includes('progr')) {
@@ -6204,41 +6216,137 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             overdueCount++;
           }
 
+          // Estatísticas numéricas
           const numVal = parseSpreadsheetNumber(val);
           if (!isNaN(numVal) && isFinite(numVal) && text.length > 0) {
-            colNumericSums[cIdx] += numVal;
-            colNumericCounts[cIdx]++;
+            const stat = colStats[cIdx];
+            stat.count++;
+            stat.sum += numVal;
+            if (numVal < stat.min) stat.min = numVal;
+            if (numVal > stat.max) stat.max = numVal;
+            if (!stat.sampleFormatted && val) {
+              stat.sampleFormatted = String(val).trim();
+            }
           }
         });
       });
 
-      if (tasksEl) tasksEl.textContent = totalTasks;
-      if (progressEl) progressEl.textContent = inProgressCount;
-      if (doneEl) doneEl.textContent = doneCount;
-      if (overdueEl) overdueEl.textContent = overdueCount;
+      // Calcular relevância contextual de cada coluna numérica
+      const numericCols = colStats.filter(s => s.count > 0);
+      numericCols.forEach(stat => {
+        stat.avg = stat.count > 0 ? (stat.sum / stat.count) : 0;
+        const hLow = stat.header.toLowerCase();
 
-      // Melhor coluna numérica para soma
-      let bestNumericCol = -1;
-      let maxNumCount = 0;
-      colNumericCounts.forEach((count, cIdx) => {
-        if (count > maxNumCount) {
-          maxNumCount = count;
-          bestNumericCol = cIdx;
+        // Priorizar colunas financeiras ou de métrica principal
+        if (/total|valor|montante|receita|faturamento|subtotal|saldo|pre[cç]o|lucro|venda/.test(hLow)) {
+          stat.priorityScore += 50;
+        } else if (/quant|qtd|itens|volume|unidades/.test(hLow)) {
+          stat.priorityScore += 30;
         }
+        // Se tiver moeda (Kz, R$, $, €, etc.)
+        if (/kz|r\$|\$|€|usd|eur|aoa/.test(hLow) || /kz|r\$|\$|€|aoa/i.test(stat.sampleFormatted)) {
+          stat.priorityScore += 40;
+        }
+        // Mais linhas preenchidas ganham pontos
+        stat.priorityScore += (stat.count / Math.max(totalRows, 1)) * 20;
       });
 
-      if (sumEl) {
-        if (bestNumericCol >= 0 && maxNumCount > 0) {
-          const sum = colNumericSums[bestNumericCol];
-          const headerName = artifact.headers[bestNumericCol] || 'Total';
-          let sampleStr = '';
-          artifact.rows.forEach(r => { if (!sampleStr && r[bestNumericCol]) sampleStr = r[bestNumericCol]; });
-          sumEl.textContent = formatSpreadsheetNumber(sum, sampleStr || headerName);
-          sumEl.title = `Soma acumulada da coluna "${headerName}"`;
-        } else {
-          sumEl.textContent = '-';
+      // Ordenar colunas numéricas pela maior relevância
+      numericCols.sort((a, b) => b.priorityScore - a.priorityScore);
+
+      const hasTaskStatuses = (doneCount + inProgressCount + overdueCount) > 0;
+      let cardsHtml = '';
+
+      if (hasTaskStatuses) {
+        // MODO 1: GESTOR DE TAREFAS / PROJETOS (QUANDO HÁ STATUS REAIS)
+        cardsHtml += `
+          <div class="canvas-kpi-card" title="Total de tarefas registradas na planilha">
+            <span class="kpi-title">TOTAL DE TAREFAS</span>
+            <span class="kpi-number" id="kpi-val-tasks">${totalRows}</span>
+          </div>
+          <div class="canvas-kpi-card highlight-amber" title="Tarefas em andamento ou pendentes">
+            <span class="kpi-title">EM ANDAMENTO</span>
+            <span class="kpi-number" id="kpi-val-progress">${inProgressCount}</span>
+          </div>
+          <div class="canvas-kpi-card highlight-green" title="Tarefas concluídas ou pagas">
+            <span class="kpi-title">CONCLUÍDAS</span>
+            <span class="kpi-number" id="kpi-val-done">${doneCount}</span>
+          </div>
+          <div class="canvas-kpi-card highlight-red" title="Tarefas atrasadas ou urgentes">
+            <span class="kpi-title">ATRASADAS</span>
+            <span class="kpi-number" id="kpi-val-overdue">${overdueCount}</span>
+          </div>
+        `;
+
+        if (numericCols.length > 0) {
+          const mainNum = numericCols[0];
+          const fmtSum = formatSpreadsheetNumber(mainNum.sum, mainNum.sampleFormatted || mainNum.header);
+          const shortHeader = mainNum.header.length > 15 ? (mainNum.header.slice(0, 14) + '…') : mainNum.header;
+          cardsHtml += `
+            <div class="canvas-kpi-card highlight-gold" title="Soma acumulada da coluna ${escapeHtml(mainNum.header)}">
+              <span class="kpi-title">SOMA (${escapeHtml(shortHeader.toUpperCase())})</span>
+              <span class="kpi-number" id="kpi-val-sum">${escapeHtml(fmtSum)}</span>
+            </div>
+          `;
+        }
+      } else {
+        // MODO 2: PLANILHA FINANCEIRA / VENDAS / COMERCIAL / GERAL (SEM STATUS DE TAREFA)
+        // Card 1: Total de Linhas / Registros
+        cardsHtml += `
+          <div class="canvas-kpi-card" title="Total de itens registrados na planilha">
+            <span class="kpi-title">REGISTROS</span>
+            <span class="kpi-number" id="kpi-val-tasks">${totalRows} itens</span>
+          </div>
+        `;
+
+        if (numericCols.length > 0) {
+          const primary = numericCols[0];
+          const fmtSum = formatSpreadsheetNumber(primary.sum, primary.sampleFormatted || primary.header);
+          const shortHead1 = primary.header.length > 14 ? (primary.header.slice(0, 13) + '…') : primary.header;
+
+          // Card 2: Soma da Métrica Principal com o NOME EXATO da coluna
+          cardsHtml += `
+            <div class="canvas-kpi-card highlight-gold" title="Soma acumulada da coluna ${escapeHtml(primary.header)}">
+              <span class="kpi-title">SOMA (${escapeHtml(shortHead1.toUpperCase())})</span>
+              <span class="kpi-number" id="kpi-val-sum">${escapeHtml(fmtSum)}</span>
+            </div>
+          `;
+
+          // Card 3: Se houver uma segunda coluna numérica (ex: Quantidade e Preço Total)
+          if (numericCols.length > 1) {
+            const secondary = numericCols[1];
+            const fmtSum2 = formatSpreadsheetNumber(secondary.sum, secondary.sampleFormatted || secondary.header);
+            const shortHead2 = secondary.header.length > 14 ? (secondary.header.slice(0, 13) + '…') : secondary.header;
+
+            cardsHtml += `
+              <div class="canvas-kpi-card highlight-blue" title="Soma acumulada da coluna ${escapeHtml(secondary.header)}">
+                <span class="kpi-title">SOMA (${escapeHtml(shortHead2.toUpperCase())})</span>
+                <span class="kpi-number">${escapeHtml(fmtSum2)}</span>
+              </div>
+            `;
+          }
+
+          // Card 4: Média da Métrica Principal
+          const fmtAvg = formatSpreadsheetNumber(primary.avg, primary.sampleFormatted || primary.header);
+          cardsHtml += `
+            <div class="canvas-kpi-card highlight-green" title="Média calculada da coluna ${escapeHtml(primary.header)}">
+              <span class="kpi-title">MÉDIA (${escapeHtml(shortHead1.toUpperCase())})</span>
+              <span class="kpi-number">${escapeHtml(fmtAvg)}</span>
+            </div>
+          `;
+
+          // Card 5: Maior Registro (Máximo)
+          const fmtMax = formatSpreadsheetNumber(primary.max, primary.sampleFormatted || primary.header);
+          cardsHtml += `
+            <div class="canvas-kpi-card highlight-amber" title="Maior valor registrado na coluna ${escapeHtml(primary.header)}">
+              <span class="kpi-title">MAIOR REGISTRO</span>
+              <span class="kpi-number">${escapeHtml(fmtMax)}</span>
+            </div>
+          `;
         }
       }
+
+      kpiStrip.innerHTML = cardsHtml;
     }
 
     // 2. RENDERIZAR GRELHA DA PLANILHA COM CORES CONDICIONAIS
