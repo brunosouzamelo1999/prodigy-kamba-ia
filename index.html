@@ -282,7 +282,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   
   <!-- Estilos Globais -->
-  <link rel="stylesheet" href="styles.css?v=20260929_v44_no_kpi_print">
+  <link rel="stylesheet" href="styles.css?v=20260929_v53_code_header">
 </head>
 <body style="background-color: #0F1117; color: #ECECEC; margin: 0; min-height: 100vh;">
 
@@ -1630,17 +1630,38 @@
             <!-- Barra de Ações da Planilha -->
             <div class="canvas-grid-toolbar">
               <div class="toolbar-left">
-                <button type="button" id="btn-grid-add-row" class="canvas-toolbar-btn">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  <span>+ Linha</span>
+                <!-- Adicionar Linha -->
+                <button type="button" id="btn-grid-add-row" class="canvas-toolbar-btn" title="Adicionar nova linha (+ Linha)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Linha</span>
                 </button>
-                <button type="button" id="btn-grid-add-col" class="canvas-toolbar-btn">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  <span>+ Coluna</span>
+                <!-- Excluir Linha -->
+                <button type="button" id="btn-grid-del-row" class="canvas-toolbar-btn btn-toolbar-del" title="Excluir linha selecionada ou última linha (- Linha)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Linha</span>
                 </button>
-                <button type="button" id="btn-grid-clear" class="canvas-toolbar-btn btn-danger-soft">
-                  <span>Limpar</span>
+
+                <div class="canvas-toolbar-sep"></div>
+
+                <!-- Adicionar Coluna -->
+                <button type="button" id="btn-grid-add-col" class="canvas-toolbar-btn" title="Adicionar nova coluna (+ Coluna)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Coluna</span>
                 </button>
+                <!-- Excluir Coluna -->
+                <button type="button" id="btn-grid-del-col" class="canvas-toolbar-btn btn-toolbar-del" title="Excluir coluna selecionada ou última coluna (- Coluna)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Coluna</span>
+                </button>
+
+                <div class="canvas-toolbar-sep"></div>
+
+                <!-- Desfazer (Ctrl+Z) -->
+                <button type="button" id="btn-grid-undo" class="canvas-toolbar-btn btn-toolbar-undo disabled" title="Desfazer última alteração (Ctrl+Z)" disabled>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                  <span>Desfazer</span>
+                </button>
+
                 <div class="canvas-toolbar-sep"></div>
                 <!-- Botão de Seta para Expandir / Recolher Métricas da Planilha -->
                 <button type="button" id="btn-toggle-kpi-strip" class="canvas-toolbar-btn btn-toggle-kpi" title="Expandir ou recolher resumo de métricas da planilha">
@@ -1814,7 +1835,7 @@
               <textarea id="canvas-code-textarea" class="canvas-code-textarea" spellcheck="false" placeholder="Digite ou cole código HTML, CSS e JavaScript aqui..."></textarea>
             </div>
             <div class="canvas-code-preview-wrap" id="canvas-code-preview-wrap" style="display: none;">
-              <iframe id="canvas-preview-iframe" class="canvas-preview-iframe" sandbox="allow-scripts allow-modals"></iframe>
+              <iframe id="canvas-preview-iframe" class="canvas-preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
             </div>
           </div>
 
@@ -2658,6 +2679,6 @@
   <script src="libs/xlsx.full.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260929_v44_no_kpi_print"></script>
+  <script src="app.js?v=20260929_v53_code_header"></script>
 </body>
 </html>

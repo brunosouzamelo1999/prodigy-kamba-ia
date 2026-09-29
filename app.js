@@ -3050,6 +3050,15 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       const dataRows = art.rows.map(r => `| ${r.join(' | ')} |`).join('\n');
       const tableMd = `${headerRow}\n${sepRow}\n${dataRows}`;
       promptToSend = `${text}\n\n[CONTEXTO ATIVO DO CANVAS - PLANILHA "${art.fileName || art.title}":\n${tableMd}\n(Instrução: Se a resposta envolver editar, recalcular ou adicionar dados a esta planilha, forneça a tabela completa e atualizada em formato Markdown para sincronização no Canvas)]`;
+    } else if (typeof window !== 'undefined' && window.activeCanvasArtifact && window.activeCanvasArtifact.type === 'code') {
+      const art = window.activeCanvasArtifact;
+      const codeTextareaEl = document.getElementById('canvas-code-textarea');
+      const currentCode = codeTextareaEl ? codeTextareaEl.value.trim() : '';
+      if (currentCode) {
+        promptToSend = `${text}\n\n[CONTEXTO ATIVO DO CANVAS - ARQUIVO "${art.fileName || 'index.html'}":\n\`\`\`html\n${currentCode.slice(0, 3500)}\n\`\`\`\n(Instrução fundamental: Você está em modo de Edição em Dupla no Canvas. Responda com a explicação e forneça o código completo e funcional dentro de um bloco Markdown \`\`\`html ... \`\`\` para que seja sincronizado e visualizado em tempo real na Pré-visualização ao Vivo do Canvas ao lado)]`;
+      } else {
+        promptToSend = `${text}\n\n[CONTEXTO ATIVO DO CANVAS - MODO SANDBOX DE CÓDIGO ("${art.fileName || 'index.html'}"):\n(Instrução fundamental: Você está em modo de Edição em Dupla no Canvas. Forneça o código completo e funcional dentro de um bloco Markdown \`\`\`html ... \`\`\` para que seja sincronizado e renderizado imediatamente na Pré-visualização ao Vivo do Canvas ao lado)]`;
+      }
     }
 
     let finalAiResponseText = '';
@@ -3139,6 +3148,21 @@ Para que o **Meu Kota IA** responda a perguntas em tempo real (como horários, c
       chat.messages.push({ role: 'ai', content: finalAiResponseText });
       saveChatsToStorage();
       renderHistory();
+
+      // Sincronização automática para Edição em Dupla no Canvas (Código / Web App)
+      if (typeof window !== 'undefined' && window.activeCanvasArtifact && window.activeCanvasArtifact.type === 'code') {
+        const codeMatch = finalAiResponseText.match(/```(?:html|xml|svg|javascript|js|css)?\s*\n([\s\S]*?)```/i) || finalAiResponseText.match(/```([\s\S]*?)```/);
+        if (codeMatch && codeMatch[1]) {
+          const extractedCode = codeMatch[1].trim();
+          const textareaEl = document.getElementById('canvas-code-textarea');
+          if (textareaEl) {
+            textareaEl.value = extractedCode;
+            if (window.updateCodeGutter) window.updateCodeGutter();
+            if (window.updateCodeLivePreview) window.updateCodeLivePreview();
+            showToast('Código sincronizado e atualizado na Pré-visualização!');
+          }
+        }
+      }
 
       // Salvaguarda: se a resposta da IA de texto disser que gerou uma imagem, acionar a criação visual
       const lowerResp = finalAiResponseText.toLowerCase();
@@ -3490,6 +3514,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 - NOTAÇÃO MATEMÁTICA E CIENTÍFICA CLARA E HUMANA: NUNCA use código LaTeX bruto nem símbolos de cifrão no meio do texto (como $3 \times 3$, $\det(R)$, $T_1 \cdot T_2 \neq T_2 \cdot T_1$, \\quad, \\times, \\cdot). Escreva SEMPRE em linguagem humana natural, limpa e legível para qualquer pessoa comum (ex: escreva "3x3" ou "3 × 3", "T1 · T2 ≠ T2 · T1", "det(R) = +1", "R^T · R = I", "[0 0 0 1]"). Todas as equações, matrizes e expressões devem ser compreensíveis de imediato sem códigos de programação matemática.
 - GERAÇÃO DE DOCUMENTOS E RELATÓRIOS EM PADRÃO COMERCIAL (CARDÁPIOS, CONTRATOS, PROPOSTAS, RELATÓRIOS): Quando o usuário solicitar a elaboração de um cardápio, contrato, proposta, orçamento, relatório, plano de negócios ou minuta, elabore diretamente o documento completo em padrão comercial impecável, pronto para apresentação ou impressão. Inicie imediatamente com o título formal do documento (ex: **CASA DE PASTO E LANCHONETE... — CARDÁPIO OFICIAL** ou **CONTRATO DE...**), sem preâmbulos protocolares nem notas de encerramento sobre botões da interface, mantendo o conteúdo 100% limpo e executivo.
 - FORMATAÇÃO DE TABELAS VISUAIS: Sempre que o usuário solicitar projeções financeiras, comparativos, cardápios com colunas de preços, cronogramas, custos operacionais ou dados estruturados, utilize SEMPRE tabelas no padrão oficial Markdown (| Coluna 1 | Coluna 2 | ... | :--- | :---: |), pois o Meu Kota renderiza automaticamente tabelas visuais interativas, elegantes e com rolagem responsiva no chat e no PDF.
+- LINKS DE CONVERSÃO E CHAMADAS PARA AÇÃO (CTA) EM SITES / LANDING PAGES: Ao criar landing pages, sites ou botões de contato, utilize SEMPRE os links universais modernos recomendados:
+  * WhatsApp: utilize SEMPRE o link universal oficial "https://wa.me/DDI+NUMERO?text=MENSAGEM" (Ex: "https://wa.me/5592999845217?text=Olá..."). NUNCA use a API legada "api.whatsapp.com/send", pois ela é bloqueada por segurança CORS no navegador.
+  * Redes Sociais: utilize URLs diretas completas ("https://instagram.com/perfil", "https://t.me/usuario", "https://facebook.com/pagina", "https://x.com/usuario").
+  * Sempre inclua target="_blank" e rel="noopener noreferrer" em links externos.
 - BLINDAGEM DE IDENTIDADE WHITE-LABEL: Você é estritamente o "Meu Kota IA". NUNCA mencione "Google", "Gemini", "Google Search", "AI Studio" ou provedores externos. Ao realizar pesquisas ao vivo na web (clima, eventos, notícias ou cotações), JAMAIS diga "pesquisei no Google" e JAMAIS inclua links, URLs externas ou listas de fontes ao final da resposta. Responda de forma natural, direta e soberana, integrando as informações com a autoridade e sabedoria de um Kota.
 - IDIOMA: Responda em português formal impecável, fluido, respeitoso e acolhedor, refletindo a dignidade de um Kota.`
       }]
@@ -4392,16 +4420,16 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     codeBlocks.forEach((item, index) => {
       const isWebCode = ['html', 'js', 'javascript', 'css', 'xml', 'svg'].includes(item.lang);
       const testBtnHtml = isWebCode 
-        ? `<button type="button" class="btn-open-code-canvas" title="Abrir no Canvas e Testar ao Vivo">` +
+        ? `<button type="button" class="btn-open-code-canvas" title="Abrir e Testar com Meu Kota">` +
             `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>` +
-            `<span>Testar no Canvas</span>` +
+            `<span>Testar com Meu Kota</span>` +
           `</button>`
         : '';
 
       const codeHtml = `<div class="code-block-wrapper" data-lang="${item.lang}">` +
         `<div class="code-block-header">` +
           `<span class="code-lang-tag">${item.lang}</span>` +
-          `<div style="display:flex;align-items:center;gap:6px;">` +
+          `<div class="code-block-actions">` +
             testBtnHtml +
             `<button type="button" class="btn-copy-code" title="Copiar código para a área de transferência">` +
               `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>` +
@@ -5811,8 +5839,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
     // Barra de ferramentas e abas da grelha
     const btnAddRow = document.getElementById('btn-grid-add-row');
+    const btnDelRow = document.getElementById('btn-grid-del-row');
     const btnAddCol = document.getElementById('btn-grid-add-col');
-    const btnGridClear = document.getElementById('btn-grid-clear');
+    const btnDelCol = document.getElementById('btn-grid-del-col');
+    const btnGridUndo = document.getElementById('btn-grid-undo');
     const btnToggleKpiStrip = document.getElementById('btn-toggle-kpi-strip');
     const kpiStrip = document.getElementById('canvas-kpi-strip');
     const btnAddSheetTab = document.getElementById('btn-add-sheet-tab');
@@ -6176,7 +6206,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           showToast('Erro ao abrir diálogo de impressão: ' + e.message);
           cleanup();
         }
-      }, 150);
+      }, 400);
 
       // Fallback estendido de segurança caso o navegador não emita o evento afterprint
       setTimeout(cleanup, 60000);
@@ -6256,41 +6286,13 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
 
       const html = `
-        <div class="clean-print-report" style="width: 100%; max-width: 100%; background: #FFFFFF; color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 10px;">
+        <div class="clean-print-report" style="width: 100%; max-width: 100%; background: #FFFFFF; color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 20px;">
 
-          <!-- CABEÇALHO EXECUTIVO LIMPO (SEM BOTÕES OU CHROME DO SISTEMA) -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 14px; border-bottom: 2px solid #0F172A; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 40px; height: 40px; border-radius: 8px; background: #0F172A; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFD100; flex-shrink: 0;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              </div>
-              <div>
-                <div style="font-size: 15px; font-weight: 800; color: #0F172A; letter-spacing: 0.5px;">MEU KOTA IA — SISTEMAS INTELIGENTES</div>
-                <div style="font-size: 11px; color: #64748B; font-weight: 500;">Relatório de Acompanhamento Executivo & Gestão de Entregas</div>
-              </div>
-            </div>
-            <div style="text-align: right; font-size: 10.5px; color: #475569; line-height: 1.5;">
-              <div><strong>Data de Emissão:</strong> ${formattedDate}</div>
-              <div><strong>Ref.:</strong> ${docRef}</div>
-              <div><span style="display: inline-block; background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; padding: 1px 7px; border-radius: 4px; font-weight: 700; font-size: 9.5px; margin-top: 3px;">CONFIDENCIAL • HOMOLOGADO</span></div>
-            </div>
-          </div>
-
-          <!-- TÍTULO OFICIAL DO ARQUIVO -->
-          <div style="margin-bottom: 20px;">
-            <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px;">
-              ${escapeHtml(cleanTitle)}
-            </h1>
-            <div style="font-size: 11.5px; color: #64748B;">
-              Tabela estruturada contendo ${totalTasks} itens registrados para acompanhamento e auditoria comercial.
-            </div>
-          </div>
-
-          <!-- TABELA DE DADOS ULTRA-NÍTIDA (DIRETO NO DOCUMENTO, SEM CARTÕES DE RESUMO) -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 11px; border: 1.5px solid #0F172A;">
+          <!-- APENAS A TABELA DE DADOS — SEM CABEÇALHO, SEM TÍTULO, SEM RODAPÉ -->
+          <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
             <thead>
               <tr style="background: #0F172A; color: #FFFFFF;">
-                ${headers.map(h => `<th style="padding: 10px 10px; text-align: left; font-weight: 700; font-size: 10.5px; letter-spacing: 0.3px; border: 1px solid #0F172A; color: #FFFFFF; background: #0F172A;">${escapeHtml(cleanMarkdownText(h))}</th>`).join('')}
+                ${headers.map(h => `<th style="padding: 10px 12px; text-align: left; font-weight: 700; font-size: 11px; border: 1px solid #0F172A; color: #FFFFFF; background: #0F172A;">${escapeHtml(cleanMarkdownText(h))}</th>`).join('')}
               </tr>
             </thead>
             <tbody>
@@ -6310,7 +6312,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
                     } else if (statusClass === 'overdue') {
                       content = `<span style="display:inline-block;background:#FEE2E2;color:#991B1B;border:1px solid #F87171;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">${content}</span>`;
                     }
-                    return `<td style="padding: 9px 10px; border: 1px solid #CBD5E1; color: #1E293B; vertical-align: top; line-height: 1.45;">${content}</td>`;
+                    return `<td style="padding: 9px 12px; border: 1px solid #CBD5E1; color: #1E293B; vertical-align: top; line-height: 1.45;">${content}</td>`;
                   }).join('')}
                 </tr>
               `;
@@ -6318,27 +6320,6 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             </tbody>
           </table>
 
-          <!-- SEÇÃO FORMAL DE HOMOLOGAÇÃO E ASSINATURAS -->
-          <div style="margin-top: 36px; padding-top: 18px; border-top: 1.5px dashed #CBD5E1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; page-break-inside: avoid; break-inside: avoid;">
-            <div style="text-align: center;">
-              <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
-              <div style="font-size: 12px; font-weight: 700; color: #0F172A;">Bruno Souza</div>
-              <div style="font-size: 10px; color: #64748B;">Diretoria Executiva / Gestor de Projeto</div>
-              <div style="font-size: 8.5px; color: #10B981; font-weight: 700; margin-top: 3px;">ASSINADO ELETRONICAMENTE</div>
-            </div>
-            <div style="text-align: center;">
-              <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
-              <div style="font-size: 12px; font-weight: 700; color: #0F172A;">Cliente / Responsável Técnico</div>
-              <div style="font-size: 10px; color: #64748B;">Homologação & Aprovação Formal</div>
-              <div style="font-size: 8.5px; color: #64748B; font-weight: 600; margin-top: 3px;">VALIDAÇÃO COMERCIAL</div>
-            </div>
-          </div>
-
-          <!-- RODAPÉ FINAL DISCRETO -->
-          <div style="margin-top: 26px; padding-top: 8px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #94A3B8;">
-            <span>Meu Kota IA • Sistema de Inteligência Conversacional Corporativa</span>
-            <span>https://meu-kota-ia.web.app • Documento Homologado</span>
-          </div>
         </div>
       `;
 
@@ -6397,10 +6378,121 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       codeGutter.innerHTML = numbersHtml;
     }
 
-    // 10. ATUALIZAR PREVIEW AO VIVO NO IFRAME
+    // 10. ATUALIZAR PREVIEW AO VIVO NO IFRAME (COM BLINDAGEM DE NAVEGAÇÃO INTERNA)
     function updateCodeLivePreview() {
       if (!previewIframe || !codeTextarea) return;
-      previewIframe.srcdoc = codeTextarea.value || '';
+      let rawHtml = codeTextarea.value || '';
+      if (!rawHtml.trim()) {
+        previewIframe.srcdoc = '';
+        return;
+      }
+
+      // Script de blindagem e isolamento:
+      // Impede que âncoras como #problema, #solucao, #, / ou links relativos
+      // recarreguem ou dupliquem o Meu Kota IA dentro do iframe de pré-visualização.
+      const navigationShieldScript = `
+<script id="meu-kota-sandbox-shield">
+(function() {
+  document.addEventListener('click', function(e) {
+    var anchor = e.target.closest('a');
+    if (!anchor) return;
+    var href = anchor.getAttribute('href');
+    if (!href) return;
+    
+    // 1. Âncoras internas (#problema, #solucao, #metodo, etc.)
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      if (href === '#' || href === '#!') return;
+      try {
+        var targetId = href.slice(1);
+        var targetEl = document.getElementById(targetId) || document.querySelector(href);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (err) {}
+      return;
+    }
+    
+    // 2. Links relativos vazios ou que apontem para a raiz (evita navegar para Meu Kota)
+    if (href === '/' || href === './' || href === 'index.html' || href === '' || href.startsWith('/')) {
+      e.preventDefault();
+      return;
+    }
+    
+    // 3. Links externos de conversão (WhatsApp, redes sociais, telefones, etc.)
+    if (/^(https?:|\\/\\/|tel:|mailto:|wa\\.me)/i.test(href)) {
+      e.preventDefault();
+      var targetUrl = href;
+      // Normalização inteligente e anti-bloqueio de WhatsApp:
+      // Evita o redirecionamento para api.whatsapp.com (que é bloqueado por adblockers e antivírus com ERR_BLOCKED_BY_RESPONSE)
+      if (targetUrl.includes('api.whatsapp.com') || targetUrl.includes('wa.me')) {
+        try {
+          var phone = '';
+          var msg = '';
+          if (targetUrl.includes('wa.me/')) {
+            var parts = targetUrl.split('wa.me/')[1] || '';
+            var phoneAndQuery = parts.split('?');
+            phone = (phoneAndQuery[0] || '').replace(/[^0-9]/g, '');
+            if (phoneAndQuery[1]) {
+              var params = new URLSearchParams(phoneAndQuery[1]);
+              msg = params.get('text') || '';
+            }
+          } else {
+            var u = new URL(targetUrl, 'https://api.whatsapp.com');
+            phone = (u.searchParams.get('phone') || '').replace(/[^0-9]/g, '');
+            msg = u.searchParams.get('text') || '';
+          }
+          if (phone) {
+            var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (!isMobile) {
+              // No computador (Windows/Mac/Linux): abrir diretamente o WhatsApp Web oficial
+              targetUrl = 'https://web.whatsapp.com/send?phone=' + phone + (msg ? '&text=' + encodeURIComponent(msg) : '');
+            } else {
+              // No telemóvel (Android/iOS): abrir diretamente o app do WhatsApp
+              targetUrl = 'https://wa.me/' + phone + (msg ? '?text=' + encodeURIComponent(msg) : '');
+            }
+          }
+        } catch(err) {}
+      }
+      // Delega a abertura do link para a janela raiz (top-level) via postMessage
+      // Isso garante que a nova aba seja aberta 100% fora do sandbox do iframe,
+      // eliminando completamente o erro ERR_BLOCKED_BY_RESPONSE
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'meu_kota_open_external', url: targetUrl }, '*');
+          return;
+        }
+      } catch(postErr) {}
+      var tempA = document.createElement('a');
+      tempA.href = targetUrl;
+      tempA.target = '_blank';
+      tempA.rel = 'noopener noreferrer';
+      document.body.appendChild(tempA);
+      tempA.click();
+      tempA.remove();
+      return;
+    }
+  }, true);
+
+  // Evita que formulários vazios deem reload na tela
+  document.addEventListener('submit', function(e) {
+    var form = e.target;
+    var action = form ? form.getAttribute('action') : null;
+    if (!action || action === '#' || action === '/' || action === './') {
+      e.preventDefault();
+    }
+  }, true);
+})();
+<\/script>`;
+
+      let secureDoc = rawHtml;
+      if (/<\/body>/i.test(secureDoc)) {
+        secureDoc = secureDoc.replace(/<\/body>/i, navigationShieldScript + '\n</body>');
+      } else {
+        secureDoc += '\n' + navigationShieldScript;
+      }
+
+      previewIframe.srcdoc = secureDoc;
     }
 
     // --- MÉTODOS DE ABERTURA DO CANVAS ---
@@ -6429,7 +6521,8 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         artifact.fileName = name;
       }
 
-      // Renderizar grelha, KPIs e resumo
+      // Renderizar grelha, KPIs e resumo com histórico resetado
+      resetSpreadsheetUndo();
       renderSpreadsheetGrid(artifact);
       recalculateSpreadsheetKpis(artifact);
       renderSpreadsheetSummary(artifact);
@@ -6519,10 +6612,17 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
 
       // Ativar aba Código ou Preview
-      if (tabCodeEditor) tabCodeEditor.classList.add('active');
-      if (tabCodePreview) tabCodePreview.classList.remove('active');
-      if (codeEditorWrap) codeEditorWrap.style.display = 'flex';
-      if (codePreviewWrap) codePreviewWrap.style.display = 'none';
+      const isAlreadyOnPreview = tabCodePreview && tabCodePreview.classList.contains('active');
+      if (!isAlreadyOnPreview) {
+        if (tabCodeEditor) tabCodeEditor.classList.add('active');
+        if (tabCodePreview) tabCodePreview.classList.remove('active');
+        if (codeEditorWrap) codeEditorWrap.style.display = 'flex';
+        if (codePreviewWrap) codePreviewWrap.style.display = 'none';
+      } else {
+        if (codeEditorWrap) codeEditorWrap.style.display = 'none';
+        if (codePreviewWrap) codePreviewWrap.style.display = 'flex';
+        updateCodeLivePreview();
+      }
 
       // Barra de contexto
       if (contextBar) contextBar.style.display = 'flex';
@@ -6644,13 +6744,102 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       };
     }
 
+    // --- SISTEMA DE HISTÓRICO E DESFAZER (CTRL+Z) DA PLANILHA ---
+    let spreadsheetUndoStack = [];
+    let pendingFocusSnapshot = null;
+    let lastFocusedCell = null;
+
+    function captureSpreadsheetSnapshot(art) {
+      if (!art) return null;
+      return {
+        headers: JSON.parse(JSON.stringify(art.headers || [])),
+        rows: JSON.parse(JSON.stringify(art.rows || [])),
+        aligns: art.aligns ? JSON.parse(JSON.stringify(art.aligns)) : null
+      };
+    }
+
+    function pushSpreadsheetUndoState() {
+      if (!window.activeCanvasArtifact || window.activeCanvasArtifact.type !== 'spreadsheet') return;
+      const snapshot = captureSpreadsheetSnapshot(window.activeCanvasArtifact);
+      if (!snapshot) return;
+      spreadsheetUndoStack.push(snapshot);
+      if (spreadsheetUndoStack.length > 50) spreadsheetUndoStack.shift();
+      updateUndoButtonUI();
+    }
+
+    function undoSpreadsheetAction() {
+      if (!window.activeCanvasArtifact || window.activeCanvasArtifact.type !== 'spreadsheet') return;
+      if (!spreadsheetUndoStack.length) {
+        showToast('Nenhuma alteração anterior para desfazer.');
+        return;
+      }
+      const prev = spreadsheetUndoStack.pop();
+      const art = window.activeCanvasArtifact;
+      art.headers = prev.headers;
+      art.rows = prev.rows;
+      if (prev.aligns) art.aligns = prev.aligns;
+      renderSpreadsheetGrid(art);
+      recalculateSpreadsheetKpis(art);
+      renderSpreadsheetSummary(art);
+      updateUndoButtonUI();
+      showToast('Ação desfeita com sucesso (Ctrl+Z)!');
+    }
+
+    function resetSpreadsheetUndo() {
+      spreadsheetUndoStack = [];
+      pendingFocusSnapshot = null;
+      lastFocusedCell = null;
+      updateUndoButtonUI();
+    }
+
+    function updateUndoButtonUI() {
+      if (!btnGridUndo) return;
+      if (spreadsheetUndoStack.length > 0) {
+        btnGridUndo.classList.remove('disabled');
+        btnGridUndo.removeAttribute('disabled');
+        btnGridUndo.title = `Desfazer última alteração (Ctrl+Z) • ${spreadsheetUndoStack.length} ação(ões)`;
+      } else {
+        btnGridUndo.classList.add('disabled');
+        btnGridUndo.setAttribute('disabled', 'true');
+        btnGridUndo.title = 'Desfazer última alteração (Ctrl+Z)';
+      }
+    }
+
     // --- EVENT LISTENERS DO CANVAS ---
 
-    // 1. Edição em tempo real das células da tabela (contenteditable)
+    // 1. Edição em tempo real das células da tabela (contenteditable) com histórico
     if (excelTable) {
+      excelTable.addEventListener('focusin', (e) => {
+        const target = e.target.closest('[contenteditable="true"]');
+        if (target && window.activeCanvasArtifact && window.activeCanvasArtifact.type === 'spreadsheet') {
+          const cellType = target.getAttribute('data-type');
+          const colIdx = parseInt(target.getAttribute('data-col'), 10);
+          const rowIdx = parseInt(target.getAttribute('data-row'), 10);
+          lastFocusedCell = { type: cellType, row: isNaN(rowIdx) ? null : rowIdx, col: isNaN(colIdx) ? null : colIdx };
+          pendingFocusSnapshot = captureSpreadsheetSnapshot(window.activeCanvasArtifact);
+        }
+      });
+
+      excelTable.addEventListener('click', (e) => {
+        const target = e.target.closest('[data-type="header"], [data-type="cell"]');
+        if (target) {
+          const cellType = target.getAttribute('data-type');
+          const colIdx = parseInt(target.getAttribute('data-col'), 10);
+          const rowIdx = parseInt(target.getAttribute('data-row'), 10);
+          lastFocusedCell = { type: cellType, row: isNaN(rowIdx) ? null : rowIdx, col: isNaN(colIdx) ? null : colIdx };
+        }
+      });
+
       excelTable.addEventListener('input', (e) => {
         const target = e.target;
         if (!target || !window.activeCanvasArtifact) return;
+
+        if (pendingFocusSnapshot) {
+          spreadsheetUndoStack.push(pendingFocusSnapshot);
+          if (spreadsheetUndoStack.length > 50) spreadsheetUndoStack.shift();
+          updateUndoButtonUI();
+          pendingFocusSnapshot = null;
+        }
 
         const cellType = target.getAttribute('data-type');
         const colIdx = parseInt(target.getAttribute('data-col'), 10);
@@ -6671,13 +6860,17 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 2. Toolbar da Planilha: Adicionar Linha
+    // 2. Toolbar da Planilha: Adicionar Linha (+ Linha)
     if (btnAddRow) {
       btnAddRow.addEventListener('click', () => {
-        if (!window.activeCanvasArtifact) return;
+        if (!window.activeCanvasArtifact || window.activeCanvasArtifact.type !== 'spreadsheet') return;
         const art = window.activeCanvasArtifact;
+        pushSpreadsheetUndoState();
         const emptyRow = new Array(art.headers.length).fill('');
-        art.rows.push(emptyRow);
+        const insertIdx = (lastFocusedCell && lastFocusedCell.row !== null && lastFocusedCell.row < art.rows.length) 
+          ? lastFocusedCell.row + 1 
+          : art.rows.length;
+        art.rows.splice(insertIdx, 0, emptyRow);
         renderSpreadsheetGrid(art);
         recalculateSpreadsheetKpis(art);
         renderSpreadsheetSummary(art);
@@ -6685,15 +6878,53 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 3. Toolbar da Planilha: Adicionar Coluna
+    // 2B. Toolbar da Planilha: Excluir Linha (- Linha)
+    if (btnDelRow) {
+      btnDelRow.addEventListener('click', () => {
+        if (!window.activeCanvasArtifact || window.activeCanvasArtifact.type !== 'spreadsheet') return;
+        const art = window.activeCanvasArtifact;
+        if (!art.rows || art.rows.length === 0) {
+          showToast('Não há linhas para excluir.');
+          return;
+        }
+        pushSpreadsheetUndoState();
+        if (art.rows.length === 1) {
+          // Manter pelo menos 1 linha na grelha, limpando o conteúdo
+          art.rows[0].fill('');
+          renderSpreadsheetGrid(art);
+          recalculateSpreadsheetKpis(art);
+          renderSpreadsheetSummary(art);
+          showToast('Linha esvaziada (a tabela precisa ter ao menos 1 linha).');
+          return;
+        }
+
+        let removedIdx = art.rows.length - 1;
+        if (lastFocusedCell && lastFocusedCell.row !== null && lastFocusedCell.row < art.rows.length) {
+          removedIdx = lastFocusedCell.row;
+          lastFocusedCell = null;
+        }
+        art.rows.splice(removedIdx, 1);
+        renderSpreadsheetGrid(art);
+        recalculateSpreadsheetKpis(art);
+        renderSpreadsheetSummary(art);
+        showToast(`Linha ${removedIdx + 2} excluída!`);
+      });
+    }
+
+    // 3. Toolbar da Planilha: Adicionar Coluna (+ Coluna)
     if (btnAddCol) {
       btnAddCol.addEventListener('click', () => {
-        if (!window.activeCanvasArtifact) return;
+        if (!window.activeCanvasArtifact || window.activeCanvasArtifact.type !== 'spreadsheet') return;
         const art = window.activeCanvasArtifact;
+        pushSpreadsheetUndoState();
         const nextColNumber = art.headers.length + 1;
         const newColName = 'Coluna ' + nextColNumber;
-        art.headers.push(newColName);
-        art.rows.forEach(r => r.push(''));
+        const insertColIdx = (lastFocusedCell && lastFocusedCell.col !== null && lastFocusedCell.col < art.headers.length)
+          ? lastFocusedCell.col + 1
+          : art.headers.length;
+        art.headers.splice(insertColIdx, 0, newColName);
+        art.rows.forEach(r => r.splice(insertColIdx, 0, ''));
+        if (art.aligns) art.aligns.splice(insertColIdx, 0, 'left');
         renderSpreadsheetGrid(art);
         recalculateSpreadsheetKpis(art);
         renderSpreadsheetSummary(art);
@@ -6701,22 +6932,51 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 4. Toolbar da Planilha: Limpar Células
-    if (btnGridClear) {
-      btnGridClear.addEventListener('click', () => {
-        if (!window.activeCanvasArtifact) return;
-        const confirmed = confirm('Deseja limpar todos os dados das células desta planilha?');
-        if (confirmed) {
-          window.activeCanvasArtifact.rows.forEach(r => {
-            for (let c = 0; c < r.length; c++) r[c] = '';
-          });
-          renderSpreadsheetGrid(window.activeCanvasArtifact);
-          recalculateSpreadsheetKpis(window.activeCanvasArtifact);
-          renderSpreadsheetSummary(window.activeCanvasArtifact);
-          showToast('Células da planilha limpas.');
+    // 3B. Toolbar da Planilha: Excluir Coluna (- Coluna)
+    if (btnDelCol) {
+      btnDelCol.addEventListener('click', () => {
+        if (!window.activeCanvasArtifact || window.activeCanvasArtifact.type !== 'spreadsheet') return;
+        const art = window.activeCanvasArtifact;
+        if (!art.headers || art.headers.length <= 1) {
+          showToast('A planilha precisa ter pelo menos 1 coluna.');
+          return;
         }
+        pushSpreadsheetUndoState();
+        let targetColIdx = art.headers.length - 1;
+        if (lastFocusedCell && lastFocusedCell.col !== null && lastFocusedCell.col < art.headers.length) {
+          targetColIdx = lastFocusedCell.col;
+          lastFocusedCell = null;
+        }
+        const colName = art.headers[targetColIdx] || ('Coluna ' + (targetColIdx + 1));
+        art.headers.splice(targetColIdx, 1);
+        art.rows.forEach(r => r.splice(targetColIdx, 1));
+        if (art.aligns) art.aligns.splice(targetColIdx, 1);
+        renderSpreadsheetGrid(art);
+        recalculateSpreadsheetKpis(art);
+        renderSpreadsheetSummary(art);
+        showToast(`Coluna "${colName}" excluída!`);
       });
     }
+
+    // 4. Toolbar da Planilha: Botão Desfazer (Ctrl+Z)
+    if (btnGridUndo) {
+      btnGridUndo.addEventListener('click', () => {
+        undoSpreadsheetAction();
+      });
+    }
+
+    // 4B. Atalho de Teclado Global: Ctrl+Z para Desfazer na Planilha
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+        if (window.activeCanvasArtifact && window.activeCanvasArtifact.type === 'spreadsheet') {
+          const spreadView = document.getElementById('canvas-view-spreadsheet');
+          if (spreadView && spreadView.classList.contains('active')) {
+            e.preventDefault();
+            undoSpreadsheetAction();
+          }
+        }
+      }
+    });
 
     // 4B. Alternar exibição dos cartões de métricas (expandir / recolher com seta)
     if (btnToggleKpiStrip && kpiStrip) {
@@ -6768,7 +7028,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         tabCodeEditor.classList.remove('active');
         if (codeEditorWrap) codeEditorWrap.style.display = 'none';
         if (codePreviewWrap) {
-          codePreviewWrap.style.display = 'block';
+          codePreviewWrap.style.display = 'flex';
           updateCodeLivePreview();
         }
       });
@@ -7013,14 +7273,14 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         return;
       }
 
-      // Botão "Testar no Canvas" em qualquer bloco de código do chat
+      // Botão "Testar com Meu Kota" em qualquer bloco de código do chat
       const btnTestCode = e.target.closest('.btn-open-code-canvas');
       if (btnTestCode) {
         const wrapper = btnTestCode.closest('.code-block-wrapper');
         if (wrapper) {
           const lang = wrapper.getAttribute('data-lang') || 'html';
           const codeEl = wrapper.querySelector('code');
-          const rawCode = codeEl ? codeEl.innerText : '';
+          const rawCode = codeEl ? (codeEl.textContent || codeEl.innerText).trim() : '';
           openCodeInCanvas({
             title: `Código ${lang.toUpperCase()}`,
             fileName: lang === 'javascript' || lang === 'js' ? 'script.js' : 'index.html',
@@ -7037,10 +7297,27 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     window.openSpreadsheetInCanvas = openSpreadsheetInCanvas;
     window.openDocumentInCanvas = openDocumentInCanvas;
     window.openCodeInCanvas = openCodeInCanvas;
+    window.updateCodeLivePreview = updateCodeLivePreview;
+    window.updateCodeGutter = updateCodeGutter;
     window.exportSpreadsheetToXlsx = exportSpreadsheetToXlsx;
     window.exportSpreadsheetToPdf = exportSpreadsheetToPdf;
     window.exportDocumentToPdf = exportDocumentToPdf;
     window.exportCodeToFile = exportCodeToFile;
+
+    // Receptor de links externos seguros do Canvas Sandbox
+    // Abre a URL diretamente a partir do contexto raiz do navegador (top-level)
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'meu_kota_open_external' && event.data.url) {
+        const safeUrl = event.data.url;
+        const tempA = document.createElement('a');
+        tempA.href = safeUrl;
+        tempA.target = '_blank';
+        tempA.rel = 'noopener noreferrer';
+        document.body.appendChild(tempA);
+        tempA.click();
+        tempA.remove();
+      }
+    });
   }
 
   // Configurações e Inicializações Globais
