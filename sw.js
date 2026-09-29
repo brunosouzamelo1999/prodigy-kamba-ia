@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v62-clean-academic-pdf-gemini-standard';
+const CACHE_NAME = 'meu-kota-cache-v63-remove-novo-arquivo-header-button';
 
 const PRECACHE_ASSETS = [
   './',

@@ -1380,44 +1380,6 @@
           </div>
 
           <div class="gpt-header-right">
-            <!-- Launcher Rápido do Canvas (Acesso de Antemão aos 3 Tipos de Arquivo) -->
-            <div class="canvas-launcher-dropdown-wrap" style="position: relative;">
-              <button class="gpt-canvas-launcher-btn" id="btn-open-canvas-launcher" type="button" title="Abrir ou Criar Novo Arquivo no Canvas">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>
-                <span>Novo Arquivo</span>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div id="canvas-launcher-menu" class="canvas-launcher-menu" style="display: none;">
-                <button type="button" class="canvas-menu-item" data-action="new-spreadsheet">
-                  <span class="c-menu-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9M3 15h18"/></svg>
-                  </span>
-                  <div class="c-menu-info">
-                    <span class="c-menu-title">Planilha Excel (.xlsx)</span>
-                    <span class="c-menu-desc">Grelha Excel, KPIs (Tasks, Done, Overdue) e Abas</span>
-                  </div>
-                </button>
-                <button type="button" class="canvas-menu-item" data-action="new-document">
-                  <span class="c-menu-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  </span>
-                  <div class="c-menu-info">
-                    <span class="c-menu-title">Documento Comercial (.pdf)</span>
-                    <span class="c-menu-desc">Folha A4 Executiva com Timbre e Assinaturas</span>
-                  </div>
-                </button>
-                <button type="button" class="canvas-menu-item" data-action="new-code">
-                  <span class="c-menu-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                  </span>
-                  <div class="c-menu-info">
-                    <span class="c-menu-title">Código & Web App (.html)</span>
-                    <span class="c-menu-desc">Editor de Código e Sandbox ao Vivo</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
             <button class="gpt-share-btn" id="btn-share-chat" title="Compartilhar esta conversa">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="18" cy="5" r="3"/>
@@ -2678,6 +2640,6 @@
   <script src="libs/xlsx.full.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260929_v62_clean_academic_pdf_gemini_standard"></script>
+  <script src="app.js?v=20260929_v63_remove_novo_arquivo_header_button"></script>
 </body>
 </html>
