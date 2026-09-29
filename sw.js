@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v53-code-header';
+const CACHE_NAME = 'meu-kota-cache-v54-compact-table-card';
 
 const PRECACHE_ASSETS = [
   './',

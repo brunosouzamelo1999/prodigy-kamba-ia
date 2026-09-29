@@ -4316,28 +4316,28 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         };
       }
 
-      // Montar HTML com Cartão de Artefato Interativo + Tabela Formatada
+      // Montar HTML com Cartão de Artefato Interativo + Tabela Formatada (Compacto & Anti-Quebra)
       let html = `<div class="kamba-artifact-card" data-artifact-id="${artifactId}">` +
         `<div class="artifact-card-left">` +
           `<div class="artifact-card-icon">` +
-            `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>` +
+            `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>` +
           `</div>` +
           `<div class="artifact-card-info">` +
-            `<span class="artifact-card-title">${escapeHtml(sheetTitle)}</span>` +
-            `<span class="artifact-card-subtitle">Planilha Dinâmica • ${rowsData.length} linha${rowsData.length !== 1 ? 's' : ''}, ${headerCells.length} coluna${headerCells.length !== 1 ? 's' : ''}</span>` +
+            `<span class="artifact-card-title">Planilha Interativa</span>` +
+            `<span class="artifact-card-subtitle">${rowsData.length} linha${rowsData.length !== 1 ? 's' : ''} · ${headerCells.length} coluna${headerCells.length !== 1 ? 's' : ''}</span>` +
           `</div>` +
         `</div>` +
         `<div class="artifact-card-actions">` +
           `<button type="button" class="btn-open-canvas-pill" data-artifact-id="${artifactId}" title="Abrir no Canvas lado a lado para co-edição">` +
-            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>` +
+            `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>` +
             `<span>Abrir no Canvas</span>` +
           `</button>` +
           `<button type="button" class="btn-artifact-quick-dl" data-artifact-id="${artifactId}" title="Baixar planilha nativa em Microsoft Excel (.xlsx)">` +
-            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>` +
+            `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>` +
             `<span>Excel (.xlsx)</span>` +
           `</button>` +
           `<button type="button" class="btn-artifact-quick-pdf" data-artifact-id="${artifactId}" title="Baixar Relatório Limpo em PDF pronto para compartilhar">` +
-            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>` +
+            `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>` +
             `<span>PDF Limpo</span>` +
           `</button>` +
         `</div>` +
