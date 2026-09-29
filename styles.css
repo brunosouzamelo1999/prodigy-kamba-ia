@@ -8288,14 +8288,56 @@ html.is-offline #kota-offline-screen {
 /* MODO PLANILHA (SPREADSHEET CANVAS)                           */
 /* ============================================================ */
 
+.canvas-toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+}
+
+.btn-toggle-kpi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-kpi .kpi-toggle-arrow {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-toggle-kpi.active .kpi-toggle-arrow {
+  transform: rotate(180deg);
+}
+
+.btn-toggle-kpi.active {
+  background: rgba(255, 209, 0, 0.12);
+  color: #FFD100;
+  border-color: rgba(255, 209, 0, 0.35);
+}
+
 .canvas-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   padding: 10px 14px;
   background: rgba(0, 0, 0, 0.28);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   flex-shrink: 0;
+  overflow: hidden;
+  max-height: 140px;
+  opacity: 1;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease, padding 0.22s ease, border-color 0.22s ease;
+}
+
+.canvas-kpi-strip.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-color: transparent;
+  pointer-events: none;
 }
 
 .canvas-kpi-card {
@@ -9456,7 +9498,11 @@ html.is-offline #kota-offline-screen {
   body:not(.printing-clean-doc) td.row-num-cell,
   body:not(.printing-clean-doc) .canvas-editing-hint,
   body:not(.printing-clean-doc) .kamba-artifact-card .artifact-card-actions,
-  body:not(.printing-clean-doc) .canvas-launcher-dropdown-wrap {
+  body:not(.printing-clean-doc) .canvas-launcher-dropdown-wrap,
+  .canvas-kpi-strip,
+  .canvas-kpi-card,
+  .btn-toggle-kpi,
+  .canvas-summary-dashboard {
     display: none !important;
   }
 

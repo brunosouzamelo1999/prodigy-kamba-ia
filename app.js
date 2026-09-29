@@ -5813,6 +5813,8 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     const btnAddRow = document.getElementById('btn-grid-add-row');
     const btnAddCol = document.getElementById('btn-grid-add-col');
     const btnGridClear = document.getElementById('btn-grid-clear');
+    const btnToggleKpiStrip = document.getElementById('btn-toggle-kpi-strip');
+    const kpiStrip = document.getElementById('canvas-kpi-strip');
     const btnAddSheetTab = document.getElementById('btn-add-sheet-tab');
     const tabSheetTracker = document.getElementById('tab-sheet-tracker');
     const tabSheetResumo = document.getElementById('tab-sheet-resumo');
@@ -6284,31 +6286,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
             </div>
           </div>
 
-          <!-- CARTÕES DE RESUMO EXECUTIVO (MÉTRICAS CLARAS COM BORDAS DEFINIDAS) -->
-          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px;">
-            <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 6px; padding: 10px 10px; text-align: center;">
-              <div style="font-size: 9.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Tasks</div>
-              <div style="font-size: 18px; font-weight: 800; color: #0F172A; margin-top: 2px;">${totalTasks}</div>
-            </div>
-            <div style="background: #FEFCE8; border: 1.5px solid #FDE047; border-radius: 6px; padding: 10px 10px; text-align: center;">
-              <div style="font-size: 9.5px; font-weight: 700; color: #854D0E; text-transform: uppercase;">In Progress</div>
-              <div style="font-size: 18px; font-weight: 800; color: #A16207; margin-top: 2px;">${inProgressCount}</div>
-            </div>
-            <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 6px; padding: 10px 10px; text-align: center;">
-              <div style="font-size: 9.5px; font-weight: 700; color: #166534; text-transform: uppercase;">Done</div>
-              <div style="font-size: 18px; font-weight: 800; color: #15803D; margin-top: 2px;">${doneCount}</div>
-            </div>
-            <div style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 10px 10px; text-align: center;">
-              <div style="font-size: 9.5px; font-weight: 700; color: #991B1B; text-transform: uppercase;">Overdue</div>
-              <div style="font-size: 18px; font-weight: 800; color: #DC2626; margin-top: 2px;">${overdueCount}</div>
-            </div>
-            <div style="background: #FFFBEB; border: 1.5px solid #FCD34D; border-radius: 6px; padding: 10px 10px; text-align: center;">
-              <div style="font-size: 9.5px; font-weight: 700; color: #78350F; text-transform: uppercase;">Soma Total</div>
-              <div style="font-size: 16px; font-weight: 800; color: #B45309; margin-top: 3px;">${formattedSum}</div>
-            </div>
-          </div>
-
-          <!-- TABELA DE DADOS ULTRA-NÍTIDA (SEM COLUNAS A, B, C, SEM NÚMEROS 1, 2, 3, COM BORDAS DEFINIDAS) -->
+          <!-- TABELA DE DADOS ULTRA-NÍTIDA (DIRETO NO DOCUMENTO, SEM CARTÕES DE RESUMO) -->
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 11px; border: 1.5px solid #0F172A;">
             <thead>
               <tr style="background: #0F172A; color: #FFFFFF;">
@@ -6455,6 +6433,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       renderSpreadsheetGrid(artifact);
       recalculateSpreadsheetKpis(artifact);
       renderSpreadsheetSummary(artifact);
+
+      // Manter cartões de métricas recolhidos por padrão
+      if (kpiStrip) kpiStrip.classList.add('collapsed');
+      if (btnToggleKpiStrip) btnToggleKpiStrip.classList.remove('active');
 
       // Alternar para aba Tracker
       if (tabSheetTracker) tabSheetTracker.classList.add('active');
@@ -6733,6 +6715,14 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           renderSpreadsheetSummary(window.activeCanvasArtifact);
           showToast('Células da planilha limpas.');
         }
+      });
+    }
+
+    // 4B. Alternar exibição dos cartões de métricas (expandir / recolher com seta)
+    if (btnToggleKpiStrip && kpiStrip) {
+      btnToggleKpiStrip.addEventListener('click', () => {
+        const isCollapsed = kpiStrip.classList.toggle('collapsed');
+        btnToggleKpiStrip.classList.toggle('active', !isCollapsed);
       });
     }
 

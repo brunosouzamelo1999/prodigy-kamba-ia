@@ -1599,8 +1599,38 @@
 
           <!-- 1. MODO PLANILHA INTERATIVA (SPREADSHEET) -->
           <div id="canvas-view-spreadsheet" class="canvas-subview active">
-            <!-- Barra de Resumo e Métricas (KPI Strip) Exata: Total Tasks, In Progress, Done, Overdue + Soma Total -->
-            <div class="canvas-kpi-strip" id="canvas-kpi-strip">
+            <!-- Barra de Ações da Planilha -->
+            <div class="canvas-grid-toolbar">
+              <div class="toolbar-left">
+                <button type="button" id="btn-grid-add-row" class="canvas-toolbar-btn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>+ Linha</span>
+                </button>
+                <button type="button" id="btn-grid-add-col" class="canvas-toolbar-btn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>+ Coluna</span>
+                </button>
+                <button type="button" id="btn-grid-clear" class="canvas-toolbar-btn btn-danger-soft">
+                  <span>Limpar</span>
+                </button>
+                <div class="canvas-toolbar-sep"></div>
+                <!-- Botão de Seta para Expandir / Recolher Métricas da Planilha -->
+                <button type="button" id="btn-toggle-kpi-strip" class="canvas-toolbar-btn btn-toggle-kpi" title="Expandir ou recolher resumo de métricas da planilha">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  <span>Métricas</span>
+                  <svg class="kpi-toggle-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+              <div class="toolbar-right">
+                <span class="canvas-editing-hint">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Grelha Excel editável • Clique em qualquer célula
+                </span>
+              </div>
+            </div>
+
+            <!-- Barra de Resumo e Métricas (KPI Strip) - Oculta/Recolhida por padrão via classe .collapsed -->
+            <div class="canvas-kpi-strip collapsed" id="canvas-kpi-strip">
               <div class="canvas-kpi-card">
                 <span class="kpi-title">TOTAL TASKS</span>
                 <span class="kpi-number" id="kpi-val-tasks">0</span>
@@ -1620,29 +1650,6 @@
               <div class="canvas-kpi-card highlight-gold" id="kpi-card-sum">
                 <span class="kpi-title">SOMA TOTAL</span>
                 <span class="kpi-number" id="kpi-val-sum">-</span>
-              </div>
-            </div>
-
-            <!-- Barra de Ações da Planilha -->
-            <div class="canvas-grid-toolbar">
-              <div class="toolbar-left">
-                <button type="button" id="btn-grid-add-row" class="canvas-toolbar-btn">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  <span>+ Linha</span>
-                </button>
-                <button type="button" id="btn-grid-add-col" class="canvas-toolbar-btn">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  <span>+ Coluna</span>
-                </button>
-                <button type="button" id="btn-grid-clear" class="canvas-toolbar-btn btn-danger-soft">
-                  <span>Limpar</span>
-                </button>
-              </div>
-              <div class="toolbar-right">
-                <span class="canvas-editing-hint">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  Grelha Excel editável • Clique em qualquer célula
-                </span>
               </div>
             </div>
 
@@ -2623,6 +2630,6 @@
   <script src="libs/xlsx.full.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260929_v42_clean_print_preview"></script>
+  <script src="app.js?v=20260929_v43_collapsible_kpi_no_print"></script>
 </body>
 </html>
