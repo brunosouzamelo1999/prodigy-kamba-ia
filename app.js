@@ -6905,6 +6905,19 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
+    // 12B. Interceptar atalho de impressão (Ctrl+P / Cmd+P) para sempre disparar o PDF executivo limpo sem métricas
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        if (window.activeCanvasArtifact && window.activeCanvasArtifact.type === 'spreadsheet') {
+          e.preventDefault();
+          exportSpreadsheetToPdf(window.activeCanvasArtifact);
+        } else if (window.activeCanvasArtifact && window.activeCanvasArtifact.type === 'document') {
+          e.preventDefault();
+          exportDocumentToPdf();
+        }
+      }
+    });
+
     // 13. Launcher de Novo Arquivo no Topo do Chat
     if (btnOpenLauncher && launcherMenu) {
       btnOpenLauncher.addEventListener('click', (e) => {

@@ -243,6 +243,34 @@
     .btn-offline-retry:active {
       transform: scale(0.97) !important;
     }
+
+    /* 5. Regras Críticas de Impressão Global (Elimina 100% as métricas de qualquer impressão ou Ctrl+P) */
+    @media print {
+      .canvas-kpi-strip,
+      .canvas-kpi-card,
+      #canvas-kpi-strip,
+      .btn-toggle-kpi,
+      .canvas-summary-dashboard,
+      .canvas-grid-toolbar,
+      .canvas-header,
+      .canvas-sheet-tabs-bar {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+      }
+      body.printing-clean-doc > *:not(#meu-kota-print-stage) {
+        display: none !important;
+      }
+      body.printing-clean-doc #meu-kota-print-stage {
+        display: block !important;
+      }
+    }
   </style>
 
   <!-- Tipografia Oficial Geist & Geist Mono (Vercel Style) -->
@@ -254,7 +282,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   
   <!-- Estilos Globais -->
-  <link rel="stylesheet" href="styles.css?v=20260928_v37_tables">
+  <link rel="stylesheet" href="styles.css?v=20260929_v44_no_kpi_print">
 </head>
 <body style="background-color: #0F1117; color: #ECECEC; margin: 0; min-height: 100vh;">
 
@@ -2630,6 +2658,6 @@
   <script src="libs/xlsx.full.min.js"></script>
 
   <!-- Script Lógico Modular -->
-  <script src="app.js?v=20260929_v43_collapsible_kpi_no_print"></script>
+  <script src="app.js?v=20260929_v44_no_kpi_print"></script>
 </body>
 </html>
