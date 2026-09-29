@@ -3513,7 +3513,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 - ANÁLISE PROFUNDA DE DOCUMENTOS: Você possui visão computacional nativa e leitura multimodal completa. Extraia todo o texto visível de imagens com fidelidade absoluta (OCR) e faça análises executivas de PDFs e relatórios.
 - NOTAÇÃO MATEMÁTICA E CIENTÍFICA CLARA E HUMANA: NUNCA use código LaTeX bruto nem símbolos de cifrão no meio do texto (como $3 \times 3$, $\det(R)$, $T_1 \cdot T_2 \neq T_2 \cdot T_1$, \\quad, \\times, \\cdot). Escreva SEMPRE em linguagem humana natural, limpa e legível para qualquer pessoa comum (ex: escreva "3x3" ou "3 × 3", "T1 · T2 ≠ T2 · T1", "det(R) = +1", "R^T · R = I", "[0 0 0 1]"). Todas as equações, matrizes e expressões devem ser compreensíveis de imediato sem códigos de programação matemática.
 - GERAÇÃO DE DOCUMENTOS E RELATÓRIOS EM PADRÃO COMERCIAL (CARDÁPIOS, CONTRATOS, PROPOSTAS, RELATÓRIOS): Quando o usuário solicitar a elaboração de um cardápio, contrato, proposta, orçamento, relatório, plano de negócios ou minuta, elabore diretamente o documento completo em padrão comercial impecável, pronto para apresentação ou impressão. Inicie imediatamente com o título formal do documento (ex: **CASA DE PASTO E LANCHONETE... — CARDÁPIO OFICIAL** ou **CONTRATO DE...**), sem preâmbulos protocolares nem notas de encerramento sobre botões da interface, mantendo o conteúdo 100% limpo e executivo.
-- FORMATAÇÃO DE TABELAS VISUAIS: Sempre que o usuário solicitar projeções financeiras, comparativos, cardápios com colunas de preços, cronogramas, custos operacionais ou dados estruturados, utilize SEMPRE tabelas no padrão oficial Markdown (| Coluna 1 | Coluna 2 | ... | :--- | :---: |), pois o Meu Kota renderiza automaticamente tabelas visuais interativas, elegantes e com rolagem responsiva no chat e no PDF.
+- FORMATAÇÃO DE TABELAS VISUAIS, DEMONSTRATIVOS E GRÁFICOS DE EXCEL: Sempre que o usuário solicitar projeções financeiras, demonstrativos de faturamento, comparativos, cardápios com preços, cronogramas, custos operacionais ou gráficos analíticos, utilize SEMPRE tabelas no padrão oficial Markdown (| Coluna 1 | Coluna 2 | ... | :--- | :---: |). NUNCA desenhe gráficos com caracteres de texto primitivos ou colchetes ASCII (ex: jamais desenhe "[   ] 100%"). O Meu Kota renderiza tabelas automaticamente como planilhas interativas com auto-cálculo e gera gráficos executivos em padrão Microsoft Excel (Colunas 2D/3D, Barras 2D/3D, Pizza, Rosca, Linhas, Área, Cascata, Funil e Radar).
 - LINKS DE CONVERSÃO E CHAMADAS PARA AÇÃO (CTA) EM SITES / LANDING PAGES: Ao criar landing pages, sites ou botões de contato, utilize SEMPRE os links universais modernos recomendados:
   * WhatsApp: utilize SEMPRE o link universal oficial "https://wa.me/DDI+NUMERO?text=MENSAGEM" (Ex: "https://wa.me/5592999845217?text=Olá..."). NUNCA use a API legada "api.whatsapp.com/send", pois ela é bloqueada por segurança CORS no navegador.
   * Redes Sociais: utilize URLs diretas completas ("https://instagram.com/perfil", "https://t.me/usuario", "https://facebook.com/pagina", "https://x.com/usuario").
@@ -4331,6 +4331,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           `<button type="button" class="btn-open-canvas-pill" data-artifact-id="${artifactId}" title="Abrir no Canvas lado a lado para co-edição">` +
             `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>` +
             `<span>Abrir no Canvas</span>` +
+          `</button>` +
+          `<button type="button" class="btn-artifact-quick-charts" data-artifact-id="${artifactId}" title="Ver Gráficos Interativos no padrão Microsoft Excel">` +
+            `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>` +
+            `<span>Gráficos</span>` +
           `</button>` +
           `<button type="button" class="btn-artifact-quick-dl" data-artifact-id="${artifactId}" title="Baixar planilha nativa em Microsoft Excel (.xlsx)">` +
             `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>` +
@@ -5848,8 +5852,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     const btnAddSheetTab = document.getElementById('btn-add-sheet-tab');
     const tabSheetTracker = document.getElementById('tab-sheet-tracker');
     const tabSheetResumo = document.getElementById('tab-sheet-resumo');
+    const tabSheetGraficos = document.getElementById('tab-sheet-graficos');
     const viewTracker = document.getElementById('canvas-tab-view-tracker');
     const viewResumo = document.getElementById('canvas-tab-view-resumo');
+    const viewGraficos = document.getElementById('canvas-tab-view-graficos');
 
     // Elementos do Sandbox de Código
     const tabCodeEditor = document.getElementById('tab-code-editor');
@@ -6163,6 +6169,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           }
         });
       });
+
+      if (viewGraficos && viewGraficos.style.display !== 'none') {
+        renderSpreadsheetCharts(artifact);
+      }
     }
 
     // 1. RECALCULAR KPIS: TOTAL TASKS, IN PROGRESS, DONE, OVERDUE + SOMA TOTAL
@@ -6418,6 +6428,744 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           </div>
         </div>
       `;
+    }
+
+    // ============================================================
+    // ESTÚDIO DE GRÁFICOS INTERATIVOS DE EXCEL (CANVAS GRÁFICOS)
+    // ============================================================
+    let currentChartCategory = 'colunas'; // 'colunas', 'barras', 'linhas', 'pizza', 'cascata', 'radar'
+    let currentChartVariation = '2d';     // '2d', '3d', 'donut', 'area', 'funil', 'combinacao'
+    let currentChartMetricCol = -1;
+
+    function renderSpreadsheetCharts(artifact) {
+      const container = document.getElementById('canvas-charts-dashboard');
+      if (!container || !artifact) return;
+
+      const numCols = (artifact.headers || []).length;
+      if (numCols === 0 || (artifact.rows || []).length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#94A3B8;">Nenhum dado disponível para gerar gráficos.</div>`;
+        return;
+      }
+
+      // 1. Mapear todas as colunas com valores numéricos
+      const numericCols = [];
+      for (let c = 0; c < numCols; c++) {
+        let validNumCount = 0;
+        artifact.rows.forEach(r => {
+          if (!isNaN(parseSpreadsheetNumber(r[c]))) validNumCount++;
+        });
+        if (validNumCount > 0) {
+          const hName = cleanMarkdownText(artifact.headers[c] || `Coluna ${getExcelColumnLetter(c)}`);
+          numericCols.push({ index: c, name: hName, count: validNumCount });
+        }
+      }
+
+      if (numericCols.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:40px;color:#CBD5E1;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);border-radius:12px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <h3 style="margin:0 0 8px;font-size:16px;color:#FFF;">Nenhuma Coluna Numérica Detectada</h3>
+            <p style="margin:0;font-size:13px;color:#94A3B8;">Adicione valores na aba <strong>Tracker</strong> (ex: faturamento, quantidades ou preços) para visualizar gráficos de Excel automáticos.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // 2. Definir coluna métrica ativa
+      const metricColIndices = numericCols.map(nc => nc.index);
+      if (!metricColIndices.includes(currentChartMetricCol)) {
+        let bestCol = numericCols[0].index;
+        for (const nc of numericCols) {
+          const lower = nc.name.toLowerCase();
+          if (lower.includes('total') || lower.includes('faturamento') || lower.includes('valor') || lower.includes('preço') || lower.includes('custo')) {
+            bestCol = nc.index;
+            break;
+          }
+        }
+        currentChartMetricCol = bestCol;
+      }
+
+      // 3. Coluna de rótulos/categorias
+      let labelCol = 0;
+      if (labelCol === currentChartMetricCol && numCols > 1) {
+        labelCol = (currentChartMetricCol === 0) ? 1 : 0;
+      }
+
+      // 4. Extrair itens de dados (ignorando linhas de totais acumulados para manter proporções)
+      const dataItems = [];
+      let totalSum = 0;
+      let maxValue = 0;
+      let sampleFormatted = '';
+
+      artifact.rows.forEach((r, idx) => {
+        const rawLabel = cleanMarkdownText(r[labelCol] || '');
+        const isSummaryRow = /^(total|valor global|soma|acumulado|média|subtotal)/i.test(rawLabel);
+        if (isSummaryRow) return;
+
+        const val = parseSpreadsheetNumber(r[currentChartMetricCol]);
+        if (!isNaN(val)) {
+          if (val > maxValue) maxValue = val;
+          totalSum += val;
+          if (!sampleFormatted && r[currentChartMetricCol]) sampleFormatted = r[currentChartMetricCol];
+          dataItems.push({
+            label: rawLabel || `Linha ${idx + 2}`,
+            value: val,
+            formatted: r[currentChartMetricCol] || formatSpreadsheetNumber(val, sampleFormatted),
+            originalIndex: idx
+          });
+        }
+      });
+
+      if (dataItems.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#94A3B8;">Nenhum valor numérico válido encontrado na coluna selecionada.</div>`;
+        return;
+      }
+
+      // Paleta vibrante e executiva inspirada em Angola / Dark Modern
+      const chartColors = [
+        '#FFD100', '#10B981', '#38BDF8', '#8B5CF6', 
+        '#F43F5E', '#F59E0B', '#06B6D4', '#EC4899', 
+        '#A855F7', '#14B8A6', '#6366F1', '#EAB308'
+      ];
+
+      const activeMetricName = cleanMarkdownText(artifact.headers[currentChartMetricCol] || 'Valores');
+      const formattedTotal = formatSpreadsheetNumber(totalSum, sampleFormatted || activeMetricName);
+
+      // 5. Categorias de Gráficos de Excel
+      const categories = [
+        { id: 'colunas', name: 'Colunas', icon: '<path d="M18 20V10M12 20V4M6 20v14"/>' },
+        { id: 'barras', name: 'Barras', icon: '<path d="M4 6h16M4 12h10M4 18h14"/>' },
+        { id: 'linhas', name: 'Linhas / Área', icon: '<path d="M3 18l6-6 4 4 8-8"/>' },
+        { id: 'pizza', name: 'Pizza / Rosca', icon: '<path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/>' },
+        { id: 'cascata', name: 'Cascata / Funil', icon: '<path d="M3 4h4v6H3zM9 8h4v6H9zM15 12h4v8h-4z"/>' },
+        { id: 'radar', name: 'Radar / Misto', icon: '<polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>' }
+      ];
+
+      // Variações contextuais
+      let variationBtnsHtml = '';
+      if (currentChartCategory === 'colunas' || currentChartCategory === 'barras') {
+        variationBtnsHtml = `
+          <div class="chart-variation-toggle">
+            <button type="button" class="chart-variation-btn ${currentChartVariation === '2d' ? 'active' : ''}" data-var="2d">2D</button>
+            <button type="button" class="chart-variation-btn ${currentChartVariation === '3d' ? 'active' : ''}" data-var="3d">3D</button>
+          </div>
+        `;
+      } else if (currentChartCategory === 'linhas') {
+        variationBtnsHtml = `
+          <div class="chart-variation-toggle">
+            <button type="button" class="chart-variation-btn ${currentChartVariation === '2d' || currentChartVariation === 'linha' ? 'active' : ''}" data-var="linha">Linha</button>
+            <button type="button" class="chart-variation-btn ${currentChartVariation === 'area' ? 'active' : ''}" data-var="area">Área Preenchida</button>
+          </div>
+        `;
+      } else if (currentChartCategory === 'pizza') {
+        variationBtnsHtml = `
+          <div class="chart-variation-toggle">
+            <button type="button" class="chart-variation-btn ${currentChartVariation === 'donut' || currentChartVariation === '2d' ? 'active' : ''}" data-var="donut">Rosca (Donut)</button>
+            <button type="button" class="chart-variation-btn ${currentChartVariation === 'pizza' ? 'active' : ''}" data-var="pizza">Pizza 2D</button>
+          </div>
+        `;
+      } else if (currentChartCategory === 'cascata') {
+        variationBtnsHtml = `
+          <div class="chart-variation-toggle">
+            <button type="button" class="chart-variation-btn ${currentChartVariation === 'cascata' || currentChartVariation === '2d' ? 'active' : ''}" data-var="cascata">Cascata (Waterfall)</button>
+            <button type="button" class="chart-variation-btn ${currentChartVariation === 'funil' ? 'active' : ''}" data-var="funil">Funil</button>
+          </div>
+        `;
+      } else if (currentChartCategory === 'radar') {
+        variationBtnsHtml = `
+          <div class="chart-variation-toggle">
+            <button type="button" class="chart-variation-btn ${currentChartVariation === 'radar' || currentChartVariation === '2d' ? 'active' : ''}" data-var="radar">Radar (Teia)</button>
+            <button type="button" class="chart-variation-btn ${currentChartVariation === 'combinacao' ? 'active' : ''}" data-var="combinacao">Combinação (Coluna+Linha)</button>
+          </div>
+        `;
+      }
+
+      // Seletor de Métrica se houver múltiplas colunas
+      const metricOptionsHtml = numericCols.map(nc => `
+        <option value="${nc.index}" ${nc.index === currentChartMetricCol ? 'selected' : ''}>${escapeHtml(nc.name)}</option>
+      `).join('');
+
+      // 6. Gerar SVG do Gráfico
+      const svgW = 760;
+      const svgH = 340;
+      let svgContent = '';
+
+      if (currentChartCategory === 'colunas') {
+        const is3D = currentChartVariation === '3d';
+        const padL = 70;
+        const padR = 40;
+        const padT = 30;
+        const padB = 60;
+        const plotW = svgW - padL - padR;
+        const plotH = svgH - padT - padB;
+        const count = dataItems.length;
+        const slotW = plotW / count;
+        const barW = Math.min(Math.max(slotW * 0.55, 14), 60);
+
+        // Grade Y
+        let gridHtml = '';
+        for (let i = 0; i <= 4; i++) {
+          const y = padT + (plotH / 4) * i;
+          const valAtY = maxValue - (maxValue / 4) * i;
+          gridHtml += `
+            <line x1="${padL}" y1="${y}" x2="${svgW - padR}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3,3" />
+            <text x="${padL - 10}" y="${y + 4}" fill="#64748B" font-size="10" text-anchor="end" font-family="monospace">${escapeHtml(formatSpreadsheetNumber(valAtY, sampleFormatted))}</text>
+          `;
+        }
+
+        let barsHtml = '';
+        dataItems.forEach((item, idx) => {
+          const ratio = maxValue > 0 ? (item.value / maxValue) : 0;
+          const bH = Math.max(ratio * plotH, 4);
+          const x = padL + idx * slotW + (slotW - barW) / 2;
+          const y = padT + plotH - bH;
+          const color = chartColors[idx % chartColors.length];
+
+          if (is3D) {
+            const depth = Math.min(barW * 0.35, 14);
+            const front = `<polygon points="${x},${y} ${x + barW},${y} ${x + barW},${y + bH} ${x},${y + bH}" fill="${color}" class="excel-chart-bar-rect" data-item-idx="${idx}" />`;
+            const top = `<polygon points="${x},${y} ${x + depth},${y - depth} ${x + barW + depth},${y - depth} ${x + barW},${y}" fill="${color}" filter="brightness(1.3)" />`;
+            const side = `<polygon points="${x + barW},${y} ${x + barW + depth},${y - depth} ${x + barW + depth},${y + bH - depth} ${x + barW},${y + bH}" fill="${color}" filter="brightness(0.7)" />`;
+            barsHtml += `<g class="excel-chart-bar-group" data-item-idx="${idx}">${top}${side}${front}</g>`;
+          } else {
+            barsHtml += `
+              <rect x="${x}" y="${y}" width="${barW}" height="${bH}" rx="4" ry="4" fill="${color}" class="excel-chart-bar-rect" data-item-idx="${idx}">
+                <title>${escapeHtml(item.label)}: ${escapeHtml(item.formatted)}</title>
+              </rect>
+            `;
+          }
+
+          const labelShort = item.label.length > 12 ? (item.label.slice(0, 11) + '…') : item.label;
+          barsHtml += `
+            <text x="${x + barW / 2}" y="${padT + plotH + 20}" fill="#94A3B8" font-size="11" text-anchor="middle" font-weight="500">${escapeHtml(labelShort)}</text>
+            <text x="${x + barW / 2}" y="${y - (is3D ? 16 : 8)}" fill="#FFD100" font-size="10.5" font-weight="700" text-anchor="middle" font-family="monospace">${escapeHtml(item.formatted)}</text>
+          `;
+        });
+
+        svgContent = `
+          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            ${gridHtml}
+            ${barsHtml}
+          </svg>
+        `;
+      } else if (currentChartCategory === 'barras') {
+        const padL = 130;
+        const padR = 80;
+        const padT = 20;
+        const padB = 30;
+        const plotW = svgW - padL - padR;
+        const count = dataItems.length;
+        const slotH = Math.min((svgH - padT - padB) / count, 45);
+        const barH = slotH * 0.55;
+
+        let barsHtml = '';
+        dataItems.forEach((item, idx) => {
+          const ratio = maxValue > 0 ? (item.value / maxValue) : 0;
+          const bW = Math.max(ratio * plotW, 6);
+          const y = padT + idx * slotH + (slotH - barH) / 2;
+          const color = chartColors[idx % chartColors.length];
+          const labelShort = item.label.length > 16 ? (item.label.slice(0, 15) + '…') : item.label;
+
+          barsHtml += `
+            <text x="${padL - 12}" y="${y + barH / 2 + 4}" fill="#CBD5E1" font-size="11" text-anchor="end" font-weight="500">${escapeHtml(labelShort)}</text>
+            <rect x="${padL}" y="${y}" width="${plotW}" height="${barH}" rx="3" fill="rgba(255,255,255,0.05)" />
+            <rect x="${padL}" y="${y}" width="${bW}" height="${barH}" rx="3" fill="${color}" class="excel-chart-bar-rect" data-item-idx="${idx}" />
+            <text x="${padL + bW + 10}" y="${y + barH / 2 + 4}" fill="#FFD100" font-size="11" font-weight="700" font-family="monospace">${escapeHtml(item.formatted)}</text>
+          `;
+        });
+
+        svgContent = `
+          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            ${barsHtml}
+          </svg>
+        `;
+      } else if (currentChartCategory === 'linhas') {
+        const isArea = currentChartVariation === 'area';
+        const padL = 70;
+        const padR = 40;
+        const padT = 30;
+        const padB = 60;
+        const plotW = svgW - padL - padR;
+        const plotH = svgH - padT - padB;
+        const count = dataItems.length;
+        const stepX = count > 1 ? plotW / (count - 1) : plotW;
+
+        let gridHtml = '';
+        for (let i = 0; i <= 4; i++) {
+          const y = padT + (plotH / 4) * i;
+          const valAtY = maxValue - (maxValue / 4) * i;
+          gridHtml += `
+            <line x1="${padL}" y1="${y}" x2="${svgW - padR}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3,3" />
+            <text x="${padL - 10}" y="${y + 4}" fill="#64748B" font-size="10" text-anchor="end" font-family="monospace">${escapeHtml(formatSpreadsheetNumber(valAtY, sampleFormatted))}</text>
+          `;
+        }
+
+        const points = dataItems.map((item, idx) => {
+          const x = padL + (count > 1 ? idx * stepX : plotW / 2);
+          const ratio = maxValue > 0 ? (item.value / maxValue) : 0;
+          const y = padT + plotH - ratio * plotH;
+          return { x, y, item, idx };
+        });
+
+        let pathD = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 0; i < points.length - 1; i++) {
+          const p0 = points[i];
+          const p1 = points[i + 1];
+          const cpX = (p0.x + p1.x) / 2;
+          pathD += ` C ${cpX} ${p0.y}, ${cpX} ${p1.y}, ${p1.x} ${p1.y}`;
+        }
+
+        let areaHtml = '';
+        if (isArea) {
+          const areaD = `${pathD} L ${points[points.length - 1].x} ${padT + plotH} L ${points[0].x} ${padT + plotH} Z`;
+          areaHtml = `
+            <defs>
+              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FFD100" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="#FFD100" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <path d="${areaD}" fill="url(#areaGrad)" />
+          `;
+        }
+
+        let nodesHtml = '';
+        points.forEach(p => {
+          const labelShort = p.item.label.length > 12 ? (p.item.label.slice(0, 11) + '…') : p.item.label;
+          nodesHtml += `
+            <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#FFD100" stroke="#0F1117" stroke-width="2.5" class="excel-chart-data-node" data-item-idx="${p.idx}" />
+            <text x="${p.x}" y="${p.y - 10}" fill="#FFD100" font-size="10" font-weight="700" text-anchor="middle" font-family="monospace">${escapeHtml(p.item.formatted)}</text>
+            <text x="${p.x}" y="${padT + plotH + 20}" fill="#94A3B8" font-size="11" text-anchor="middle">${escapeHtml(labelShort)}</text>
+          `;
+        });
+
+        svgContent = `
+          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            ${gridHtml}
+            ${areaHtml}
+            <path d="${pathD}" fill="none" stroke="#FFD100" stroke-width="3" stroke-linecap="round" />
+            ${nodesHtml}
+          </svg>
+        `;
+      } else if (currentChartCategory === 'pizza') {
+        const isDonut = currentChartVariation === 'donut' || currentChartVariation === '2d';
+        const cx = svgW / 2;
+        const cy = svgH / 2;
+        const r = Math.min(svgW, svgH) * 0.4;
+        const innerR = isDonut ? (r * 0.58) : 0;
+
+        let curAngle = -Math.PI / 2;
+        let slicesHtml = '';
+
+        dataItems.forEach((item, idx) => {
+          const share = totalSum > 0 ? (item.value / totalSum) : 0;
+          const sliceAngle = share * 2 * Math.PI;
+          const endAngle = curAngle + sliceAngle;
+          const color = chartColors[idx % chartColors.length];
+
+          const x1 = cx + r * Math.cos(curAngle);
+          const y1 = cy + r * Math.sin(curAngle);
+          const x2 = cx + r * Math.cos(endAngle);
+          const y2 = cy + r * Math.sin(endAngle);
+          const largeArc = sliceAngle > Math.PI ? 1 : 0;
+
+          let pathD = '';
+          if (isDonut) {
+            const ix1 = cx + innerR * Math.cos(endAngle);
+            const iy1 = cy + innerR * Math.sin(endAngle);
+            const ix2 = cx + innerR * Math.cos(curAngle);
+            const iy2 = cy + innerR * Math.sin(curAngle);
+            pathD = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix2} ${iy2} Z`;
+          } else {
+            pathD = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+          }
+
+          slicesHtml += `
+            <path d="${pathD}" fill="${color}" stroke="#0F1117" stroke-width="2.5" class="excel-chart-pie-slice" data-item-idx="${idx}">
+              <title>${escapeHtml(item.label)}: ${escapeHtml(item.formatted)} (${Math.round(share * 100)}%)</title>
+            </path>
+          `;
+          curAngle = endAngle;
+        });
+
+        let centerHoleHtml = '';
+        if (isDonut) {
+          centerHoleHtml = `
+            <circle cx="${cx}" cy="${cy}" r="${innerR}" fill="#141721" />
+            <text x="${cx}" y="${cy - 6}" fill="#94A3B8" font-size="11" text-anchor="middle" text-transform="uppercase">TOTAL GERAL</text>
+            <text x="${cx}" y="${cy + 14}" fill="#FFD100" font-size="14" font-weight="800" text-anchor="middle" font-family="monospace">${escapeHtml(formattedTotal)}</text>
+          `;
+        }
+
+        svgContent = `
+          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            ${slicesHtml}
+            ${centerHoleHtml}
+          </svg>
+        `;
+      } else if (currentChartCategory === 'cascata') {
+        const isFunnel = currentChartVariation === 'funil';
+        if (isFunnel) {
+          const padT = 20;
+          const padB = 20;
+          const count = dataItems.length;
+          const stageH = (svgH - padT - padB) / count;
+          const maxTrapW = svgW * 0.75;
+          let funnelHtml = '';
+
+          dataItems.forEach((item, idx) => {
+            const ratioTop = idx === 0 ? 1 : (dataItems[idx - 1].value / dataItems[0].value);
+            const ratioBot = item.value / dataItems[0].value;
+            const wTop = Math.max(ratioTop * maxTrapW, 60);
+            const wBot = Math.max(ratioBot * maxTrapW, 60);
+            const yTop = padT + idx * stageH;
+            const yBot = yTop + stageH - 4;
+            const xTopL = (svgW - wTop) / 2;
+            const xTopR = xTopL + wTop;
+            const xBotL = (svgW - wBot) / 2;
+            const xBotR = xBotL + wBot;
+            const color = chartColors[idx % chartColors.length];
+
+            funnelHtml += `
+              <polygon points="${xTopL},${yTop} ${xTopR},${yTop} ${xBotR},${yBot} ${xBotL},${yBot}" fill="${color}" opacity="0.88" class="excel-chart-bar-rect" data-item-idx="${idx}" />
+              <text x="${svgW / 2}" y="${yTop + stageH / 2}" fill="#FFFFFF" font-size="11.5" font-weight="700" text-anchor="middle">${escapeHtml(item.label)}: ${escapeHtml(item.formatted)}</text>
+            `;
+          });
+
+          svgContent = `
+            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+              ${funnelHtml}
+            </svg>
+          `;
+        } else {
+          // Cascata (Waterfall Chart do Microsoft Excel)
+          const padL = 70;
+          const padR = 40;
+          const padT = 30;
+          const padB = 60;
+          const plotW = svgW - padL - padR;
+          const plotH = svgH - padT - padB;
+          const count = dataItems.length + 1;
+          const slotW = plotW / count;
+          const barW = slotW * 0.6;
+
+          let runningSum = 0;
+          let waterfallBars = '';
+
+          dataItems.forEach((item, idx) => {
+            const startVal = runningSum;
+            runningSum += item.value;
+            const endVal = runningSum;
+            const isPos = item.value >= 0;
+            const color = isPos ? '#10B981' : '#EF4444';
+
+            const bottomVal = Math.min(startVal, endVal);
+            const topVal = Math.max(startVal, endVal);
+            const y = padT + plotH - (topVal / Math.max(totalSum, maxValue)) * plotH;
+            const h = Math.max(((topVal - bottomVal) / Math.max(totalSum, maxValue)) * plotH, 4);
+            const x = padL + idx * slotW + (slotW - barW) / 2;
+
+            waterfallBars += `
+              <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="${color}" class="excel-chart-bar-rect" data-item-idx="${idx}" />
+              <text x="${x + barW / 2}" y="${y - 6}" fill="${color}" font-size="10" font-weight="700" text-anchor="middle" font-family="monospace">${escapeHtml(item.formatted)}</text>
+              <text x="${x + barW / 2}" y="${padT + plotH + 20}" fill="#94A3B8" font-size="10.5" text-anchor="middle">${escapeHtml(item.label.slice(0, 8))}</text>
+            `;
+          });
+
+          // Barra Total Final
+          const totalX = padL + dataItems.length * slotW + (slotW - barW) / 2;
+          const totalY = padT + plotH - (totalSum / Math.max(totalSum, maxValue)) * plotH;
+          const totalH = Math.max((totalSum / Math.max(totalSum, maxValue)) * plotH, 4);
+          waterfallBars += `
+            <rect x="${totalX}" y="${totalY}" width="${barW}" height="${totalH}" rx="3" fill="#FFD100" />
+            <text x="${totalX + barW / 2}" y="${totalY - 6}" fill="#FFD100" font-size="10" font-weight="700" text-anchor="middle" font-family="monospace">${escapeHtml(formattedTotal)}</text>
+            <text x="${totalX + barW / 2}" y="${padT + plotH + 20}" fill="#FFD100" font-size="11" font-weight="700" text-anchor="middle">TOTAL</text>
+          `;
+
+          svgContent = `
+            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+              <line x1="${padL}" y1="${padT + plotH}" x2="${svgW - padR}" y2="${padT + plotH}" stroke="rgba(255,255,255,0.15)" />
+              ${waterfallBars}
+            </svg>
+          `;
+        }
+      } else if (currentChartCategory === 'radar') {
+        const isCombo = currentChartVariation === 'combinacao';
+        if (isCombo) {
+          const padL = 70;
+          const padR = 40;
+          const padT = 30;
+          const padB = 60;
+          const plotW = svgW - padL - padR;
+          const plotH = svgH - padT - padB;
+          const count = dataItems.length;
+          const slotW = plotW / count;
+          const barW = slotW * 0.5;
+
+          let comboBars = '';
+          const linePoints = [];
+
+          dataItems.forEach((item, idx) => {
+            const ratio = maxValue > 0 ? (item.value / maxValue) : 0;
+            const bH = Math.max(ratio * plotH, 4);
+            const x = padL + idx * slotW + (slotW - barW) / 2;
+            const y = padT + plotH - bH;
+            const color = '#38BDF8';
+
+            comboBars += `
+              <rect x="${x}" y="${y}" width="${barW}" height="${bH}" rx="3" fill="${color}" opacity="0.8" class="excel-chart-bar-rect" data-item-idx="${idx}" />
+              <text x="${x + barW / 2}" y="${padT + plotH + 20}" fill="#94A3B8" font-size="11" text-anchor="middle">${escapeHtml(item.label.slice(0, 10))}</text>
+            `;
+            linePoints.push({ x: x + barW / 2, y: y, item, idx });
+          });
+
+          let linePath = `M ${linePoints[0].x} ${linePoints[0].y}`;
+          for (let i = 1; i < linePoints.length; i++) {
+            linePath += ` L ${linePoints[i].x} ${linePoints[i].y}`;
+          }
+
+          let comboNodes = '';
+          linePoints.forEach(p => {
+            comboNodes += `
+              <circle cx="${p.x}" cy="${p.y}" r="4" fill="#FFD100" stroke="#0F1117" stroke-width="2" />
+              <text x="${p.x}" y="${p.y - 8}" fill="#FFD100" font-size="10" font-weight="700" text-anchor="middle" font-family="monospace">${escapeHtml(p.item.formatted)}</text>
+            `;
+          });
+
+          svgContent = `
+            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+              ${comboBars}
+              <path d="${linePath}" fill="none" stroke="#FFD100" stroke-width="2.5" />
+              ${comboNodes}
+            </svg>
+          `;
+        } else {
+          // Radar
+          const cx = svgW / 2;
+          const cy = svgH / 2;
+          const r = Math.min(svgW, svgH) * 0.38;
+          const count = dataItems.length;
+          const angleStep = (2 * Math.PI) / count;
+
+          let webLines = '';
+          for (let level = 1; level <= 4; level++) {
+            const curR = (r / 4) * level;
+            const pts = [];
+            for (let i = 0; i < count; i++) {
+              const a = -Math.PI / 2 + i * angleStep;
+              pts.push(`${cx + curR * Math.cos(a)},${cy + curR * Math.sin(a)}`);
+            }
+            webLines += `<polygon points="${pts.join(' ')}" fill="none" stroke="rgba(255,255,255,0.08)" />`;
+          }
+
+          const dataPoints = [];
+          for (let i = 0; i < count; i++) {
+            const a = -Math.PI / 2 + i * angleStep;
+            const ax = cx + r * Math.cos(a);
+            const ay = cy + r * Math.sin(a);
+            webLines += `<line x1="${cx}" y1="${cy}" x2="${ax}" y2="${ay}" stroke="rgba(255,255,255,0.12)" />`;
+
+            const item = dataItems[i];
+            const ratio = maxValue > 0 ? (item.value / maxValue) : 0;
+            const dx = cx + (r * ratio) * Math.cos(a);
+            const dy = cy + (r * ratio) * Math.sin(a);
+            dataPoints.push({ x: dx, y: dy, item, idx: i, lx: cx + (r + 18) * Math.cos(a), ly: cy + (r + 18) * Math.sin(a) });
+          }
+
+          const polyPts = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
+          let nodesHtml = '';
+          dataPoints.forEach(p => {
+            nodesHtml += `
+              <circle cx="${p.x}" cy="${p.y}" r="4" fill="#FFD100" stroke="#0F1117" stroke-width="2" class="excel-chart-data-node" data-item-idx="${p.idx}" />
+              <text x="${p.lx}" y="${p.ly + 4}" fill="#CBD5E1" font-size="10.5" text-anchor="middle">${escapeHtml(p.item.label.slice(0, 9))}</text>
+            `;
+          });
+
+          svgContent = `
+            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+              ${webLines}
+              <polygon points="${polyPts}" fill="rgba(255,209,0,0.25)" stroke="#FFD100" stroke-width="2.5" />
+              ${nodesHtml}
+            </svg>
+          `;
+        }
+      }
+
+      // 7. Legenda dos Itens
+      const legendHtml = dataItems.map((item, idx) => {
+        const sharePct = totalSum > 0 ? Math.round((item.value / totalSum) * 100) : 0;
+        const color = chartColors[idx % chartColors.length];
+        return `
+          <div class="chart-legend-item">
+            <span class="chart-legend-color" style="background:${color};"></span>
+            <span class="chart-legend-name">${escapeHtml(item.label)}</span>
+            <span class="chart-legend-val">${escapeHtml(item.formatted)} <small style="color:#94A3B8;font-weight:normal;">(${sharePct}%)</small></span>
+          </div>
+        `;
+      }).join('');
+
+      // 8. Montar o HTML Completo da Tela de Gráficos
+      container.innerHTML = `
+        <div class="excel-chart-ribbon">
+          <div class="chart-ribbon-row">
+            <div class="chart-type-categories">
+              ${categories.map(cat => `
+                <button type="button" class="chart-category-btn ${cat.id === currentChartCategory ? 'active' : ''}" data-cat="${cat.id}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${cat.icon}</svg>
+                  <span>${cat.name}</span>
+                </button>
+              `).join('')}
+            </div>
+            <button type="button" class="btn-chart-export" id="btn-export-chart-png" title="Baixar imagem em alta resolução">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Baixar Imagem (.png)</span>
+            </button>
+          </div>
+          <div class="chart-ribbon-row">
+            <div class="chart-options-group">
+              ${variationBtnsHtml}
+            </div>
+            ${numericCols.length > 1 ? `
+              <div class="chart-options-group">
+                <span class="chart-select-label">Métrica:</span>
+                <select class="chart-metric-select" id="chart-metric-col-select">
+                  ${metricOptionsHtml}
+                </select>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <div class="excel-chart-stage-card">
+          <div class="chart-stage-header">
+            <div class="chart-stage-title-wrap">
+              <div class="chart-stage-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>${escapeHtml(activeMetricName)} • Análise Gráfica</span>
+              </div>
+              <span class="chart-stage-subtitle">${dataItems.length} registros analisados · Sincronizado em tempo real com a grelha</span>
+            </div>
+            <div class="chart-stage-stat">
+              <span class="chart-stage-stat-val">${escapeHtml(formattedTotal)}</span>
+              <span class="chart-stage-stat-lbl">Soma Acumulada</span>
+            </div>
+          </div>
+
+          <div class="chart-svg-container" id="chart-svg-container">
+            ${svgContent}
+            <div class="chart-interactive-tooltip" id="chart-tooltip" style="display:none;opacity:0;"></div>
+          </div>
+
+          <div class="chart-legend-wrap">
+            ${legendHtml}
+          </div>
+        </div>
+      `;
+
+      // 9. Event Listeners Interativos
+      container.querySelectorAll('.chart-category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentChartCategory = btn.getAttribute('data-cat');
+          currentChartVariation = '2d';
+          renderSpreadsheetCharts(artifact);
+        });
+      });
+
+      container.querySelectorAll('.chart-variation-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentChartVariation = btn.getAttribute('data-var');
+          renderSpreadsheetCharts(artifact);
+        });
+      });
+
+      const metricSelect = document.getElementById('chart-metric-col-select');
+      if (metricSelect) {
+        metricSelect.addEventListener('change', (e) => {
+          currentChartMetricCol = parseInt(e.target.value, 10);
+          renderSpreadsheetCharts(artifact);
+        });
+      }
+
+      // Tooltip Interativo Flutuante
+      const tooltip = document.getElementById('chart-tooltip');
+      const svgBox = document.getElementById('chart-svg-container');
+      if (tooltip && svgBox) {
+        const interactiveEls = svgBox.querySelectorAll('[data-item-idx]');
+        interactiveEls.forEach(el => {
+          el.addEventListener('mouseenter', () => {
+            const idx = parseInt(el.getAttribute('data-item-idx'), 10);
+            const item = dataItems[idx];
+            if (!item) return;
+            const sharePct = totalSum > 0 ? Math.round((item.value / totalSum) * 100) : 0;
+            tooltip.innerHTML = `
+              <div class="chart-tooltip-title">${escapeHtml(item.label)}</div>
+              <div class="chart-tooltip-detail">
+                <span>Valor: <strong>${escapeHtml(item.formatted)}</strong></span>
+                <span>(${sharePct}%)</span>
+              </div>
+            `;
+            tooltip.style.display = 'block';
+            setTimeout(() => { tooltip.style.opacity = '1'; }, 10);
+          });
+
+          el.addEventListener('mousemove', (e) => {
+            const rect = svgBox.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            tooltip.style.left = `${x}px`;
+            tooltip.style.top = `${y}px`;
+          });
+
+          el.addEventListener('mouseleave', () => {
+            tooltip.style.opacity = '0';
+            setTimeout(() => { tooltip.style.display = 'none'; }, 150);
+          });
+        });
+      }
+
+      // Baixar Imagem PNG em Alta Resolução
+      const btnExportPng = document.getElementById('btn-export-chart-png');
+      if (btnExportPng) {
+        btnExportPng.addEventListener('click', () => {
+          exportChartAsPng(artifact);
+        });
+      }
+    }
+
+    // Helper: Exportar gráfico SVG ativo como imagem PNG
+    function exportChartAsPng(artifact) {
+      const svgEl = document.querySelector('.excel-chart-stage-card svg');
+      if (!svgEl) return;
+
+      try {
+        const svgData = new XMLSerializer().serializeToString(svgEl);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 1520;
+          canvas.height = 680;
+          const ctx = canvas.getContext('2d');
+
+          ctx.fillStyle = '#141721';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+
+          canvas.toBlob((pngBlob) => {
+            const fileName = (artifact.fileName || 'grafico-excel').replace(/\.[^.]+$/, '') + '-grafico.png';
+            triggerBlobDownload(pngBlob, fileName);
+            showToast('Gráfico exportado em imagem PNG de alta resolução!');
+          }, 'image/png');
+        };
+        img.src = url;
+      } catch (err) {
+        console.error('Erro ao exportar gráfico:', err);
+        showToast('Erro ao exportar imagem: ' + err.message);
+      }
     }
 
     // 4. EXPORTAÇÃO EXCEL (.XLSX) COM AMBAS AS ABAS (TRACKER + RESUMO)
@@ -6819,7 +7567,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
 
     // --- MÉTODOS DE ABERTURA DO CANVAS ---
 
-    function openSpreadsheetInCanvas(artifact) {
+    function openSpreadsheetInCanvas(artifact, initialTab = 'tracker') {
       if (!artifact) return;
       window.activeCanvasArtifact = artifact;
       artifact.type = 'spreadsheet';
@@ -6854,11 +7602,8 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       if (kpiStrip) kpiStrip.classList.add('collapsed');
       if (btnToggleKpiStrip) btnToggleKpiStrip.classList.remove('active');
 
-      // Alternar para aba Tracker
-      if (tabSheetTracker) tabSheetTracker.classList.add('active');
-      if (tabSheetResumo) tabSheetResumo.classList.remove('active');
-      if (viewTracker) viewTracker.style.display = 'block';
-      if (viewResumo) viewResumo.style.display = 'none';
+      // Alternar para a aba solicitada (Tracker, Resumo ou Gráficos)
+      switchSpreadsheetTab(initialTab);
 
       // Atualizar barra de contexto no chat
       if (contextBar) contextBar.style.display = 'flex';
@@ -7330,26 +8075,35 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       });
     }
 
-    // 5. Abas da Planilha (Tracker / Resumo)
-    if (tabSheetTracker && tabSheetResumo) {
-      tabSheetTracker.addEventListener('click', () => {
-        tabSheetTracker.classList.add('active');
-        tabSheetResumo.classList.remove('active');
-        if (viewTracker) viewTracker.style.display = 'block';
-        if (viewResumo) viewResumo.style.display = 'none';
-      });
+    // 5. Abas da Planilha (Tracker / Resumo / Gráficos)
+    function switchSpreadsheetTab(tabName) {
+      if (tabSheetTracker) tabSheetTracker.classList.toggle('active', tabName === 'tracker');
+      if (tabSheetResumo) tabSheetResumo.classList.toggle('active', tabName === 'resumo');
+      if (tabSheetGraficos) tabSheetGraficos.classList.toggle('active', tabName === 'graficos');
 
-      tabSheetResumo.addEventListener('click', () => {
-        tabSheetResumo.classList.add('active');
-        tabSheetTracker.classList.remove('active');
-        if (viewTracker) viewTracker.style.display = 'none';
-        if (viewResumo) {
-          viewResumo.style.display = 'block';
-          if (window.activeCanvasArtifact) {
-            renderSpreadsheetSummary(window.activeCanvasArtifact);
-          }
+      if (viewTracker) viewTracker.style.display = tabName === 'tracker' ? 'block' : 'none';
+      if (viewResumo) {
+        viewResumo.style.display = tabName === 'resumo' ? 'block' : 'none';
+        if (tabName === 'resumo' && window.activeCanvasArtifact) {
+          renderSpreadsheetSummary(window.activeCanvasArtifact);
         }
-      });
+      }
+      if (viewGraficos) {
+        viewGraficos.style.display = tabName === 'graficos' ? 'block' : 'none';
+        if (tabName === 'graficos' && window.activeCanvasArtifact) {
+          renderSpreadsheetCharts(window.activeCanvasArtifact);
+        }
+      }
+    }
+
+    if (tabSheetTracker) {
+      tabSheetTracker.addEventListener('click', () => switchSpreadsheetTab('tracker'));
+    }
+    if (tabSheetResumo) {
+      tabSheetResumo.addEventListener('click', () => switchSpreadsheetTab('resumo'));
+    }
+    if (tabSheetGraficos) {
+      tabSheetGraficos.addEventListener('click', () => switchSpreadsheetTab('graficos'));
     }
 
     if (btnAddSheetTab) {
@@ -7592,7 +8346,17 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       if (btnOpen) {
         const artId = btnOpen.getAttribute('data-artifact-id');
         if (artId && window.meuKotaArtifactRegistry && window.meuKotaArtifactRegistry[artId]) {
-          openSpreadsheetInCanvas(window.meuKotaArtifactRegistry[artId]);
+          openSpreadsheetInCanvas(window.meuKotaArtifactRegistry[artId], 'tracker');
+        }
+        return;
+      }
+
+      // Botão "Gráficos" Direto na tabela do chat
+      const btnQuickCharts = e.target.closest('.btn-artifact-quick-charts');
+      if (btnQuickCharts) {
+        const artId = btnQuickCharts.getAttribute('data-artifact-id');
+        if (artId && window.meuKotaArtifactRegistry && window.meuKotaArtifactRegistry[artId]) {
+          openSpreadsheetInCanvas(window.meuKotaArtifactRegistry[artId], 'graficos');
         }
         return;
       }

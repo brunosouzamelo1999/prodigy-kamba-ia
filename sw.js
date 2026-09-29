@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v55-dynamic-formulas-charts';
+const CACHE_NAME = 'meu-kota-cache-v56-excel-charts';
 
 const PRECACHE_ASSETS = [
   './',
