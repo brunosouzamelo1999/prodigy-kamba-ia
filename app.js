@@ -6643,7 +6643,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         });
 
         svgContent = `
-          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
             ${gridHtml}
             ${barsHtml}
           </svg>
@@ -6675,7 +6675,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         });
 
         svgContent = `
-          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
             ${barsHtml}
           </svg>
         `;
@@ -6740,7 +6740,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         });
 
         svgContent = `
-          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
             ${gridHtml}
             ${areaHtml}
             <path d="${pathD}" fill="none" stroke="#FFD100" stroke-width="3" stroke-linecap="round" />
@@ -6798,7 +6798,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         }
 
         svgContent = `
-          <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
             ${slicesHtml}
             ${centerHoleHtml}
           </svg>
@@ -6833,7 +6833,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           });
 
           svgContent = `
-            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
               ${funnelHtml}
             </svg>
           `;
@@ -6883,7 +6883,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           `;
 
           svgContent = `
-            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
               <line x1="${padL}" y1="${padT + plotH}" x2="${svgW - padR}" y2="${padT + plotH}" stroke="rgba(255,255,255,0.15)" />
               ${waterfallBars}
             </svg>
@@ -6933,7 +6933,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           });
 
           svgContent = `
-            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
               ${comboBars}
               <path d="${linePath}" fill="none" stroke="#FFD100" stroke-width="2.5" />
               ${comboNodes}
@@ -6982,7 +6982,7 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           });
 
           svgContent = `
-            <svg viewBox="0 0 ${svgW} ${svgH}" class="excel-chart-svg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" class="excel-chart-svg">
               ${webLines}
               <polygon points="${polyPts}" fill="rgba(255,209,0,0.25)" stroke="#FFD100" stroke-width="2.5" />
               ${nodesHtml}
@@ -7016,10 +7016,16 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
                 </button>
               `).join('')}
             </div>
-            <button type="button" class="btn-chart-export" id="btn-export-chart-png" title="Baixar imagem em alta resolução">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>Baixar Imagem (.png)</span>
-            </button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn-chart-export" id="btn-export-chart-png" title="Baixar imagem em alta resolução (PNG)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Baixar Imagem (.png)</span>
+              </button>
+              <button type="button" class="btn-chart-export" id="btn-export-chart-svg" style="background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.3);color:#38BDF8;" title="Baixar vetor editável (SVG)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><polyline points="8 11 12 15 16 11"/><path d="M20 21H4"/></svg>
+                <span>Vetor (.svg)</span>
+              </button>
+            </div>
           </div>
           <div class="chart-ribbon-row">
             <div class="chart-options-group">
@@ -7130,33 +7136,102 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
           exportChartAsPng(artifact);
         });
       }
+
+      // Baixar Vetor SVG Puro
+      const btnExportSvg = document.getElementById('btn-export-chart-svg');
+      if (btnExportSvg) {
+        btnExportSvg.addEventListener('click', () => {
+          exportChartAsSvg(artifact);
+        });
+      }
     }
 
-    // Helper: Exportar gráfico SVG ativo como imagem PNG
+    // Helper: Exportar gráfico SVG ativo como imagem PNG executiva em alta resolução (1600x900)
     function exportChartAsPng(artifact) {
+      const stageCard = document.querySelector('.excel-chart-stage-card');
       const svgEl = document.querySelector('.excel-chart-stage-card svg');
       if (!svgEl) return;
 
       try {
-        const svgData = new XMLSerializer().serializeToString(svgEl);
+        let svgData = new XMLSerializer().serializeToString(svgEl);
+        if (!svgData.includes('xmlns="http://www.w3.org/2000/svg"')) {
+          svgData = svgData.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+        }
+        if (!svgData.includes('width=')) {
+          svgData = svgData.replace('<svg ', '<svg width="' + (svgEl.clientWidth || 760) + '" height="' + (svgEl.clientHeight || 340) + '" ');
+        }
+
+        const activeMetricName = cleanMarkdownText(artifact.headers[currentChartMetricCol] || 'Valores');
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(svgBlob);
         const img = new Image();
 
         img.onload = function() {
+          const W = 1600;
+          const H = 900;
           const canvas = document.createElement('canvas');
-          canvas.width = 1520;
-          canvas.height = 680;
+          canvas.width = W;
+          canvas.height = H;
           const ctx = canvas.getContext('2d');
 
-          ctx.fillStyle = '#141721';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          // Fundo escuro premium
+          ctx.fillStyle = '#0F1117';
+          ctx.fillRect(0, 0, W, H);
 
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Card interno com sombra e cantos arredondados
+          ctx.fillStyle = '#141721';
+          if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(30, 30, W - 60, H - 60, 16);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          } else {
+            ctx.fillRect(30, 30, W - 60, H - 60);
+          }
+
+          // Cabeçalho: Título da Métrica
+          ctx.fillStyle = '#FFD100';
+          ctx.font = 'bold 30px sans-serif';
+          ctx.fillText(activeMetricName.toUpperCase() + ' — ANÁLISE GRÁFICA', 70, 95);
+
+          ctx.fillStyle = '#94A3B8';
+          ctx.font = '500 16px sans-serif';
+          const fileTitle = (artifact.fileName || 'Planilha').replace(/\.[^.]+$/, '');
+          ctx.fillText(fileTitle + ' • ' + currentChartCategory.toUpperCase() + ' (' + currentChartVariation.toUpperCase() + ')', 70, 130);
+
+          // Total acumulado no topo direito
+          const totalValEl = stageCard ? stageCard.querySelector('.chart-stage-stat-val') : null;
+          if (totalValEl) {
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#FFD100';
+            ctx.font = 'bold 28px monospace';
+            ctx.fillText(totalValEl.textContent.trim(), W - 70, 95);
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 13px sans-serif';
+            ctx.fillText('SOMA ACUMULADA', W - 70, 125);
+            ctx.textAlign = 'left';
+          }
+
+          // Linha divisória fina
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.beginPath();
+          ctx.moveTo(70, 155);
+          ctx.lineTo(W - 70, 155);
+          ctx.stroke();
+
+          // Desenhar o SVG do Gráfico
+          ctx.drawImage(img, 70, 185, W - 140, H - 290);
           URL.revokeObjectURL(url);
 
+          // Rodapé informativo
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.font = '500 13px sans-serif';
+          ctx.fillText('Gerado pelo Meu Kota IA — Análise e Inteligência de Negócios', 70, H - 55);
+
           canvas.toBlob((pngBlob) => {
-            const fileName = (artifact.fileName || 'grafico-excel').replace(/\.[^.]+$/, '') + '-grafico.png';
+            const fileName = (artifact.fileName || 'grafico-excel').replace(/\.[^.]+$/, '') + '-' + currentChartCategory + '-' + currentChartVariation + '.png';
             triggerBlobDownload(pngBlob, fileName);
             showToast('Gráfico exportado em imagem PNG de alta resolução!');
           }, 'image/png');
@@ -7165,6 +7240,27 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       } catch (err) {
         console.error('Erro ao exportar gráfico:', err);
         showToast('Erro ao exportar imagem: ' + err.message);
+      }
+    }
+
+    // Helper: Exportar gráfico ativo como Vetor SVG puro editável
+    function exportChartAsSvg(artifact) {
+      const svgEl = document.querySelector('.excel-chart-stage-card svg');
+      if (!svgEl) return;
+      try {
+        let svgData = new XMLSerializer().serializeToString(svgEl);
+        if (!svgData.includes('xmlns="http://www.w3.org/2000/svg"')) {
+          svgData = svgData.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+        }
+        if (!svgData.includes('width=')) {
+          svgData = svgData.replace('<svg ', '<svg width="' + (svgEl.clientWidth || 760) + '" height="' + (svgEl.clientHeight || 340) + '" ');
+        }
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const fileName = (artifact.fileName || 'grafico-excel').replace(/\.[^.]+$/, '') + '-' + currentChartCategory + '-' + currentChartVariation + '.svg';
+        triggerBlobDownload(svgBlob, fileName);
+        showToast('Vetor SVG exportado com sucesso!');
+      } catch (err) {
+        showToast('Erro ao exportar SVG: ' + err.message);
       }
     }
 
