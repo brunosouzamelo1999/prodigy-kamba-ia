@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v57-chart-export-png-svg';
+const CACHE_NAME = 'meu-kota-cache-v58-robust-chart-export';
 
 const PRECACHE_ASSETS = [
   './',

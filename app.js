@@ -7150,7 +7150,10 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     function exportChartAsPng(artifact) {
       const stageCard = document.querySelector('.excel-chart-stage-card');
       const svgEl = document.querySelector('.excel-chart-stage-card svg');
-      if (!svgEl) return;
+      if (!svgEl) {
+        showToast('Nenhum gráfico visível para exportar.');
+        return;
+      }
 
       try {
         let svgData = new XMLSerializer().serializeToString(svgEl);
@@ -7162,91 +7165,136 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
         }
 
         const activeMetricName = cleanMarkdownText(artifact.headers[currentChartMetricCol] || 'Valores');
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
+        const targetFileName = (artifact.fileName || 'grafico-excel').replace(/\.[^.]+$/, '') + '-' + currentChartCategory + '-' + currentChartVariation + '.png';
+
+        // Codificação Base64 segura para Unicode
+        let base64Svg = '';
+        try {
+          base64Svg = window.btoa(unescape(encodeURIComponent(svgData)));
+        } catch (e) {
+          base64Svg = window.btoa(svgData);
+        }
+
         const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        // Fallback imediato: se o navegador bloquear renderização de SVG no canvas, baixa o vetor SVG
+        img.onerror = function(err) {
+          console.warn('[Meu Kota] Aviso ao renderizar PNG, baixando vetor SVG diretamente:', err);
+          exportChartAsSvg(artifact);
+        };
 
         img.onload = function() {
-          const W = 1600;
-          const H = 900;
-          const canvas = document.createElement('canvas');
-          canvas.width = W;
-          canvas.height = H;
-          const ctx = canvas.getContext('2d');
+          try {
+            const W = 1600;
+            const H = 900;
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
 
-          // Fundo escuro premium
-          ctx.fillStyle = '#0F1117';
-          ctx.fillRect(0, 0, W, H);
+            // Fundo escuro premium
+            ctx.fillStyle = '#0F1117';
+            ctx.fillRect(0, 0, W, H);
 
-          // Card interno com sombra e cantos arredondados
-          ctx.fillStyle = '#141721';
-          if (typeof ctx.roundRect === 'function') {
-            ctx.beginPath();
-            ctx.roundRect(30, 30, W - 60, H - 60, 16);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-          } else {
-            ctx.fillRect(30, 30, W - 60, H - 60);
-          }
+            // Card interno com sombra e cantos arredondados
+            ctx.fillStyle = '#141721';
+            if (typeof ctx.roundRect === 'function') {
+              ctx.beginPath();
+              ctx.roundRect(30, 30, W - 60, H - 60, 16);
+              ctx.fill();
+              ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+              ctx.lineWidth = 2;
+              ctx.stroke();
+            } else {
+              ctx.fillRect(30, 30, W - 60, H - 60);
+            }
 
-          // Cabeçalho: Título da Métrica
-          ctx.fillStyle = '#FFD100';
-          ctx.font = 'bold 30px sans-serif';
-          ctx.fillText(activeMetricName.toUpperCase() + ' — ANÁLISE GRÁFICA', 70, 95);
-
-          ctx.fillStyle = '#94A3B8';
-          ctx.font = '500 16px sans-serif';
-          const fileTitle = (artifact.fileName || 'Planilha').replace(/\.[^.]+$/, '');
-          ctx.fillText(fileTitle + ' • ' + currentChartCategory.toUpperCase() + ' (' + currentChartVariation.toUpperCase() + ')', 70, 130);
-
-          // Total acumulado no topo direito
-          const totalValEl = stageCard ? stageCard.querySelector('.chart-stage-stat-val') : null;
-          if (totalValEl) {
-            ctx.textAlign = 'right';
+            // Cabeçalho: Título da Métrica
             ctx.fillStyle = '#FFD100';
-            ctx.font = 'bold 28px monospace';
-            ctx.fillText(totalValEl.textContent.trim(), W - 70, 95);
+            ctx.font = 'bold 30px sans-serif';
+            ctx.fillText(activeMetricName.toUpperCase() + ' — ANÁLISE GRÁFICA', 70, 95);
+
             ctx.fillStyle = '#94A3B8';
-            ctx.font = '600 13px sans-serif';
-            ctx.fillText('SOMA ACUMULADA', W - 70, 125);
-            ctx.textAlign = 'left';
+            ctx.font = '500 16px sans-serif';
+            const fileTitle = (artifact.fileName || 'Planilha').replace(/\.[^.]+$/, '');
+            ctx.fillText(fileTitle + ' • ' + currentChartCategory.toUpperCase() + ' (' + currentChartVariation.toUpperCase() + ')', 70, 130);
+
+            // Total acumulado no topo direito
+            const totalValEl = stageCard ? stageCard.querySelector('.chart-stage-stat-val') : null;
+            if (totalValEl) {
+              ctx.textAlign = 'right';
+              ctx.fillStyle = '#FFD100';
+              ctx.font = 'bold 28px monospace';
+              ctx.fillText(totalValEl.textContent.trim(), W - 70, 95);
+              ctx.fillStyle = '#94A3B8';
+              ctx.font = '600 13px sans-serif';
+              ctx.fillText('SOMA ACUMULADA', W - 70, 125);
+              ctx.textAlign = 'left';
+            }
+
+            // Linha divisória fina
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.beginPath();
+            ctx.moveTo(70, 155);
+            ctx.lineTo(W - 70, 155);
+            ctx.stroke();
+
+            // Desenhar o SVG do Gráfico
+            ctx.drawImage(img, 70, 185, W - 140, H - 290);
+
+            // Rodapé informativo
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.font = '500 13px sans-serif';
+            ctx.fillText('Gerado pelo Meu Kota IA — Análise e Inteligência de Negócios', 70, H - 55);
+
+            // Exportar Blob ou DataURL
+            if (canvas.toBlob) {
+              canvas.toBlob((pngBlob) => {
+                if (pngBlob) {
+                  triggerBlobDownload(pngBlob, targetFileName);
+                  showToast('Gráfico exportado em imagem PNG de alta resolução!');
+                } else {
+                  const dataUrl = canvas.toDataURL('image/png');
+                  const a = document.createElement('a');
+                  a.href = dataUrl;
+                  a.download = targetFileName;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  showToast('Gráfico exportado em imagem PNG!');
+                }
+              }, 'image/png');
+            } else {
+              const dataUrl = canvas.toDataURL('image/png');
+              const a = document.createElement('a');
+              a.href = dataUrl;
+              a.download = targetFileName;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              showToast('Gráfico exportado em imagem PNG!');
+            }
+          } catch(renderErr) {
+            console.warn('[Meu Kota] Erro na rasterização do Canvas, baixando SVG:', renderErr);
+            exportChartAsSvg(artifact);
           }
-
-          // Linha divisória fina
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-          ctx.beginPath();
-          ctx.moveTo(70, 155);
-          ctx.lineTo(W - 70, 155);
-          ctx.stroke();
-
-          // Desenhar o SVG do Gráfico
-          ctx.drawImage(img, 70, 185, W - 140, H - 290);
-          URL.revokeObjectURL(url);
-
-          // Rodapé informativo
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.font = '500 13px sans-serif';
-          ctx.fillText('Gerado pelo Meu Kota IA — Análise e Inteligência de Negócios', 70, H - 55);
-
-          canvas.toBlob((pngBlob) => {
-            const fileName = (artifact.fileName || 'grafico-excel').replace(/\.[^.]+$/, '') + '-' + currentChartCategory + '-' + currentChartVariation + '.png';
-            triggerBlobDownload(pngBlob, fileName);
-            showToast('Gráfico exportado em imagem PNG de alta resolução!');
-          }, 'image/png');
         };
-        img.src = url;
+
+        img.src = 'data:image/svg+xml;base64,' + base64Svg;
       } catch (err) {
         console.error('Erro ao exportar gráfico:', err);
-        showToast('Erro ao exportar imagem: ' + err.message);
+        exportChartAsSvg(artifact);
       }
     }
 
     // Helper: Exportar gráfico ativo como Vetor SVG puro editável
     function exportChartAsSvg(artifact) {
       const svgEl = document.querySelector('.excel-chart-stage-card svg');
-      if (!svgEl) return;
+      if (!svgEl) {
+        showToast('Nenhum gráfico visível para exportar.');
+        return;
+      }
       try {
         let svgData = new XMLSerializer().serializeToString(svgEl);
         if (!svgData.includes('xmlns="http://www.w3.org/2000/svg"')) {
