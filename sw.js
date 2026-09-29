@@ -3,7 +3,7 @@
    Carregamento Instantâneo & Atualização em Tempo Real
    ============================================================ */
 
-const CACHE_NAME = 'meu-kota-cache-v40-clean-pdf-export';
+const CACHE_NAME = 'meu-kota-cache-v42-clean-print-preview';
 
 const PRECACHE_ASSETS = [
   './',

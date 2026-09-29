@@ -2586,25 +2586,9 @@ body {
   box-shadow: 0 0 16px var(--angola-yellow-glow);
 }
 
-/* Estilos Nativos de Impressão @media print */
-@media print {
-  body {
-    background: #FFFFFF !important;
-    color: #000000 !important;
-  }
-  .app-view, .kamba-toast, .executive-modal-overlay {
-    display: none !important;
-  }
-  #print-container {
-    display: block !important;
-    width: 100% !important;
-    padding: 20mm !important;
-    background: #FFFFFF !important;
-    color: #111827 !important;
-  }
-}
-#print-container {
-  display: none;
+/* Palco Isolado de Impressão Limpa em PDF Nativo */
+#meu-kota-print-stage {
+  display: none !important;
 }
 
 @media (max-width: 768px) {
@@ -9421,56 +9405,66 @@ html.is-offline #kota-offline-screen {
 /* ============================================================ */
 
 @media print {
-  /* Ocultar toda a interface de aplicação do Meu Kota IA */
-  .gpt-sidebar,
-  .gpt-header,
-  .gpt-input-area,
-  .gpt-scroll-area,
-  .canvas-header,
-  .canvas-grid-toolbar,
-  .canvas-sheet-tabs-bar,
-  .canvas-code-tabs,
-  .canvas-code-gutter,
-  .canvas-doc-toolbar,
-  .canvas-export-menu-wrap,
-  .executive-modal-overlay,
-  .toast,
-  .btn-detach-canvas,
-  .corner-cell,
-  th[data-col],
-  td.row-num-cell,
-  .canvas-editing-hint,
-  .kamba-artifact-card .artifact-card-actions,
-  .canvas-launcher-dropdown-wrap {
-    display: none !important;
+  /* Configuração Oficial da Página de Impressão */
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm 12mm 12mm;
   }
 
-  body {
+  /* Quando o documento limpo estiver em pré-visualização de impressão */
+  body.printing-clean-doc {
     background: #FFFFFF !important;
     color: #0F172A !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  .gpt-layout {
-    display: block !important;
-    height: auto !important;
-    overflow: visible !important;
+  body.printing-clean-doc > *:not(#meu-kota-print-stage) {
+    display: none !important;
   }
 
-  .kota-canvas-panel {
+  body.printing-clean-doc #meu-kota-print-stage {
     display: block !important;
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #FFFFFF !important;
-    border: none !important;
-    box-shadow: none !important;
+    color: #0F172A !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
-  .canvas-body {
-    overflow: visible !important;
+  /* Ocultar elementos da interface se a impressão for padrão */
+  body:not(.printing-clean-doc) .gpt-sidebar,
+  body:not(.printing-clean-doc) .gpt-header,
+  body:not(.printing-clean-doc) .gpt-input-area,
+  body:not(.printing-clean-doc) .canvas-header,
+  body:not(.printing-clean-doc) .canvas-grid-toolbar,
+  body:not(.printing-clean-doc) .canvas-sheet-tabs-bar,
+  body:not(.printing-clean-doc) .canvas-code-tabs,
+  body:not(.printing-clean-doc) .canvas-code-gutter,
+  body:not(.printing-clean-doc) .canvas-doc-toolbar,
+  body:not(.printing-clean-doc) .canvas-export-menu-wrap,
+  body:not(.printing-clean-doc) .executive-modal-overlay,
+  body:not(.printing-clean-doc) .kamba-toast,
+  body:not(.printing-clean-doc) .toast,
+  body:not(.printing-clean-doc) .btn-detach-canvas,
+  body:not(.printing-clean-doc) .corner-cell,
+  body:not(.printing-clean-doc) th[data-col],
+  body:not(.printing-clean-doc) td.row-num-cell,
+  body:not(.printing-clean-doc) .canvas-editing-hint,
+  body:not(.printing-clean-doc) .kamba-artifact-card .artifact-card-actions,
+  body:not(.printing-clean-doc) .canvas-launcher-dropdown-wrap {
+    display: none !important;
+  }
+
+  body:not(.printing-clean-doc) {
     background: #FFFFFF !important;
+    color: #0F172A !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Forçar que todas as cores de fundo e bordas sejam impressas com fidelidade */

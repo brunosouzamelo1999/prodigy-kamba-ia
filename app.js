@@ -5863,13 +5863,14 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     }
 
-    // Helper: Limpar asteriscos de markdown para exibição limpa em tabelas e PDFs
+    // Helper: Limpar asteriscos e crases de markdown para exibição limpa em tabelas e PDFs
     function cleanMarkdownText(str) {
       if (!str) return '';
       return String(str)
         .replace(/\*\*(.*?)\*\*/g, '$1')
         .replace(/\*(.*?)\*/g, '$1')
         .replace(/__(.*?)__/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
         .trim();
     }
 
@@ -6140,52 +6141,75 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       }
     }
 
-    // Helper para garantir carregamento seguro do html2pdf.js
-    async function ensureHtml2Pdf() {
-      if (typeof html2pdf !== 'undefined') return true;
-      try {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = 'libs/html2pdf.bundle.min.js';
-          s.onload = resolve;
-          s.onerror = reject;
-          document.head.appendChild(s);
-        });
-        return typeof html2pdf !== 'undefined';
-      } catch (e) {
-        console.error('[Meu Kota] Erro ao carregar html2pdf:', e);
-        return false;
+    // 6. DISPARADOR DE PRÉ-VISUALIZAÇÃO DE IMPRESSÃO LIMPA EM PDF (CHROME / NATIVO)
+    function triggerCleanPrintPreview(htmlContent) {
+      let stage = document.getElementById('meu-kota-print-stage');
+      if (!stage) {
+        stage = document.createElement('div');
+        stage.id = 'meu-kota-print-stage';
+        stage.className = 'meu-kota-print-stage';
+        document.body.appendChild(stage);
       }
+
+      stage.innerHTML = htmlContent;
+      document.body.classList.add('printing-clean-doc');
+
+      let cleaned = false;
+      const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
+        document.body.classList.remove('printing-clean-doc');
+        if (stage) stage.innerHTML = '';
+        window.removeEventListener('afterprint', cleanup);
+      };
+
+      window.addEventListener('afterprint', cleanup);
+
+      // Pequeno timeout para o navegador calcular o DOM e estilos de impressão antes de abrir a janela
+      setTimeout(() => {
+        try {
+          window.print();
+        } catch (e) {
+          console.error('[Meu Kota] Erro ao abrir janela de impressão:', e);
+          showToast('Erro ao abrir diálogo de impressão: ' + e.message);
+          cleanup();
+        }
+      }, 150);
+
+      // Fallback estendido de segurança caso o navegador não emita o evento afterprint
+      setTimeout(cleanup, 60000);
     }
 
-    // 6A. EXPORTAÇÃO LIMPA DE PLANILHA PARA PDF EXECUTIVO (SEM CHROME DA APLICAÇÃO)
-    async function exportSpreadsheetToPdf(artifact) {
-      if (!artifact) return;
-      showToast('Compilando relatório executivo em PDF limpo...');
-
-      const hasPdf = await ensureHtml2Pdf();
-      if (!hasPdf) {
-        showToast('Biblioteca de PDF indisponível no momento.');
+    // 6A. EXPORTAÇÃO LIMPA DE PLANILHA PARA PDF EXECUTIVO (ABRE A JANELA DE IMPRESSÃO COM PRÉ-VISUALIZAÇÃO)
+    function exportSpreadsheetToPdf(artifact) {
+      if (!artifact) {
+        showToast('Nenhuma planilha disponível para gerar PDF.');
         return;
       }
+      showToast('Abrindo pré-visualização de impressão em PDF...');
 
       const now = new Date();
       const formattedDate = now.toLocaleDateString('pt-AO');
       const docRef = `MK-REL-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
       const cleanTitle = (artifact.title || artifact.fileName || 'Relatório de Tarefas').replace(/\.xlsx$/i, '').trim();
 
+      const rows = Array.isArray(artifact.rows) ? artifact.rows : [];
+      const headers = (Array.isArray(artifact.headers) && artifact.headers.length > 0) ? artifact.headers : ['Item', 'Descrição'];
+
       // Recalcular métricas
-      const totalTasks = artifact.rows.length;
+      const totalTasks = rows.length;
       let inProgressCount = 0;
       let doneCount = 0;
       let overdueCount = 0;
 
-      const numCols = artifact.headers.length;
+      const numCols = headers.length;
       const colNumericSums = new Array(numCols).fill(0);
       const colNumericCounts = new Array(numCols).fill(0);
 
-      artifact.rows.forEach(r => {
+      rows.forEach(r => {
+        if (!Array.isArray(r)) return;
         r.forEach((val, cIdx) => {
+          if (cIdx >= numCols) return;
           const text = cleanMarkdownText(val || '').toLowerCase();
           if (/^(done|conclu[ií]d[oa]|pago|ok|aprovado|sim|yes|finalizado|feito)$/.test(text) || text.includes('conclu')) {
             doneCount++;
@@ -6222,228 +6246,143 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
       let formattedSum = '-';
       if (bestNumericCol >= 0 && maxNumCount > 0) {
         const sum = colNumericSums[bestNumericCol];
-        const headerName = artifact.headers[bestNumericCol] || 'Total';
+        const headerName = headers[bestNumericCol] || 'Total';
         formattedSum = sum.toLocaleString('pt-AO', { maximumFractionDigits: 2 });
         if (headerName.toLowerCase().includes('kz') || headerName.toLowerCase().includes('preço') || headerName.toLowerCase().includes('custo') || headerName.toLowerCase().includes('valor')) {
           formattedSum += ' Kz';
         }
       }
 
-      // Container fora da tela com largura A4 padronizada (794px)
-      const printContainer = document.createElement('div');
-      printContainer.style.position = 'fixed';
-      printContainer.style.left = '-9999px';
-      printContainer.style.top = '0';
-      printContainer.style.width = '794px';
-      printContainer.style.background = '#FFFFFF';
-      printContainer.style.color = '#0F172A';
-      printContainer.style.padding = '36px 40px';
-      printContainer.style.boxSizing = 'border-box';
-      printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-      printContainer.style.lineHeight = '1.5';
-      printContainer.style.zIndex = '-9999';
+      const html = `
+        <div class="clean-print-report" style="width: 100%; max-width: 100%; background: #FFFFFF; color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 10px;">
 
-      printContainer.innerHTML = `
-        <!-- CABEÇALHO EXECUTIVO LIMPO (SEM BOTÕES OU CHROME DO SISTEMA) -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 14px; border-bottom: 2px solid #0F172A; margin-bottom: 20px;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 38px; height: 38px; border-radius: 8px; background: #0F172A; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFD100; flex-shrink: 0;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <!-- CABEÇALHO EXECUTIVO LIMPO (SEM BOTÕES OU CHROME DO SISTEMA) -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 14px; border-bottom: 2px solid #0F172A; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 40px; height: 40px; border-radius: 8px; background: #0F172A; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFD100; flex-shrink: 0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div>
+                <div style="font-size: 15px; font-weight: 800; color: #0F172A; letter-spacing: 0.5px;">MEU KOTA IA — SISTEMAS INTELIGENTES</div>
+                <div style="font-size: 11px; color: #64748B; font-weight: 500;">Relatório de Acompanhamento Executivo & Gestão de Entregas</div>
+              </div>
             </div>
-            <div>
-              <div style="font-size: 14px; font-weight: 800; color: #0F172A; letter-spacing: 0.5px;">MEU KOTA IA — SISTEMAS INTELIGENTES</div>
-              <div style="font-size: 10.5px; color: #64748B; font-weight: 500;">Relatório de Acompanhamento Executivo & Gestão de Entregas</div>
+            <div style="text-align: right; font-size: 10.5px; color: #475569; line-height: 1.5;">
+              <div><strong>Data de Emissão:</strong> ${formattedDate}</div>
+              <div><strong>Ref.:</strong> ${docRef}</div>
+              <div><span style="display: inline-block; background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; padding: 1px 7px; border-radius: 4px; font-weight: 700; font-size: 9.5px; margin-top: 3px;">CONFIDENCIAL • HOMOLOGADO</span></div>
             </div>
           </div>
-          <div style="text-align: right; font-size: 10px; color: #475569; line-height: 1.5;">
-            <div><strong>Data:</strong> ${formattedDate}</div>
-            <div><strong>Ref.:</strong> ${docRef}</div>
-            <div><span style="display: inline-block; background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; padding: 1px 7px; border-radius: 4px; font-weight: 700; font-size: 9px; margin-top: 3px;">CONFIDENCIAL • HOMOLOGADO</span></div>
-          </div>
-        </div>
 
-        <!-- TÍTULO OFICIAL DO ARQUIVO -->
-        <div style="margin-bottom: 20px;">
-          <h1 style="font-size: 19px; font-weight: 800; color: #0F172A; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px;">
-            ${escapeHtml(cleanTitle)}
-          </h1>
-          <div style="font-size: 11px; color: #64748B;">
-            Tabela estruturada contendo ${totalTasks} itens registrados para acompanhamento e auditoria comercial.
+          <!-- TÍTULO OFICIAL DO ARQUIVO -->
+          <div style="margin-bottom: 20px;">
+            <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px;">
+              ${escapeHtml(cleanTitle)}
+            </h1>
+            <div style="font-size: 11.5px; color: #64748B;">
+              Tabela estruturada contendo ${totalTasks} itens registrados para acompanhamento e auditoria comercial.
+            </div>
           </div>
-        </div>
 
-        <!-- CARTÕES DE RESUMO EXECUTIVO (MÉTRICAS CLARAS COM BORDAS DEFINIDAS) -->
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px;">
-          <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; padding: 9px 10px; text-align: center;">
-            <div style="font-size: 9px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Tasks</div>
-            <div style="font-size: 17px; font-weight: 800; color: #0F172A; margin-top: 2px;">${totalTasks}</div>
+          <!-- CARTÕES DE RESUMO EXECUTIVO (MÉTRICAS CLARAS COM BORDAS DEFINIDAS) -->
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px;">
+            <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 6px; padding: 10px 10px; text-align: center;">
+              <div style="font-size: 9.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Tasks</div>
+              <div style="font-size: 18px; font-weight: 800; color: #0F172A; margin-top: 2px;">${totalTasks}</div>
+            </div>
+            <div style="background: #FEFCE8; border: 1.5px solid #FDE047; border-radius: 6px; padding: 10px 10px; text-align: center;">
+              <div style="font-size: 9.5px; font-weight: 700; color: #854D0E; text-transform: uppercase;">In Progress</div>
+              <div style="font-size: 18px; font-weight: 800; color: #A16207; margin-top: 2px;">${inProgressCount}</div>
+            </div>
+            <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 6px; padding: 10px 10px; text-align: center;">
+              <div style="font-size: 9.5px; font-weight: 700; color: #166534; text-transform: uppercase;">Done</div>
+              <div style="font-size: 18px; font-weight: 800; color: #15803D; margin-top: 2px;">${doneCount}</div>
+            </div>
+            <div style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 10px 10px; text-align: center;">
+              <div style="font-size: 9.5px; font-weight: 700; color: #991B1B; text-transform: uppercase;">Overdue</div>
+              <div style="font-size: 18px; font-weight: 800; color: #DC2626; margin-top: 2px;">${overdueCount}</div>
+            </div>
+            <div style="background: #FFFBEB; border: 1.5px solid #FCD34D; border-radius: 6px; padding: 10px 10px; text-align: center;">
+              <div style="font-size: 9.5px; font-weight: 700; color: #78350F; text-transform: uppercase;">Soma Total</div>
+              <div style="font-size: 16px; font-weight: 800; color: #B45309; margin-top: 3px;">${formattedSum}</div>
+            </div>
           </div>
-          <div style="background: #FEFCE8; border: 1px solid #FDE047; border-radius: 6px; padding: 9px 10px; text-align: center;">
-            <div style="font-size: 9px; font-weight: 700; color: #854D0E; text-transform: uppercase;">In Progress</div>
-            <div style="font-size: 17px; font-weight: 800; color: #A16207; margin-top: 2px;">${inProgressCount}</div>
-          </div>
-          <div style="background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 6px; padding: 9px 10px; text-align: center;">
-            <div style="font-size: 9px; font-weight: 700; color: #166534; text-transform: uppercase;">Done</div>
-            <div style="font-size: 17px; font-weight: 800; color: #15803D; margin-top: 2px;">${doneCount}</div>
-          </div>
-          <div style="background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 6px; padding: 9px 10px; text-align: center;">
-            <div style="font-size: 9px; font-weight: 700; color: #991B1B; text-transform: uppercase;">Overdue</div>
-            <div style="font-size: 17px; font-weight: 800; color: #DC2626; margin-top: 2px;">${overdueCount}</div>
-          </div>
-          <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 6px; padding: 9px 10px; text-align: center;">
-            <div style="font-size: 9px; font-weight: 700; color: #78350F; text-transform: uppercase;">Soma Total</div>
-            <div style="font-size: 15px; font-weight: 800; color: #B45309; margin-top: 3px;">${formattedSum}</div>
-          </div>
-        </div>
 
-        <!-- TABELA DE DADOS ULTRA-NÍTIDA (SEM COLUNAS A, B, C, SEM NÚMEROS 1, 2, 3, COM BORDAS DEFINIDAS) -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 10.5px; border: 1.5px solid #0F172A;">
-          <thead>
-            <tr style="background: #0F172A; color: #FFFFFF;">
-              ${artifact.headers.map(h => `<th style="padding: 9px 10px; text-align: left; font-weight: 700; font-size: 10px; letter-spacing: 0.3px; border: 1px solid #0F172A; color: #FFFFFF;">${escapeHtml(cleanMarkdownText(h))}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${artifact.rows.map((row, idx) => `
-              <tr style="background: ${idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC'};">
-                ${row.map(cell => {
-                  const raw = cleanMarkdownText(cell);
-                  const statusClass = getStatusClass(raw);
-                  let content = escapeHtml(raw);
-                  if (statusClass === 'done') {
-                    content = `<span style="display:inline-block;background:#DEF7EC;color:#03543F;border:1px solid #31C48D;padding:2px 7px;border-radius:4px;font-weight:700;font-size:9.5px;">${content}</span>`;
-                  } else if (statusClass === 'progress') {
-                    content = `<span style="display:inline-block;background:#FEF08A;color:#713F12;border:1px solid #FACC15;padding:2px 7px;border-radius:4px;font-weight:700;font-size:9.5px;">${content}</span>`;
-                  } else if (statusClass === 'overdue') {
-                    content = `<span style="display:inline-block;background:#FEE2E2;color:#991B1B;border:1px solid #F87171;padding:2px 7px;border-radius:4px;font-weight:700;font-size:9.5px;">${content}</span>`;
-                  }
-                  return `<td style="padding: 8px 10px; border: 1px solid #CBD5E1; color: #1E293B; vertical-align: top; line-height: 1.45;">${content}</td>`;
-                }).join('')}
+          <!-- TABELA DE DADOS ULTRA-NÍTIDA (SEM COLUNAS A, B, C, SEM NÚMEROS 1, 2, 3, COM BORDAS DEFINIDAS) -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 11px; border: 1.5px solid #0F172A;">
+            <thead>
+              <tr style="background: #0F172A; color: #FFFFFF;">
+                ${headers.map(h => `<th style="padding: 10px 10px; text-align: left; font-weight: 700; font-size: 10.5px; letter-spacing: 0.3px; border: 1px solid #0F172A; color: #FFFFFF; background: #0F172A;">${escapeHtml(cleanMarkdownText(h))}</th>`).join('')}
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${rows.map((row, idx) => {
+                const rowArr = Array.isArray(row) ? row : [];
+                return `
+                <tr style="background: ${idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC'};">
+                  ${headers.map((_, cIdx) => {
+                    const cell = rowArr[cIdx] !== undefined ? rowArr[cIdx] : '';
+                    const raw = cleanMarkdownText(cell);
+                    const statusClass = getStatusClass(raw);
+                    let content = escapeHtml(raw);
+                    if (statusClass === 'done') {
+                      content = `<span style="display:inline-block;background:#DEF7EC;color:#03543F;border:1px solid #31C48D;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">${content}</span>`;
+                    } else if (statusClass === 'progress') {
+                      content = `<span style="display:inline-block;background:#FEF08A;color:#713F12;border:1px solid #FACC15;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">${content}</span>`;
+                    } else if (statusClass === 'overdue') {
+                      content = `<span style="display:inline-block;background:#FEE2E2;color:#991B1B;border:1px solid #F87171;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">${content}</span>`;
+                    }
+                    return `<td style="padding: 9px 10px; border: 1px solid #CBD5E1; color: #1E293B; vertical-align: top; line-height: 1.45;">${content}</td>`;
+                  }).join('')}
+                </tr>
+              `;
+              }).join('')}
+            </tbody>
+          </table>
 
-        <!-- SEÇÃO FORMAL DE HOMOLOGAÇÃO E ASSINATURAS -->
-        <div style="margin-top: 36px; padding-top: 18px; border-top: 1.5px dashed #CBD5E1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; page-break-inside: avoid; break-inside: avoid;">
-          <div style="text-align: center;">
-            <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
-            <div style="font-size: 11.5px; font-weight: 700; color: #0F172A;">Bruno Souza</div>
-            <div style="font-size: 9.5px; color: #64748B;">Diretoria Executiva / Gestor de Projeto</div>
-            <div style="font-size: 8px; color: #10B981; font-weight: 700; margin-top: 3px;">ASSINADO ELETRONICAMENTE</div>
+          <!-- SEÇÃO FORMAL DE HOMOLOGAÇÃO E ASSINATURAS -->
+          <div style="margin-top: 36px; padding-top: 18px; border-top: 1.5px dashed #CBD5E1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; page-break-inside: avoid; break-inside: avoid;">
+            <div style="text-align: center;">
+              <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
+              <div style="font-size: 12px; font-weight: 700; color: #0F172A;">Bruno Souza</div>
+              <div style="font-size: 10px; color: #64748B;">Diretoria Executiva / Gestor de Projeto</div>
+              <div style="font-size: 8.5px; color: #10B981; font-weight: 700; margin-top: 3px;">ASSINADO ELETRONICAMENTE</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
+              <div style="font-size: 12px; font-weight: 700; color: #0F172A;">Cliente / Responsável Técnico</div>
+              <div style="font-size: 10px; color: #64748B;">Homologação & Aprovação Formal</div>
+              <div style="font-size: 8.5px; color: #64748B; font-weight: 600; margin-top: 3px;">VALIDAÇÃO COMERCIAL</div>
+            </div>
           </div>
-          <div style="text-align: center;">
-            <div style="border-bottom: 1.5px solid #0F172A; width: 75%; margin: 0 auto 6px auto;"></div>
-            <div style="font-size: 11.5px; font-weight: 700; color: #0F172A;">Cliente / Responsável Técnico</div>
-            <div style="font-size: 9.5px; color: #64748B;">Homologação & Aprovação Formal</div>
-            <div style="font-size: 8px; color: #64748B; font-weight: 600; margin-top: 3px;">VALIDAÇÃO COMERCIAL</div>
-          </div>
-        </div>
 
-        <!-- RODAPÉ FINAL DISCRETO -->
-        <div style="margin-top: 26px; padding-top: 8px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; color: #94A3B8;">
-          <span>Meu Kota IA • Sistema de Inteligência Conversacional Corporativa</span>
-          <span>https://meu-kota-ia.web.app • Documento Homologado</span>
+          <!-- RODAPÉ FINAL DISCRETO -->
+          <div style="margin-top: 26px; padding-top: 8px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #94A3B8;">
+            <span>Meu Kota IA • Sistema de Inteligência Conversacional Corporativa</span>
+            <span>https://meu-kota-ia.web.app • Documento Homologado</span>
+          </div>
         </div>
       `;
 
-      document.body.appendChild(printContainer);
-
-      let targetName = (cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'relatorio-executivo') + '.pdf';
-
-      const opt = {
-        margin: [8, 8, 8, 8],
-        filename: targetName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          scrollY: 0,
-          scrollX: 0,
-          backgroundColor: '#FFFFFF'
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-
-      try {
-        await html2pdf().set(opt).from(printContainer).save();
-        showToast('Relatório executivo em PDF limpo baixado com sucesso!');
-      } catch (err) {
-        console.error('[PDF Generation Error]', err);
-        showToast('Erro ao exportar PDF: ' + err.message);
-      } finally {
-        if (printContainer.parentNode) {
-          printContainer.parentNode.removeChild(printContainer);
-        }
-      }
+      triggerCleanPrintPreview(html);
     }
 
-    // 6B. EXPORTAÇÃO LIMPA DO DOCUMENTO A4 PARA PDF
-    async function exportDocumentToPdf() {
+    // 6B. EXPORTAÇÃO LIMPA DO DOCUMENTO A4 PARA PDF (ABRE A JANELA DE IMPRESSÃO COM PRÉ-VISUALIZAÇÃO)
+    function exportDocumentToPdf() {
       const sheet = document.getElementById('canvas-a4-sheet');
       if (!sheet) return;
+      showToast('Abrindo pré-visualização de impressão em PDF...');
 
-      const hasPdf = await ensureHtml2Pdf();
-      if (!hasPdf) {
-        showToast('Biblioteca de PDF indisponível no momento.');
-        return;
-      }
+      const clone = sheet.cloneNode(true);
+      clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
 
-      showToast('Compilando documento comercial em PDF limpo...');
-      let targetName = (fileNameInput ? fileNameInput.value : 'documento-comercial.pdf') || 'documento-comercial.pdf';
-      if (!targetName.toLowerCase().endsWith('.pdf')) targetName += '.pdf';
+      const html = `
+        <div class="clean-print-report" style="width: 100%; max-width: 100%; background: #FFFFFF; color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 10px;">
+          ${clone.innerHTML}
+        </div>
+      `;
 
-      // Criar clone limpo destacado fora da tela
-      const printContainer = document.createElement('div');
-      printContainer.style.position = 'fixed';
-      printContainer.style.left = '-9999px';
-      printContainer.style.top = '0';
-      printContainer.style.width = '794px';
-      printContainer.style.background = '#FFFFFF';
-      printContainer.style.color = '#1E293B';
-      printContainer.style.padding = '36px 40px';
-      printContainer.style.boxSizing = 'border-box';
-      printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-      printContainer.style.zIndex = '-9999';
-
-      printContainer.innerHTML = sheet.innerHTML;
-
-      // Remover contenteditable dos elementos clonados para evitar artefatos visuais
-      printContainer.querySelectorAll('[contenteditable]').forEach(el => {
-        el.removeAttribute('contenteditable');
-      });
-
-      document.body.appendChild(printContainer);
-
-      const opt = {
-        margin: [8, 8, 8, 8],
-        filename: targetName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          scrollY: 0,
-          scrollX: 0,
-          backgroundColor: '#FFFFFF'
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-
-      try {
-        await html2pdf().set(opt).from(printContainer).save();
-        showToast('Documento comercial em PDF baixado com sucesso!');
-      } catch (err) {
-        console.error('[PDF Generation Error]', err);
-        showToast('Erro ao exportar PDF: ' + err.message);
-      } finally {
-        if (printContainer.parentNode) {
-          printContainer.parentNode.removeChild(printContainer);
-        }
-      }
+      triggerCleanPrintPreview(html);
     }
 
     // 7. EXPORTAÇÃO DE CÓDIGO
@@ -6923,11 +6862,19 @@ PADRÕES DE FORMATO E COMUNICAÇÃO:
     }
 
     if (btnDlPdf) {
-      btnDlPdf.addEventListener('click', () => {
+      btnDlPdf.addEventListener('click', (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         if (exportDropdown) exportDropdown.style.display = 'none';
         if (!window.activeCanvasArtifact) {
-          showToast('Nenhum arquivo ativo no Canvas.');
-          return;
+          if (excelTable && excelTable.rows && excelTable.rows.length > 0) {
+            window.activeCanvasArtifact = createDefaultSpreadsheetTemplate();
+          } else {
+            showToast('Nenhum arquivo ativo no Canvas.');
+            return;
+          }
         }
         if (window.activeCanvasArtifact.type === 'spreadsheet') {
           exportSpreadsheetToPdf(window.activeCanvasArtifact);
